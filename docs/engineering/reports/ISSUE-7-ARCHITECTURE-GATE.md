@@ -1,24 +1,14 @@
-# Issue #7 — Architecture and collaboration gate
-Date: 2026-10-31
-Status: documentation drafted; awaiting review and explicit approvals. No product code changed.
+# Issue #7 — Architecture gate (historical drafting record)
 
-## Scope delivered
-- ADR-001 tenancy, ADR-002 identity and authorization, ADR-003 identifier options.
-- GitHub private repository collaboration-security checklist linked to issue #6.
+**Historical snapshot:** Original draft prepared 2026-10-31 while decisions were still PROPOSED and GitHub was private/unprotected. The state described in that initial report has since changed. The engineering lead accepted ADR-001/ADR-002/ADR-003 on 2026-10-31 and repository `main` is now protected. The current factual record is [ISSUE-7-ARCHITECTURE-APPROVAL.md](ISSUE-7-ARCHITECTURE-APPROVAL.md); use that report and the [decision ledger](../../architecture/decision-ledger.md) rather than treating this draft's historical status as current.
 
-## Explicit non-decisions
-Owner business policy remains OPEN: D-001/D-002/D-008/D-021/D-022/D-023/D-024; ID type D-017 and relationship flexibility D-027 require lead technical approval. No SRS status was changed. No migrations, models, roles, policies, dependencies, tests or configuration were changed.
+## Original scope
+- Draft tenant isolation, identity and authorization architecture, and identifier alternatives.
+- Document collaboration/protection risks and product-owner policy questions.
+- No business migrations, roles or other application implementation.
 
-## Git
-Branch: `docs/7-architecture-and-collaboration-decisions`.
-PR: draft, to be linked after publication.
-Merge: not performed.
+## Original non-decisions
+Support access, full role matrix, retention, self-review, suspension, invitations/MFA and domain relationship policies still require product-owner decisions. Original documentation-only PR was merged as #8; subsequent engineering acceptance is recorded separately.
 
-## Validation
-GitHub API confirmed `main.protected=false`; attempts to read rulesets returned 403 (plan message) and branch protection returned 403 (integration scope). Changes consist only of Markdown files; no application tests were run for these documentation proposals.
-
-## Next actions
-1. Owner enables and verifies private `main` protection before giving collaborator Write.
-2. Review ADR-001 and ADR-003 engineering tradeoffs.
-3. Obtain owner decisions for the OPEN policies before implementing membership/RBAC and tenant content access.
-4. Create implementation-specific Issues with tests and scope only after approvals.
+## Validation history
+Earlier branch metadata indicated `main.protected=false` while the repo was private. The owner later made the repo public and enabled branch protection. As of the updated audit, branch metadata reports `protected=true`, but the GitHub integration cannot inspect detailed protection rules (403).

@@ -1,19 +1,22 @@
 # Architecture foundation
 
-## Decision for this phase
+## Accepted foundation
+Laravel 13 / PHP 8.4, Filament 5 administrative panel and a pragmatic **modular monolith with lightweight DDD**, one application and one deployment unit. Business rules belong in application Actions/Services and domain rules, **not** Filament Resources, controllers or views. Favor framework conventions and the smallest testable design before adding abstractions.
 
-Use Laravel's standard directory structure as a pragmatic modular monolith with lightweight domain-driven design. One application and one deployment unit keep transactions, local setup and debugging straightforward. No business modules exist yet.
+Conceptual flow: Presentation → Application → Domain → Infrastructure. Keep modules cohesive; do not introduce speculative repositories, CQRS, event buses or microservices.
 
-Conceptual flow: Presentation -> Application -> Domain -> Infrastructure. Presentation (routes, controllers, Blade and any future admin resources) handles transport, validation and rendering; future application actions coordinate use cases, domain rules enforce approved behavior, and infrastructure implements persistence and integrations. Keep business rules out of presentation so they can be tested and reused across HTTP, console and jobs.
+## Accepted cross-cutting ADRs (2026-10-31)
+- [ADR-001](../adr/ADR-001-tenant-isolation.md): shared MySQL 8.x schema, `organizations` root and tenant `organization_id` enforcement in database and application.
+- [ADR-002](../adr/ADR-002-identity-authorization.md): global identity; multiple organization memberships supported; organization/assignment-scoped deny-by-default authorization; separate platform and tenant capability.
+- [ADR-003](../adr/ADR-003-identifiers-and-integrity.md): internal `BIGINT UNSIGNED` PK/FKs and public immutable ULIDs.
 
-Use Laravel dependency injection, Eloquent, migrations, validation and native testing before adding abstractions. Introduce module namespaces and explicit public application entry points only with approved requirements. Avoid direct cross-module internals; review dependencies as modules appear. Add focused tests around approved rules and boundaries. Do not create empty module folders, per-model repository interfaces, CQRS, event buses or microservices.
+These are **engineering approvals**, not silent approval of unresolved product-owner rules. Implement only against explicit acceptance criteria and with negative cross-tenant tests.
 
-## Existing structure
+## Implementation status
+The repository contains Laravel bootstrap, PHPUnit/Pint/CI, MySQL migration validation, Filament 5 and its `/admin` panel. **No tenancy, membership, custom RBAC, document/evidence domain or workflow has been implemented yet.** Built-in users/cache/jobs migrations remain provisional framework scaffolding. No production administrator access policy is in place.
 
-`app/` contains framework scaffolding only (controller base, provisional User model and provider). `bootstrap/`, `config/` and `routes/` configure Laravel. `resources/` and `public/` contain the default bootstrap page and Vite assets. `database/` retains only the three Laravel migrations, factory and empty seeder. `tests/` covers framework bootstrap. No authentication routes or business workflows are implemented.
+## Business and compliance policy still requiring product-owner decisions
+D-001 support access, D-002 role matrix/delegation, D-008 location/retention, D-022 self-review/separation of duties, D-023 suspension, D-024 invitation/reset/MFA, and D-027 domain relationship flexibility. These cannot be invented as part of a technical implementation. The data model's capacity for multi-org membership does not itself grant membership.
 
-## Deferred, requiring owner/lead decisions
-
-Tenant isolation strategy, organization/membership schema, SaaS identity model, authentication, authorization/RBAC, admin UI, Arabic RTL product UI design, workflow states, document storage/versioning, maturity rules and integrations remain unresolved. Default users/password-reset/session tables are provisional framework infrastructure, not an approved identity design. No D-002, D-017, D-021 or other OPEN/PROPOSED decision is approved by this implementation. Revisit the provisional schema before business migrations.
-
-MySQL 8.x is the target. SQLite bootstrap tests cannot validate MySQL-specific constraints or future tenant isolation. Deployment, tenancy packages and additional platform services are outside this phase.
+## Quality controls
+Use MySQL-specific migration/constraint tests as domain schema evolves; SQLite bootstrap tests alone cannot prove tenant integrity. Preserve immutable historical versions. Keep private evidence private. Record changes and evidence in `docs/engineering/reports/`.

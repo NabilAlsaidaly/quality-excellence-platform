@@ -1,20 +1,21 @@
 # Engineering governance
 
-## Project purpose
-Arabic RTL multi-tenant quality/excellence platform. Organization admins and organizational quality departments have distinct duties; quality departments create approaches, assign owners, review evidence/document changes, and later manage maturity and reference-framework assessments. Saving review-eligible changes triggers quality review automatically; no manual submit button. Maturity has five sequential stages governed by approved human assessments.
+## Project
+Arabic RTL multi-organization quality/excellence SaaS. Institutional approaches, evidence and human review advance through five maturity stages: **التوجه → النظام → التنفيذ → القياس → التحسين والتطوير**. Eligible saves trigger review automatically; there is no extra submit-for-review button. No invented numeric global maturity score.
 
-## Reference
-Complete working specification (SRS + team governance v3.0): [Google Docs reference](https://docs.google.com/document/d/1QAPmgGzxfhe_BhBSwsSyCruajVq4unNli-cairQ_mZs/edit).
-The SRS contains a decision register with OPEN items. Do not use those proposals as implicit permissions.
+## Authoritative references
+- [SRS v3 (owner requirement reference)](https://docs.google.com/document/d/1QAPmgGzxfhe_BhBSwsSyCruajVq4unNli-cairQ_mZs/edit).
+- [Accepted ADRs](../architecture/foundation.md) — technical decisions only.
+- [Current GitHub collaboration security](collaboration-security.md).
+- [Decision ledger](../architecture/decision-ledger.md) — what is approved vs what requires owner policy.
 
-## Workflow
-Issue → task branch → focused changes + real tests → engineering completion report → Draft PR → lead review/merge.
+Never convert an SRS OPEN business decision into permission by inference.
 
-## Active blocking risk
-Private GitHub repository rulesets endpoint returned 403 (upgrade plan or make public), and branch-protection introspection returned 403 via integration. `main` is **not verified as technically protected**. Keep repo private and resolve GitHub permission/protection strategy before granting contributor Write access.
+## Current state
+Laravel 13 + PHP 8.4 + Filament 5 and working CI are in `main`. The public repository's `main` has `protected=true`; detailed classic rules cannot be read through the integration. `zeko-create` has Write access. Actual contributor push/review enforcement must be checked in GitHub Settings.
 
-## Task report template
-Each task writes `docs/engineering/reports/<ISSUE-ID>.md` with executive summary, SRS/AC mapping, changed files, test commands/results, DB and security impacts, unresolved decisions, branch, commit and PR link.
+## Contribution workflow
+Approved Issue → scoped branch from current `main` → focused code + actual test evidence → permanent report in `docs/engineering/reports/` → PR → review and CI → merge. No arbitrary packages, domain policies or direct main edits.
 
-## Scope
-This is a governance baseline only. Laravel scaffolding, migrations, model design, role definitions, and product implementation will happen in separately approved Issues.
+## Reporting
+A task report must state SRS/AC, files, tests/results, DB/security changes, remaining owner decisions, branch, commits and PR. Do not claim a test ran merely because a CI configuration exists. Historical reports may contain past statuses; consult the [current audit](reports/ISSUE-7-ARCHITECTURE-APPROVAL.md) for up-to-date state.

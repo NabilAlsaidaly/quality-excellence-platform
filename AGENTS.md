@@ -1,38 +1,31 @@
 # AI Engineering Instructions — Quality & Excellence Platform
 
 ## Authority
-- Product-owner-approved requirements are the business source of truth.
-- Consult relevant SRS sections, ADRs, and the specific GitHub Issue before coding.
-- SOURCE means source-derived, not approval of unspecified details. OPEN and PROPOSED are **not** approved instructions.
-- Raise conflicts and blockers instead of inventing rules, permissions, status transitions, maturity percentages, or scope.
+- Owner-approved SRS is the source of **business** requirements.
+- **Accepted technical ADRs**: [ADR-001](docs/adr/ADR-001-tenant-isolation.md), [ADR-002](docs/adr/ADR-002-identity-authorization.md) and [ADR-003](docs/adr/ADR-003-identifiers-and-integrity.md).
+- Consult [decision ledger](docs/architecture/decision-ledger.md) and task Issue before coding. An engineering approval **never** fills in OPEN owner policies.
+- Stop and report requirements conflicts. Do not invent roles, permissions, lifecycle rules, maturity percentages, audit outcomes or external integrations.
 
 ## Architecture
-- Laravel pragmatic Modular Monolith with light DDD.
-- Keep business logic in application actions/services/domain rules—not Filament resources, controllers or views.
-- Avoid God Classes, unnecessary abstractions, duplicate services, and speculative dependencies.
+- Laravel pragmatic Modular Monolith + lightweight DDD. Keep business rules in domain/application Actions/Services, not Filament Resources, controllers or views.
+- Filament 5 is installed for administrative presentation; no new packages without explicit authorization.
+- Shared MySQL + tenant `organization_id`; global identities support organization memberships; scoped deny-by-default authorization; internal BIGINT + external ULID. Test tenant isolation at service, DB, jobs, files and downloads.
 
 ## Security
-- Enforce tenant isolation and authorization in the backend and cross-tenant relationships, jobs, storage, downloads, and tests.
-- Keep documents private and historical revisions immutable.
-- Never commit secrets, credentials, production dumps, or personal data.
+- No implicit platform-admin access to private tenant content. No user-provided organization ID is trusted for authorization.
+- Protect historical approvals/evidence revisions; never expose private documents.
+- Do not commit secrets, live tenant data, production dumps or private owner materials to this PUBLIC GitHub repository.
 
-## Git and team workflow
-- Never work directly on main/master; create a short-lived task branch from the updated default branch.
-- Scope changes to approved paths and requirements of the assigned Issue.
-- Never merge your own PR, force-push protected branches, modify repository rules, secrets, deployment or CI without explicit authorization.
-- Open a Draft PR and request lead review. Branch protection must be configured in GitHub; this file is not a technical access control.
-- If technical branch protection is unavailable for a private repo, flag the risk before adding Write collaborators.
+## Workflow
+- Never develop directly on `main`. Start from updated `main`, use an Issue-scoped branch, push and open a PR.
+- Never self-merge or bypass protection; do not modify CI/permissions/deployment outside the approved Issue.
+- GitHub branch metadata confirms `main.protected=true`; exact enforcement needs owner review in GitHub Settings. Text-only `CODEOWNERS` does not itself enforce access.
 
-## Quality gates
-- Inspect existing code; choose the smallest correct design.
-- Test relevant positive, negative, authorization, cross-tenant, concurrency, and regression paths.
-- Run actual formatting, static analysis, and automated tests. Report exact command results; never claim tests passed without evidence.
-- Arabic RTL for user-facing screens and messages.
-
-## Mandatory handover
-Write `docs/engineering/reports/<ISSUE-ID>.md` with requirements/acceptance IDs, changes, touched files, DB impacts, security, test commands/results, risks, branch, commits, and PR URL.
-- If operations fail, report failures accurately.
-- Reduce tokens by selective reading and concise outputs, **never** by dropping tests or safeguards.
+## Validation and report
+- Run actual formatting, automated positive/negative/cross-tenant tests and relevant MySQL constraints, not SQLite tests alone for tenant behavior.
+- User-facing UI is Arabic RTL.
+- Write `docs/engineering/reports/<ISSUE-ID>.md` with SRS/AC, summary, touched paths, DB/security impact, test results, risks, branch, commits and PR.
+- If any test fails, document and fix it; never fabricate success.
 
 ## Stop conditions
-Unapproved business decisions, cross-tenant risk, destructive DB changes, unsafe credential access, scope expansion, and undocumented failing tests must be escalated.
+Unknown owner policy, privilege escalation, cross-tenant risk, unauthorized data deletion/migration, unapproved package, secret access or unexpected scope expansion.

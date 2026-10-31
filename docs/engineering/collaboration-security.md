@@ -1,22 +1,24 @@
-# GitHub collaboration security — private repository
-Status: **BLOCKED ON OWNER ACTION**. Source: issue #6. Verified 2026-10-31.
+# GitHub collaboration security — current verified state
 
-## Actual state
-- Repository `NabilAlsaidaly/quality-excellence-platform` is private and owned by a personal account.
-- GitHub API returned `main.protected = false`.
-- GitHub ruleset read returned 403: "Upgrade to GitHub Pro or make this repository public to enable this feature."
-- Branch protection read via integration returned 403: "Resource not accessible by integration".
-- No repository plan upgrade, branch protection change or collaborator invitation has been made.
+**Updated 2026-10-31.** Earlier private-repository blocker is superseded by the verified facts below.
 
-## Owner action checklist
-1. Keep project private. Use an eligible GitHub plan supporting branch protection on private repositories, or a suitable organization with granular roles and an eligible plan.
-2. Configure rules for `main`: require PR, at least one reviewer other than author, CODEOWNERS review when available, required `foundation` status check, no force-push or delete, no unauthorized bypass.
-3. Validate using separate contributor permissions: push to `main` rejected, unauthorized merge rejected; accepted PR through checks and owner review only.
-4. Enforce distinct GitHub accounts, MFA, and least-privilege access; secrets and production deployment remain with the lead.
-5. Then invite collaborator. Until demonstrated protection, **do not grant Write on this personal private repo**.
+## Verified via connected GitHub repository metadata
+- Repository: `NabilAlsaidaly/quality-excellence-platform`; **PUBLIC** on GitHub (visibility `public`).
+- Default `main` branch metadata: **`protected: true`**.
+- `zeko-create` is a repository collaborator with **write** permission.
+- GitHub Actions `Foundation CI` completed successfully on `main` after Filament and architecture documentation merges.
+- The `main` protection **detail** endpoint returns **403 Resource not accessible by integration**; classic branch protection cannot be independently audited through this connector. Empty `rulesets` does not imply absence of classic protection.
 
-## Critical limitation
-Text files `AGENTS.md`, `CONTRIBUTING.md`, and `CODEOWNERS` without enforced reviewer rules cannot prevent a user with Write privileges from pushing to `main`. A fork of a private personal repository is not a substitute for upstream branch protection if collaborator retains Write. A controlled patch/review handoff without Write access is the temporary alternative.
+## Controls still requiring owner verification in GitHub Settings
+- Require PR before merge; at least one qualified reviewer where the selected workflow supports it; required `foundation` CI check; up-to-date branch rule as appropriate.
+- Prevent force-push and branch deletion; inspect and minimize owner/admin bypass.
+- Verify with `zeko-create` that direct push to `main` is rejected while task-branch push and PR are allowed.
+- Ensure MFA for collaborators; secrets and deployment access remain restricted. Do not put client data, credentials or private contractual documents into a **public** repository.
+
+**Integrity note:** Branch `main.protected=true` proves a rule exists, **not** which individual protections are enabled. Owner-permitted merges without a visible external approval do not demonstrate contributor-side enforcement.
+
+## Process
+Use Issue → branch from latest `main` → tests → engineering report → PR → review → merge. Default to no bypass and no direct main edits. Maintain `.github/CODEOWNERS` as a review suggestion only; it is not sufficient without enabled rules.
 
 References:
 - https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches

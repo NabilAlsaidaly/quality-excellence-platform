@@ -2,7 +2,7 @@ name: Foundation CI
 
 on:
   push:
-    branches: [main, chore/phase-01-laravel-bootstrap]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -59,6 +59,8 @@ jobs:
       - run: cp .env.example .env
       - run: php artisan key:generate
       - run: php artisan --version && php artisan about
+      - name: Verify Filament admin routes
+        run: php artisan route:list --path=admin
       - name: Verify target MySQL migrations
         run: |
           php artisan migrate --force
@@ -80,4 +82,5 @@ jobs:
           trap 'kill "$server_pid"' EXIT
           curl --fail --retry 10 --retry-delay 1 --retry-connrefused http://127.0.0.1:8000/up
           curl --fail http://127.0.0.1:8000/ > /dev/null
+          curl --fail http://127.0.0.1:8000/admin/login > /dev/null
           php artisan optimize:clear
