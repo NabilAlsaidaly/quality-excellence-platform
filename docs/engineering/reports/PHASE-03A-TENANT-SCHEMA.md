@@ -2,6 +2,8 @@
 
 Date: 2026-10-31 (Asia/Damascus). Contract: Issue #11 and owner-supplied phase3A.md. This is implementation evidence, not approval of unresolved product policy.
 
+PR #15 trigger-migration safety review: see section 25 for the current correction, deployment prerequisites and new verification. Earlier run/commit evidence below remains historical.
+
 ## 1. Executive Summary
 
 IMPLEMENTED: additive organizations, organization_memberships and organizational_units schema, models/relationships/factories, public ULID generation/model immutability, composite same-tenant parent FK, restrictive references and MySQL direct-self-parent triggers. Redis development Compose, PhpRedis cache/queue configuration, after-commit behavior, independent integration suites and CI extensions are implemented. TESTED locally and in successful remote CI. Published as Draft PR #15; complete and ready for engineering-lead review, with deferred authorization/cycle/production policies explicitly listed. No UI, role/permission, tenant authorization workflow or production change.
@@ -67,7 +69,7 @@ Normal Eloquent model with its own BIGINT id, explicit belongsTo user/organizati
 
 NULL parent permits roots. Composite FK enforces tenant integrity, not graph acyclicity. MySQL CHECK cannot reference AUTO_INCREMENT id; narrow BEFORE INSERT/UPDATE triggers reject direct self-parenting even for raw SQL. Eloquent saving also rejects direct self-parenting in isolated SQLite tests. Complete multi-level cycle detection and safe concurrent parent changes remain DEFERRED to an approved Application Action. No tenant organization migration/reparent API was added.
 
-MySQL binary logging initially rejected trigger creation (error 1419). Disposable local/CI server initialization sets log_bin_trust_function_creators=1 using the known service-only root fixture, then migrations/tests use the DB-scoped test user. No setting on existing/shared/production MySQL was changed. Future shared migration accounts/settings require lead review. Missing privileges fail migration rather than silently dropping the invariant. MySQL DDL is not transactionally rolled back as a whole; verify prerequisites before non-disposable migration and handle any partial failure under a reviewed recovery plan.
+MySQL binary logging initially rejected trigger creation (error 1419). The initial Phase 03A test setup changed a disposable server setting; that workaround is **removed by the PR #15 correction**. Current CI uses the existing disposable migration-operator account only for migration-bearing steps and leaves global settings unchanged; runtime steps retain database-scoped credentials. Trigger exceptions now compensate their newly created empty table under a WRITE lock and retain the original failure; existing data/unsafe cleanup requires explicit operator recovery. See section 25. MySQL DDL still commits per statement; this is not transaction-wide atomicity.
 
 ## 11. Redis Architecture and Configuration
 
@@ -124,7 +126,7 @@ No existing tests changed or disabled. Static analysis/coverage/HTTP tenant auth
 
 ## 18. CI Results
 
-Existing MySQL 8.4 service, PHP/Laravel validation, SHA-pinned actions, all framework tests, Pint, frontend/HTTP checks and Issue #4 scope-validation block retained. Added pinned Redis service/health, redis PHP extension, disposable trigger initialization and separate MySQL/Redis test steps. MySQL integration cleanup is followed by migration for existing HTTP/session checks. No repository secrets, write token permission or deployment steps. Integration absence/errors fail the job.
+Existing MySQL 8.4 service, PHP/Laravel validation, SHA-pinned actions, all framework tests, Pint, frontend/HTTP checks and Issue #4 scope-validation block retained. Added pinned Redis service/health, redis PHP extension and separate MySQL/Redis test steps. The initial disposable global-setting step is superseded/removed by section 25. MySQL integration cleanup is followed by migration for existing HTTP/session checks. No repository secrets, write token permission or deployment steps. Integration absence/errors fail the job.
 
 Initial remote [run 41231860965](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41231860965), adfa8d7: **FAILED**, Redis step exit 2, four errors/zero assertions. All preceding validation/installation/audit/route/migration/17-test SQLite and 15-test MySQL steps passed. Redis's environment guard correctly rejected inherited MySQL settings before migrations; PHP exposes CI environment variables in $_SERVER, which Laravel Dotenv can read ahead of PHPUnit's forced $_ENV/getenv. Corrected both dedicated configs by forcing the same safe values in server AND env entries. The safety check and test assertions remain intact. Pint/build/HTTP steps were SKIPPED in this failed run, not claimed as passed; subsequent full run is recorded below.
 
@@ -197,3 +199,61 @@ Repository: https://github.com/NabilAlsaidaly/quality-excellence-platform. Base 
 - `tests/Integration/MySql/TenantIntegrityTest.php`
 - `tests/Integration/Redis/RedisInfrastructureTest.php`
 - `tests/Support/MySqlTestCase.php`
+
+## 25. PR #15 trigger-migration safety and portability correction
+
+### Review finding
+
+**High severity — corrected:** organizational_units CREATE TABLE and two CREATE TRIGGER statements commit separately on MySQL. Error 1419 (or another trigger failure) could leave a table/first trigger without Laravel's migration journal entry, causing the next ordinary migrate to fail on table-exists. Initial successful CI had masked deployment privilege requirements by changing a global setting on its disposable server. That step has been removed; no global setting is changed by this correction, its tests or CI.
+
+### Minimal implementation
+
+Preserve the original table schema, migration identity and both trigger bodies. Wrap only trigger installation after this invocation's successful Schema::create. On exception, acquire a MySQL WRITE table lock, check emptiness and drop only that new empty table, automatically removing any first trigger. The lock makes the empty check/DROP indivisible with respect to competing table writers. Release the lock and rethrow the original trigger error so Laravel cannot journal a successful migration. A pre-existing table fails before entering this cleanup path and is never adopted/replaced. Unexpected rows are retained. LOCK/SELECT/DROP/UNLOCK failure raises an explicit operator-recovery exception containing the original trigger exception as its cause; no success/constraint bypass is manufactured.
+
+No business rule, FK, self-parent guarantee, existing test assertion, dependency, UI path or global setting was removed/weakened. This unmerged phase migration is corrected in place; it does not rerun or mutate already-recorded successful deployments.
+
+### Deployment prerequisites and remaining risks
+
+- Use one approved migration operator with appropriate schema CREATE/ALTER/REFERENCES/TRIGGER privileges and SELECT/DROP/LOCK TABLES for cleanup. Under binary logging, the provider may require additional administrative privilege for CREATE TRIGGER (1419). Review actual grants/provider support before rollout. Application runtime credentials must not inherit these privileges.
+- CI/local tests use the existing root fixture **only in the disposable MySQL container** for migration-bearing checks; other CI/runtime HTTP steps use the original scoped service account. The restricted fixture reproduces 1419. No GRANT, privilege escalation or server-setting modification is performed by the migration/tests/workflow.
+- A provider that refuses required trigger privileges under its existing configuration is a deployment blocker; do not omit the invariant, alter global logging/trust settings, or assume ordinary hosting credentials are portable. An alternate design/operations policy needs lead approval outside this patch.
+- Pause HTTP/background/scheduled/external writes until migrations and integrity verification complete. A trigger definer is the creating operator account; preserve its existence/activation privileges and review exports/replicas/managed-service import behavior. No environment-specific DEFINER is hard-coded.
+- This is compensating cleanup, not a multi-statement DDL transaction. Process death, disconnect/failover, earlier table/FK creation failure or revoked cleanup privileges can still leave artifacts requiring operator recovery. Old failed-attempt tables are deliberately not auto-adopted or dropped. Keep writes paused; inspect table/data, triggers and journal; remove only an operator-verified empty failed-attempt table with provenance/dependency/backup review, or reconcile preserved rows. Never run migrate:fresh or fabricate journal entries on shared data. Full procedure is in docs/setup/redis-local.md.
+
+Official review references: [MySQL implicit DDL commits](https://dev.mysql.com/doc/refman/8.4/en/implicit-commit.html), [CREATE TRIGGER privileges/definer](https://dev.mysql.com/doc/refman/8.4/en/create-trigger.html), [binary logging restrictions](https://dev.mysql.com/doc/refman/8.4/en/stored-programs-logging.html). No claim of portability to providers that prohibit triggers is made.
+
+### Regression and failure-path evidence
+
+New `tests/Integration/MySql/TriggerMigrationSafetyTest.php` covers six meaningful scenarios against real MySQL:
+
+1. Actual restricted-account error **1419** after table creation with @@GLOBAL.log_bin=1 and trust_function_creators=0: no table/triggers/journal residue, existing organization retained, ordinary migrate retry succeeds with both triggers enforced; both global settings remain unchanged.
+2. Injected second-trigger exception after confirming the first trigger exists: cleanup removes both table and first trigger, original error propagates, normal retry succeeds and rejects raw self-parent update (1644).
+3. Existing table with a synthetic row: actual error 1050 propagates, row and both triggers remain.
+4. Independent competing connection attempts INSERT between empty check and DROP: actual lock-wait error **1205**, then successful cleanup/retry. Only that test session's timeout is shortened; no global setting is changed.
+5. Unexpected concurrent row before cleanup: row is preserved, journal absent, explicit recovery error retains original cause. Fixture-only teardown is separate from application recovery.
+6. Injected cleanup DROP denial: table retained, journal absent and explicit error retains original trigger failure. Tests disarm only their own fault injection for fixture teardown.
+
+Local environment: existing Laravel/PHP/PhpRedis tooling retained; separate task container `quality-pr15-mysql` on loopback 33068, unchanged MySQL 8.4 defaults, and Compose project `quality-pr15-review` Redis on loopback 6387. No developer database was used. `P` remains the documented local `php -d sys_temp_dir=.local-tools/tmp` prefix.
+
+| Command / check | Actual result |
+| --- | --- |
+| P vendor/bin/phpunit --configuration phpunit.mysql.xml --stop-on-error --stop-on-failure | Exit 0; **21 tests, 91 assertions** (all original 15/40 plus six recovery/locking cases) |
+| P artisan test | Exit 0; **17 tests, 60 assertions**, original SQLite suite intact |
+| P vendor/bin/phpunit --configuration phpunit.redis.xml | Exit 0; **4 tests, 19 assertions**, real Redis |
+| P vendor/bin/pint --test | Exit 0, passed |
+| git diff --check | Exit 0 |
+
+An intermediate recovery version passed 20 MySQL tests/80 assertions before adding locked cleanup and the competing-writer case; the final count above supersedes it without suppressing failures. Final successful local total: **42 tests, 170 assertions**, zero failed/skipped. CI and publication evidence for this correction are added below after observation.
+
+### Changed paths for this correction
+
+- database/migrations/2026_10_31_000003_create_organizational_units_table.php — locked, non-destructive compensation for trigger failures.
+- tests/Integration/MySql/TriggerMigrationSafetyTest.php — actual MySQL failure/retry/data/lock coverage; original tests unchanged.
+- .github/workflows/ci.yml — remove global-setting mutation, scope privileged disposable credentials to migration steps.
+- docs/setup/redis-local.md — deployment privilege/definer/maintenance/recovery prerequisites; remove global-setting instructions.
+- docs/architecture/tenant-schema-foundation.md — explain compensating behavior and its boundary.
+- This permanent report — findings, test evidence, limitations and delivery records.
+
+### Correction delivery status
+
+Working branch: feat/11-tenant-schema-foundation. Existing Draft PR: https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/15. Review correction is locally tested; commit/push and new CI verification pending at this point. No merge or deployment performed. Stop for engineering-lead review after verified publication.

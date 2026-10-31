@@ -68,24 +68,32 @@ docker run --detach --rm --name quality-phase03a-mysql --publish 127.0.0.1:33068
 docker exec quality-phase03a-mysql mysqladmin ping --silent
 ```
 
-MySQL cannot use AUTO_INCREMENT id in a CHECK expression. The schema uses two narrow row-local triggers to reject a unit as its own parent even through raw SQL. When binary logging is enabled, MySQL requires appropriate migration privileges or an administrator-approved `log_bin_trust_function_creators` setting. For **this disposable container only**, initialize it as follows; no production/server-setting change is authorized by these instructions:
-
-```sh
-docker exec --env MYSQL_PWD=disposable-ci-root-password quality-phase03a-mysql mysql --user=root --execute 'SET GLOBAL log_bin_trust_function_creators = 1'
-```
-
-The tests/migrations then use the database-scoped test user, not root. Any deployment/migration-account policy needs separate lead review. Missing trigger privileges cause migration failure; no constraint is silently omitted. Complete multi-level cycle prevention is deferred to an approved Application Action; FKs/triggers here do not solve that problem.
+MySQL cannot use AUTO_INCREMENT id in a CHECK expression. Two narrow row-local triggers reject a unit as its own parent even through raw SQL. Use an approved migration operator capable of creating triggers under the server's existing binary-logging policy. Do not change global settings or grant administration privileges to the runtime application account. For the disposable service above, the pre-existing root fixture supplies migration privileges; normal application credentials remain database-scoped. The integration suite also uses the restricted fixture to reproduce real error 1419 under unchanged MySQL defaults. Full multi-level cycle prevention remains deferred.
 
 ```powershell
 $env:MYSQL_TESTS_ENABLED='1'
 $env:DB_HOST='127.0.0.1'
 $env:DB_PORT='33068'
-$env:DB_USERNAME='quality_platform_ci'
-$env:DB_PASSWORD='disposable-ci-password'
+$env:DB_USERNAME='root' # disposable container migration operator only
+$env:DB_PASSWORD='disposable-ci-root-password'
 php vendor/bin/phpunit --configuration phpunit.mysql.xml
 Remove-Item Env:MYSQL_TESTS_ENABLED,Env:DB_HOST,Env:DB_PORT,Env:DB_USERNAME,Env:DB_PASSWORD
 ```
 
 Use a dedicated shell for integration variables so normal commands cannot accidentally target the test schema. Once finished, stop only the container you created: `docker stop quality-phase03a-mysql` (its --rm flag removes it). Do not stop other containers or erase existing volumes. MySQL migrations are additive for existing users and introduce no data backfill; review backups/rollbacks separately before any shared environment migration. The new tables' restrictive foreign keys are not permission checks.
+
+## Trigger migration deployment prerequisites and recovery
+
+Before any shared rollout, the engineering lead/migration operator must verify:
+
+- MySQL 8.4/InnoDB with required trigger support, and a tested backup/recovery plan. This task authorizes no deployment.
+- A separate migration account with schema CREATE/ALTER/REFERENCES and TRIGGER privileges; SELECT, DROP and LOCK TABLES are required for compensating cleanup. Creating triggers with binary logging enabled may additionally require an administrative privilege under MySQL/provider policy (error 1419). Inspect `SHOW GRANTS` and `SELECT @@GLOBAL.log_bin, @@GLOBAL.log_bin_trust_function_creators` read-only. No migration, test or CI step changes either setting.
+- The provider permits trigger creation under those existing settings. If it does not, deployment is blocked pending an approved architecture/operations decision. Do not skip the triggers, turn off binary logging or grant broad privileges to the runtime user to manufacture success. Container root credentials here are test fixtures, not a production deployment prescription.
+- HTTP writes, workers, schedulers and external writers are paused, and only one migration operator runs. Application maintenance mode alone does not stop background/external writers. Keep writes paused until migrations and integrity checks pass.
+- The trigger definer is the creating migration account (no explicit cross-environment DEFINER is hard-coded). Its account and required trigger-activation privileges must remain valid; managed-service imports, replicas and definer removal need separate operator review.
+
+The units migration now compensates a trigger-installation exception **only after its own table creation succeeds**. It obtains a WRITE table lock, checks the new table is empty, then drops that table (which removes any first trigger) and rethrows the original failure. The lock prevents a write racing between the empty check and DROP. Existing tables never enter this cleanup path. Unexpected rows are preserved. If LOCK/SELECT/DROP/UNLOCK fails, it raises an explicit recovery error with the original trigger failure as its cause; it never marks the migration successful or disables an invariant. After successful cleanup and correcting migration-account prerequisites, ordinary `php artisan migrate` retries normally; no migrate:fresh or manually fabricated migration-log entry is needed.
+
+MySQL commits these DDL statements individually, so this is compensating recovery, not transaction-wide atomic DDL. Process termination, connection loss, failover, earlier table/FK creation failure, cleanup privilege loss or unsupported locking can still require operator intervention. Keep the application offline and inspect `migrations`, `information_schema.TRIGGERS` and the actual table before retrying. The patch intentionally refuses to adopt/drop a pre-existing table left by an older failed attempt. If such a table exists with no migration entry, the operator must establish its provenance, dependencies and contents from a backup: authorize removal only of a verified empty failed-attempt table, or reconcile/preserve rows under a reviewed recovery plan. Never blindly drop a populated table, use migrate:fresh on shared data, or mark the migration complete without checking both triggers and the foreign keys. This correction does not modify already-recorded successful migrations.
 
 Official references: [Laravel Redis](https://laravel.com/docs/13.x/redis), [queues and transactions](https://laravel.com/docs/13.x/queues#jobs-and-database-transactions), [MySQL foreign keys](https://dev.mysql.com/doc/refman/8.4/en/create-table-foreign-keys.html), [CHECK limitations](https://dev.mysql.com/doc/refman/8.4/en/create-table-check-constraints.html), [trigger binary-logging requirements](https://dev.mysql.com/doc/refman/8.4/en/stored-programs-logging.html), [official Redis image](https://hub.docker.com/_/redis).

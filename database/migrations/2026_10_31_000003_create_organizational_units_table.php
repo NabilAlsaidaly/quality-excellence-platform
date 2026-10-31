@@ -26,16 +26,45 @@ return new class extends Migration
 
         // MySQL CHECK expressions cannot reference AUTO_INCREMENT id columns.
         // These row-local guards prevent direct self-parenting, not longer cycles.
-        if (DB::getDriverName() === 'mysql') {
-            foreach (['INSERT', 'UPDATE'] as $event) {
-                $name = 'units_no_self_parent_'.strtolower($event);
-                DB::unprepared("CREATE TRIGGER {$name} BEFORE {$event} ON organizational_units
-                    FOR EACH ROW BEGIN
-                        IF NEW.parent_id IS NOT NULL AND NEW.parent_id = NEW.id THEN
-                            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A unit cannot be its own parent';
-                        END IF;
-                    END");
+        try {
+            if (DB::getDriverName() === 'mysql') {
+                foreach (['INSERT', 'UPDATE'] as $event) {
+                    $name = 'units_no_self_parent_'.strtolower($event);
+                    DB::unprepared("CREATE TRIGGER {$name} BEFORE {$event} ON organizational_units
+                        FOR EACH ROW BEGIN
+                            IF NEW.parent_id IS NOT NULL AND NEW.parent_id = NEW.id THEN
+                                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A unit cannot be its own parent';
+                            END IF;
+                        END");
+                }
             }
+        } catch (Throwable $triggerFailure) {
+            // MySQL DDL implicitly commits. Compensate only after our CREATE
+            // succeeded; a pre-existing table never enters this cleanup path.
+            try {
+                // Serialize the empty check and DROP against concurrent writers.
+                DB::unprepared('LOCK TABLES organizational_units WRITE');
+                try {
+                    if (DB::table('organizational_units')->exists()) {
+                        throw new RuntimeException('The new organizational_units table contains rows and was preserved.');
+                    }
+
+                    // Also removes any trigger installed before the failure.
+                    Schema::drop('organizational_units');
+                } finally {
+                    DB::unprepared('UNLOCK TABLES');
+                }
+            } catch (Throwable $cleanupFailure) {
+                throw new RuntimeException(
+                    'Trigger installation failed; automatic cleanup could not complete safely. '
+                    .$cleanupFailure->getMessage()
+                    .' Keep writes paused and have the migration operator inspect organizational_units before retrying.',
+                    0,
+                    $triggerFailure,
+                );
+            }
+
+            throw $triggerFailure;
         }
     }
 

@@ -147,11 +147,12 @@ jobs:
       - run: php artisan --version && php artisan about
       - name: Verify Filament admin routes
         run: php artisan route:list --path=admin
-      - name: Prepare trigger creation on disposable MySQL service only
-        env:
-          MYSQL_SERVICE_CONTAINER: ${{ job.services.mysql.id }}
-        run: docker exec --env MYSQL_PWD=disposable-ci-root-password "$MYSQL_SERVICE_CONTAINER" mysql --user=root --execute 'SET GLOBAL log_bin_trust_function_creators = 1'
       - name: Verify target MySQL migrations
+        # A migration operator needs trigger/binlog privileges. Runtime HTTP
+        # retains the database-scoped job credentials; no SET GLOBAL is used.
+        env:
+          DB_USERNAME: root
+          DB_PASSWORD: disposable-ci-root-password
         run: |
           php artisan migrate --force
           php artisan migrate:status
@@ -162,6 +163,8 @@ jobs:
       - name: Run disposable MySQL integrity integration tests
         env:
           MYSQL_TESTS_ENABLED: '1'
+          DB_USERNAME: root
+          DB_PASSWORD: disposable-ci-root-password
         run: |
           php vendor/bin/phpunit --configuration phpunit.mysql.xml
           php artisan migrate --force

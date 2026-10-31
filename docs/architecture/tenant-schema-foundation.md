@@ -18,6 +18,8 @@ Use three new migrations, never rewrite applied users migrations. Use native Has
 
 MySQL CHECK cannot reference an AUTO_INCREMENT column, so direct self-parent prevention will use narrow INSERT/UPDATE triggers on MySQL. SQLite tests retain composite FKs and model self-parent checks; MySQL tests prove actual trigger/constraint enforcement, including raw SQL. Multi-level cycles and safe parent changes remain a future approved Action, not a claim of FK protection. Model event guards do not protect raw SQL/bulk updates; no such public write surface is introduced.
 
+PR #15 trigger-safety correction: an installation failure cleans only the new empty table from that invocation under a WRITE lock and rethrows the original error. Existing tables/rows are never adopted or silently deleted. Failed/unsafe cleanup is an explicit operator-recovery error. MySQL DDL still commits per statement; see the deployment prerequisites/recovery procedure in `docs/setup/redis-local.md`. CI uses an existing privileged disposable migration account, leaving server settings and runtime credentials unchanged.
+
 ## Isolation and authorization boundary
 
 Global-table allowlist for this phase: users, password_reset_tokens, sessions, cache, cache_locks, jobs, job_batches, failed_jobs and migrations (framework infrastructure). Organizations is the tenant root. organization_memberships and organizational_units are tenant-owned and carry organization_id. Parent integrity is guaranteed structurally; query authorization, tenant context resolution, membership lifecycle, role matrix, jobs/files/download isolation and HTTP IDOR protections remain unimplemented. No global scope, membership record, ULID or platform identity confers access.
