@@ -1,18 +1,25 @@
-# ADR-002 — Global identity, organization memberships and scoped authorization
-Status: **PROPOSED — product-owner decisions required**, 2026-10-31. Issue #7.
+# ADR-002 — Global identity and organization-scoped authorization
+
+**Status: ACCEPTED — technical architecture, 2026-10-31.**
+The engineering lead approved a global identity model with support for multiple organization memberships. Product-owner role and access policy is **not** implicitly approved.
+
 SRS: BR-002..005, ACT-01..06, FR-ID-001..012, D-001/D-002/D-021/D-022/D-023/D-024.
 
-## Proposed structure
-- Global `users` stores identity, not tenant privileges.
-- `organization_memberships` links users to organizations with explicit status and possibly multiple memberships, **only if D-021 is approved**.
-- A trusted active organization context is selected from authorized memberships; no URL, header, form or JWT claim alone authorizes organization switching.
-- Platform-level permissions are separate from organization-scoped permissions. Creating/managing an organization never implies access to its evidence or ability to approve its methodology.
-- Organizational units own specific approaches. Participation and reviewer scope are explicit assignments, not an unrestricted global role.
-- Server-side deny-by-default policies must consider `actor + action + organization + resource/assignment + current state`.
-- Preserve audit trails of permission changes. Tenant-aware services, queues and storage enforce equivalent checks.
+## Decision
+- Store global user identity in `users`; a global identity alone grants **no** organizational permission.
+- Support a user having **more than one organization membership** through `organization_memberships` (D-021 technical capability selected). Whether cross-organization participation is permitted for a given business role, who can invite and switch, and how invitations are approved require owner policy.
+- Resolve an active organization only after verifying an active membership for the authenticated actor; client-controlled org IDs, headers, routes, form fields or tokens do not grant permission.
+- Separate platform administration from tenant roles. Platform staff do not gain unrestricted evidence/document access.
+- Keep organizational-unit responsibility and approach ownership/reviewer assignment explicitly scoped; never infer review scope from a broad role alone.
+- Enforce **deny by default** in backend Policies/Actions/Services for `actor + action + organization + resource/assignment + state` and equivalent queue/download paths.
+- Retain an audit trail for membership/permission changes, and test forged org switching, revoked membership, unassigned reviewer, cross-tenant object ID and privilege escalation.
 
-## Business policy decisions NOT approved
-D-001 exceptional support access to tenant content; D-002 role matrix and delegation; D-021 multiple memberships; D-022 self-review/separation of duties; D-023 tenant suspension behavior; D-024 invitation/reset/MFA channels. Do not implement a product authorization model until these are resolved. Laravel's default `users` migration is only provisional scaffolding.
+## Not decided by this technical approval
+- D-001 exceptional platform support access to tenant content.
+- D-002 exact role/permission matrix, delegation and approval authority.
+- D-022 whether a contributor can review/approve their own work (separation of duties).
+- D-023 the behavior of suspended organizations.
+- D-024 invitation/reset/MFA requirements.
+- D-008 storage, retention and jurisdiction policy.
 
-## Acceptance criteria for implementation Issue
-Define roles/actions/scope matrix and negative authorization tests. Cover cross-tenant URLs, switching active membership, revoked membership, employee not assigned to approach, background jobs, and Platform Administration without tenant document privilege. Avoid generic super-admin bypass and avoid trusting client-supplied IDs.
+**Implementation rule:** Do not implement or seed speculative permissions or bypasses. Laravel's default `users` migration is provisional until an implementation PR explicitly checks compatibility with this ADR. Functional authorization cannot be considered complete until product-owner policies are agreed.

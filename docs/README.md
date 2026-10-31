@@ -1,9 +1,14 @@
 # Project documentation
 
-- [Local development](setup/local-development.md): installation, MySQL, isolated tests and quality checks.
-- [Architecture foundation](architecture/foundation.md): boundaries, conventions and deferred decisions.
-- [Phase 01 engineering report](engineering/reports/PHASE-01-LARAVEL-BOOTSTRAP.md): implementation evidence and limitations.
+## Current references
+- [Architecture foundation and accepted ADRs](architecture/foundation.md).
+- [Decision ledger — approved technical choices vs pending owner policy](architecture/decision-ledger.md).
+- [Contributor and security posture](engineering/collaboration-security.md).
+- [Local development](setup/local-development.md).
+- [Phase 01 Laravel bootstrap evidence](engineering/reports/PHASE-01-LARAVEL-BOOTSTRAP.md).
+- [Phase 02 Filament evidence](engineering/reports/PHASE-02-FILAMENT-FOUNDATION.md).
+- [Architecture approval and repository audit](engineering/reports/ISSUE-7-ARCHITECTURE-APPROVAL.md).
 
-Every completed phase/task must add a separate permanent report under `docs/engineering/reports/`. Use `PHASE-<NUMBER>-<SHORT-TITLE>.md` or `ISSUE-<NUMBER>-<SHORT-SLUG>.md`; preserve prior reports. The Issue #3 acceptance-path report links to the canonical Phase 01 report.
+Every implementation task must add a separate permanent report in `docs/engineering/reports/`. Preserve historical reports as evidence; the linked current audit supersedes obsolete status statements.
 
-Governance PR #2 remains a separate dependency. Its files have not been copied onto this branch. Product-owner-approved requirements remain authoritative for future business behavior.
+The SRS is the product requirement source of truth. Engineering ADRs define implementation choices, **not** unspecified business authorization or compliance rules.

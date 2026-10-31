@@ -12,7 +12,7 @@
 ```sh
 git clone https://github.com/NabilAlsaidaly/quality-excellence-platform.git
 cd quality-excellence-platform
-git switch chore/phase-01-laravel-bootstrap
+git switch main
 composer install
 ```
 
@@ -54,7 +54,7 @@ npm run build
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-Open `http://127.0.0.1:8000/` (framework welcome) and `/up` (framework health). Database-backed sessions/cache/queues use the standard migrations. The health endpoint proves application boot, not database or external-service availability. For asset development, run `npm run dev` in another terminal. On Windows use these separate commands; the upstream `composer dev` includes Pail, which requires Unix process-control extensions.
+Open `http://127.0.0.1:8000/` (framework welcome), `/up` (framework health), and `/admin/login` (Filament 5 login shell; not production-hardened). Database-backed sessions/cache/queues use the standard migrations. The health endpoint proves application boot, not database or external-service availability. For asset development, run `npm run dev` in another terminal. On Windows use these separate commands; the upstream `composer dev` includes Pail, which requires Unix process-control extensions.
 
 `composer setup` is a convenience only after configuring `.env` and creating the local database; it installs locked dependencies, generates a local key, migrates and builds assets. Do not run it against an existing shared environment because it regenerates the key.
 
@@ -74,7 +74,7 @@ npm run build
 npm audit
 ```
 
-PHPUnit selects `testing`, in-memory SQLite, array cache/session/mail and synchronous queues in `phpunit.xml`. The database override is forced to avoid using a shell's MySQL connection accidentally. Tests never require the developer's MySQL database. `RefreshDatabase` exercises only framework migrations in SQLite. MySQL migrations were not locally verified in Phase 01; CI includes a dedicated MySQL service to verify that target separately. Never run destructive migration commands against shared databases.
+PHPUnit selects `testing`, in-memory SQLite, array cache/session/mail and synchronous queues in `phpunit.xml`. The database override is forced to avoid using a shell's MySQL connection accidentally. Tests never require the developer's MySQL database. `RefreshDatabase` exercises only framework migrations in SQLite. Phase 01 local MySQL migration verification was not reported; CI includes a dedicated MySQL 8.4 service and passes the framework migration checks. Domain-specific tenant constraints require additional MySQL integration tests when built. Never run destructive migration commands against shared databases.
 
 ## Troubleshooting
 
@@ -82,6 +82,6 @@ If dependencies cannot reach package servers, verify network/proxy access; do no
 
 ## Workflow and CI
 
-Start each task from fetched, updated `main`, create its task branch, run checks, commit Conventional Commits and open a Draft PR. Only the lead approves/merges. Do not force-push or modify repository settings. PR #2 governance remains unmerged at bootstrap time; no branch protection claim is made. Phase 01 explicitly authorizes minimal CI; changes to the workflow require lead review before merge. Actions are pinned to verified full commit SHAs; update pins through reviewed PRs after verifying upstream tags. CI has read-only contents permission, uses `pull_request` (never `pull_request_target`), and no repository secrets or deployment jobs.
+Start each task from fetched, updated `main`, create its task branch, run checks, commit Conventional Commits and open a Draft PR. Only the lead approves/merges. Do not force-push or modify repository settings. PR #2 governance, PR #5 Laravel and PR #9 Filament are merged. The public repository's `main` now reports `protected=true`; the GitHub integration cannot verify individual branch-rule settings (403), so the owner must confirm required review and CI enforcement in GitHub Settings. Phase 01 explicitly authorizes minimal CI; changes to the workflow require lead review before merge. Actions are pinned to verified full commit SHAs; update pins through reviewed PRs after verifying upstream tags. CI has read-only contents permission, uses `pull_request` (never `pull_request_target`), and no repository secrets or deployment jobs.
 
 Official references: [Laravel installation](https://laravel.com/docs/13.x/installation), [support policy](https://laravel.com/docs/13.x/releases), [testing](https://laravel.com/docs/13.x/testing), [deployment configuration guidance](https://laravel.com/docs/13.x/deployment), [Node release policy](https://nodejs.org/en/about/previous-releases). No deployment is performed.
