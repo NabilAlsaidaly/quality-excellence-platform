@@ -4,7 +4,7 @@ Date: 2026-10-31 (Asia/Damascus). Contract: Issue #11 and owner-supplied phase3A
 
 ## 1. Executive Summary
 
-IMPLEMENTED: additive organizations, organization_memberships and organizational_units schema, models/relationships/factories, public ULID generation/model immutability, composite same-tenant parent FK, restrictive references and MySQL direct-self-parent triggers. Redis development Compose, PhpRedis cache/queue configuration, after-commit behavior, independent integration suites and CI extensions are implemented. TESTED locally on SQLite, real MySQL 8.4.11 and Redis 8.2.11. Published as Draft PR #15; remote CI result is recorded below once observed. No UI, role/permission, tenant authorization workflow or production change.
+IMPLEMENTED: additive organizations, organization_memberships and organizational_units schema, models/relationships/factories, public ULID generation/model immutability, composite same-tenant parent FK, restrictive references and MySQL direct-self-parent triggers. Redis development Compose, PhpRedis cache/queue configuration, after-commit behavior, independent integration suites and CI extensions are implemented. TESTED locally and in successful remote CI. Published as Draft PR #15; complete and ready for engineering-lead review, with deferred authorization/cycle/production policies explicitly listed. No UI, role/permission, tenant authorization workflow or production change.
 
 ## 2. Scope and Objectives
 
@@ -83,7 +83,7 @@ Created: three timestamped migrations; Organization, OrganizationMembership, Org
 
 ## 14. SQLite Test Results
 
-`P artisan test`: **17 passed, 60 assertions**, exit 0 after schema implementation; original five tests preserved. Coverage: organization creation/multiple organizations, ULID uniqueness/integer key and binding, global user with multiple memberships/relations, authentication hashing/hiding compatibility, duplicate membership, roots/children, immutability on both public models, protected mass assignment, direct self-parent rejection and SQLite composite FK negative case. SQLite is not presented as proof of MySQL semantics. Final regression output is recorded below when complete.
+`P artisan test`: **17 passed, 60 assertions**, exit 0 after schema implementation; original five tests preserved. Coverage: organization creation/multiple organizations, ULID uniqueness/integer key and binding, global user with multiple memberships/relations, authentication hashing/hiding compatibility, duplicate membership, roots/children, immutability on both public models, protected mass assignment, direct self-parent rejection and SQLite composite FK negative case. SQLite is not presented as proof of MySQL semantics. The same counts passed final local regression and remote CI.
 
 Here and below `P` means the actual local prefix `php -d sys_temp_dir=.local-tools/tmp`; `C` means `P C:/Users/nabil/.config/herd/bin/composer.phar`. The writable temp override addresses the already-known host PHP temp-path restriction without changing global tools. Windows commands use npm.cmd with the existing workspace Node 24 first on PATH.
 
@@ -128,6 +128,8 @@ Existing MySQL 8.4 service, PHP/Laravel validation, SHA-pinned actions, all fram
 
 Initial remote [run 41231860965](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41231860965), adfa8d7: **FAILED**, Redis step exit 2, four errors/zero assertions. All preceding validation/installation/audit/route/migration/17-test SQLite and 15-test MySQL steps passed. Redis's environment guard correctly rejected inherited MySQL settings before migrations; PHP exposes CI environment variables in $_SERVER, which Laravel Dotenv can read ahead of PHPUnit's forced $_ENV/getenv. Corrected both dedicated configs by forcing the same safe values in server AND env entries. The safety check and test assertions remain intact. Pint/build/HTTP steps were SKIPPED in this failed run, not claimed as passed; subsequent full run is recorded below.
 
+Final implementation [run 41232136765](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41232136765), commit `37d9d9523981a1591cba781e843fd42189a0aa47`: **SUCCESS**. All applicable steps passed (exit 0): locked install/validation/platform/audit, admin routes, MySQL migration/rollback/remigration, isolated SQLite suite, separate MySQL integrity suite, separate real Redis suite, Pint, npm ci/build, configuration/route/view cache checks, actual HTTP `/`, `/up`, `/admin/login`, and cleanup. The Issue #4 guard is correctly SKIPPED for this Issue #11 branch by its existing condition; its source block remains identical to main. No integration test was skipped. Remote test counts: SQLite **17/60**, MySQL **15/40**, Redis **4/19** (tests/assertions).
+
 ## 19. Security Review
 
 RESTRICT references and composite tenant FK are tested. Ownership is not user-array fillable; no request contracts or implicit grants. ULIDs do not authorize. Existing password security retained. New rows/factories are synthetic; no production data, private SRS text or secrets committed. CI credentials are known disposable container-only fixtures. Redis port is loopback and test namespace/key cleanup precise. Production admin/tenant context/authorization/IDOR/job/file policies remain NOT IMPLEMENTED. No repository protection, contributor branch, deployment, production settings or real credentials changed.
@@ -146,11 +148,11 @@ Complete hierarchy cycles and safe concurrent reparenting require a future appro
 
 ## 23. Git Branch, Commit IDs, and Pull Request URL
 
-Repository: https://github.com/NabilAlsaidaly/quality-excellence-platform. Base main `56e51ee7c8eba5600454d5152b149b286d7ae29d`; assigned/push-only branch `feat/11-tenant-schema-foundation`. Implementation commit `adfa8d79b20cb9884b62c6570357ab879f0e3b28` pushed successfully. Verified Draft PR: https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/15 (open, draft, unmerged, targeting main). Report-only follow-up commit IDs are available in branch git log. No merge authorized/performed. UI contributor branch and owned files untouched. Mandatory report persistence checked with `git ls-files docs/engineering/reports/PHASE-03A-TENANT-SCHEMA.md` (listed); PR changed-file readback also confirms the report.
+Repository: https://github.com/NabilAlsaidaly/quality-excellence-platform. Base main `56e51ee7c8eba5600454d5152b149b286d7ae29d`; assigned/push-only branch `feat/11-tenant-schema-foundation`. Implementation commit `adfa8d79b20cb9884b62c6570357ab879f0e3b28`; integration isolation/report follow-up `37d9d9523981a1591cba781e843fd42189a0aa47`; both pushed successfully. Verified Draft PR: https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/15 (open, draft, unmerged, targeting main). Report-only follow-up commit IDs are available in branch git log. No merge authorized/performed. UI contributor branch and owned files untouched. Mandatory report persistence checked with `git ls-files docs/engineering/reports/PHASE-03A-TENANT-SCHEMA.md` (listed); PR changed-file readback also confirms the report.
 
 ## 24. Final Engineering Verdict
 
-Implementation and local database/Redis verification are ready for review; delivery/remote CI still pending at this report stage. Final verdict will be updated only after actual commit/push/Draft PR/report readback and observed CI. Do not interpret this foundation as production-ready tenant authorization.
+**COMPLETE — READY FOR ENGINEERING-LEAD REVIEW.** Implementation, local 36-test/119-assertion verification, independent successful MySQL/Redis CI, pushed branch, Draft PR and persisted report are verified. No required implementation blocker remains. Lead review is required before merge, especially schema triggers and CI. Tenant authorization, full hierarchy-cycle Actions and open business/production policies remain deliberately NOT IMPLEMENTED/DEFERRED; do not interpret structural integrity as production-ready tenant authorization. No merge performed.
 
 ### Verification addendum
 
@@ -160,6 +162,8 @@ Implementation and local database/Redis verification are ready for review; deliv
 - Final post-format regression: `P artisan test` exit 0, **17 tests / 60 assertions**; `P vendor/bin/pint --test` exit 0; real Redis `P vendor/bin/phpunit --configuration phpunit.redis.xml` exit 0, **4 tests / 19 assertions**. MySQL final suite above passed **15 tests / 40 assertions**. Total successful local suites: **36 tests / 119 assertions**, zero failed/skipped on the final runs.
 - Existing UI scope validation block was compared against origin/main and preserved verbatim. No forbidden presentation/translation/Vite/UI-test paths, composer/npm manifests/lockfiles or general phpunit.xml changed.
 - Task-created local MySQL and Redis containers/network were stopped/removed after successful local checks; the newly created Redis development volume was retained. No other container, volume, database or host service was stopped/deleted. Any later task-only retest setup/cleanup is recorded with its outcome.
+- CI-environment reproduction after the isolation fix: with inherited DB_CONNECTION=mysql / DB_DATABASE=quality_platform_ci and the separate real Redis service on 6387, dedicated Redis tests still used in-memory SQLite and passed **4/19**, exit 0. That retest container/network was then removed, retaining its test-only volume. Final code CI independently passed all gates afterward.
+- Successful CI observed PHP 8.4.27, Composer 2.11.1, Node 24.22.1, MySQL **8.4.13** and the pinned Redis **8.2.11** service. Pint checked **42 files** successfully. This supplements the actual local MySQL 8.4.11 evidence rather than rewriting it.
 
 ### Changed-file manifest
 
