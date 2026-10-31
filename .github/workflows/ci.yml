@@ -42,6 +42,83 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+          fetch-depth: 2
+      - name: Enforce Issue 4 UI PR allowed file scope
+        if: github.event_name == 'pull_request' && github.head_ref == 'feat/4-arabic-filament-shell'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          import sys
+
+          allowed = {
+            "app/Filament/UiPreview/ScreenCatalog.php",
+            "app/Filament/UiPreview/UiPreviewPage.php",
+            "app/Providers/Filament/AdminPanelProvider.php",
+            "lang/ar/quality_ui.php",
+            "resources/css/filament/admin/theme.css",
+            "resources/views/filament/ui-preview/gallery.blade.php",
+            "vite.config.js",
+            ".env.example",
+            "tests/Feature/FilamentUiPreviewTest.php",
+            "docs/engineering/reports/4.md",
+            "resources/views/components/quality-ui/page-header.blade.php",
+            "resources/views/components/quality-ui/section-card.blade.php",
+            "resources/views/components/quality-ui/empty-state.blade.php",
+            "resources/views/components/quality-ui/table-shell.blade.php",
+            "resources/views/components/quality-ui/filter-toolbar.blade.php",
+            "resources/views/components/quality-ui/form-field-shell.blade.php",
+            "resources/views/components/quality-ui/detail-pair.blade.php",
+            "resources/views/components/quality-ui/info-alert.blade.php",
+            "resources/views/components/quality-ui/status-placeholder.blade.php",
+            "resources/views/components/quality-ui/tabs.blade.php",
+            "resources/views/components/quality-ui/stage-strip.blade.php",
+            "resources/views/components/quality-ui/version-timeline.blade.php",
+            "resources/views/components/quality-ui/review-history.blade.php",
+            "resources/views/filament/ui-preview/screens/platform/overview.blade.php",
+            "resources/views/filament/ui-preview/screens/platform/organizations.blade.php",
+            "resources/views/filament/ui-preview/screens/platform/organization-details.blade.php",
+            "resources/views/filament/ui-preview/screens/organization/overview.blade.php",
+            "resources/views/filament/ui-preview/screens/organization/units.blade.php",
+            "resources/views/filament/ui-preview/screens/organization/users.blade.php",
+            "resources/views/filament/ui-preview/screens/organization/permissions-overview.blade.php",
+            "resources/views/filament/ui-preview/screens/approaches/index.blade.php",
+            "resources/views/filament/ui-preview/screens/approaches/create-shell.blade.php",
+            "resources/views/filament/ui-preview/screens/approaches/summary.blade.php",
+            "resources/views/filament/ui-preview/screens/approaches/content.blade.php",
+            "resources/views/filament/ui-preview/screens/approaches/participants.blade.php",
+            "resources/views/filament/ui-preview/screens/approaches/evidence.blade.php",
+            "resources/views/filament/ui-preview/screens/approaches/reviews.blade.php",
+            "resources/views/filament/ui-preview/screens/approaches/maturity.blade.php",
+            "resources/views/filament/ui-preview/screens/approaches/activity.blade.php",
+            "resources/views/filament/ui-preview/screens/documents/index.blade.php",
+            "resources/views/filament/ui-preview/screens/documents/details.blade.php",
+            "resources/views/filament/ui-preview/screens/documents/versions.blade.php",
+            "resources/views/filament/ui-preview/screens/documents/upload-shell.blade.php",
+            "resources/views/filament/ui-preview/screens/reviews/inbox.blade.php",
+            "resources/views/filament/ui-preview/screens/reviews/details.blade.php",
+            "resources/views/filament/ui-preview/screens/shared/notifications.blade.php",
+            "resources/views/filament/ui-preview/screens/shared/activity-log.blade.php"
+          }
+          changed = subprocess.check_output(
+              ["git", "diff", "--name-only", "HEAD^1", "HEAD"],
+              text=True,
+          ).splitlines()
+          forbidden = [
+              path for path in changed
+              if path not in allowed
+              and not (
+                  path.startswith("docs/engineering/reports/evidence/4/")
+                  and path.endswith(".png")
+              )
+          ]
+          print(f"Issue #4 scope: {len(changed)} changed files checked")
+          if forbidden:
+              for path in forbidden:
+                  print(f"::error title=Issue 4 scope violation::{path}")
+              sys.exit(1)
+          print("Issue #4 allowed paths check passed")
+          PY
       - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
         with:
           php-version: '8.4'
