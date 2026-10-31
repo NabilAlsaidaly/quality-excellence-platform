@@ -1,0 +1,83 @@
+name: Foundation CI
+
+on:
+  push:
+    branches: [main, chore/phase-01-laravel-bootstrap]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: quality_platform_ci
+          MYSQL_USER: quality_platform_ci
+          MYSQL_PASSWORD: disposable-ci-password
+          MYSQL_ROOT_PASSWORD: disposable-ci-root-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: quality_platform_ci
+      DB_USERNAME: quality_platform_ci
+      DB_PASSWORD: disposable-ci-password
+    steps:
+      # Full commit pins verified against upstream tags on 2026-10-31.
+      # Update pins only through a reviewed PR; lead review required before merge.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql, pdo_sqlite
+          coverage: none
+          tools: composer:v2
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: composer validate --strict
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer check-platform-reqs
+      - run: composer audit
+      - run: cp .env.example .env
+      - run: php artisan key:generate
+      - run: php artisan --version && php artisan about
+      - name: Verify target MySQL migrations
+        run: |
+          php artisan migrate --force
+          php artisan migrate:status
+          php artisan migrate:rollback --force
+          php artisan migrate --force
+      - name: Run isolated SQLite tests
+        run: php artisan test
+      - run: php vendor/bin/pint --test
+      - run: npm ci
+      - run: npm run build
+      - name: Verify runtime configuration and HTTP
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan serve --host=127.0.0.1 --port=8000 > /tmp/quality-platform-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          curl --fail --retry 10 --retry-delay 1 --retry-connrefused http://127.0.0.1:8000/up
+          curl --fail http://127.0.0.1:8000/ > /dev/null
+          php artisan optimize:clear
