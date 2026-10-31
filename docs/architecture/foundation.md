@@ -13,7 +13,7 @@ Conceptual flow: Presentation → Application → Domain → Infrastructure. Kee
 These are **engineering approvals**, not silent approval of unresolved product-owner rules. Implement only against explicit acceptance criteria and with negative cross-tenant tests.
 
 ## Implementation status
-The repository contains Laravel bootstrap, PHPUnit/Pint/CI, MySQL migration validation, Filament 5 and its `/admin` panel. **No tenancy, membership, custom RBAC, document/evidence domain or workflow has been implemented yet.** Built-in users/cache/jobs migrations remain provisional framework scaffolding. No production administrator access policy is in place.
+The repository contains Laravel bootstrap, PHPUnit/Pint/CI, Filament 5 and its `/admin` panel. Phase 03A adds structural organizations, memberships and hierarchical units plus Redis cache/queue infrastructure; see [schema design](tenant-schema-foundation.md). **Tenant context/authorization, custom RBAC, document/evidence domain and workflows remain unimplemented.** Built-in users/cache/jobs migrations are preserved; no production administrator access policy is in place.
 
 ## Business and compliance policy still requiring product-owner decisions
 D-001 support access, D-002 role matrix/delegation, D-008 location/retention, D-022 self-review/separation of duties, D-023 suspension, D-024 invitation/reset/MFA, and D-027 domain relationship flexibility. These cannot be invented as part of a technical implementation. The data model's capacity for multi-org membership does not itself grant membership.

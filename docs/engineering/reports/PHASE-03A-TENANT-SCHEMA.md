@@ -1,0 +1,268 @@
+# PHASE-03A — Tenant schema, global identity and Redis infrastructure
+
+Date: 2026-10-31 (Asia/Damascus). Contract: Issue #11 and owner-supplied phase3A.md. This is implementation evidence, not approval of unresolved product policy.
+
+PR #15 trigger-migration safety review: see section 25 for the current correction, deployment prerequisites and new verification. Earlier run/commit evidence below remains historical.
+
+## 1. Executive Summary
+
+IMPLEMENTED: additive organizations, organization_memberships and organizational_units schema, models/relationships/factories, public ULID generation/model immutability, composite same-tenant parent FK, restrictive references and MySQL direct-self-parent triggers. Redis development Compose, PhpRedis cache/queue configuration, after-commit behavior, independent integration suites and CI extensions are implemented. TESTED locally and in successful remote CI. Published as Draft PR #15; complete and ready for engineering-lead review, with deferred authorization/cycle/production policies explicitly listed. No UI, role/permission, tenant authorization workflow or production change.
+
+## 2. Scope and Objectives
+
+Persist the approved minimum tenant/identity structure while keeping global users separate from membership. Add concrete same-tenant hierarchy integrity and reproducible Redis infrastructure. Preserve all previous tests, dependencies, sessions, UI contributor scope guard and presentation files. General tests remain isolated SQLite/array/sync. Deliver additive migrations, negative MySQL tests, genuine Redis tests, documentation, committed report and Draft PR without merging.
+
+## 3. Authoritative Requirements and ADR References
+
+Read AGENTS.md, CONTRIBUTING.md, README, architecture foundation/decision ledger, accepted ADR-001/002/003, local setup, existing CI and Issue #11 including its approved Redis/unit clarification before implementation. SRS v3.0 was accessible via connected Google Drive at the exact document referenced in the task; reviewed relevant BR-001..005, FR-ID-001..012, DATA-01..10, NFR-SEC-001..012, NFR-REL-001..006, NFR-PERF-001..004 and listed decision-register items. Private source content was not copied into the public repository. ADR technical acceptance supersedes stale SRS technical OPEN labels for the selected key/membership capabilities, without approving owner access/lifecycle policy.
+
+| Requirement/acceptance | Status and evidence |
+| --- | --- |
+| BR-001, DATA-01/02, FR-ID-002 structural isolation | TESTED: organization ownership, composite FK and two-organization MySQL rejection |
+| ADR-002, FR-ID-003, D-021 technical capability | TESTED: global user with multiple distinct memberships and unique pair constraint; no grant/approval policy |
+| ADR-003, D-017 identifiers | TESTED: MySQL unsigned BIGINT metadata, unique public ULIDs, model immutability and public route key selection |
+| DATA-07 hierarchy | PARTIAL BY APPROVED SCOPE: tenant parent FK/direct self rejection tested; complete cycle prevention DEFERRED |
+| DATA-08/09/10 | TESTED: indexes/candidate key inspected; restrictive references; fresh migrations/rollback/remigration |
+| NFR-SEC-004/005 | TESTED structurally: existing password hashing/hidden attributes retained; no committed secrets |
+| NFR-REL-001 queue timing | TESTED: real Redis queue receives test-only payload after commit; rollback does not add payload |
+| NFR-PERF-003 | IMPLEMENTED: organization/parent composite lookup index; no performance SLA invented |
+| FR-ID-004..012 and remaining security/reliability/domain requirements | NOT IMPLEMENTED beyond existing framework compatibility and stated infrastructure; owner-approved Actions/Policies required |
+| Redis clarification, regression, CI, report delivery | Local evidence below; publication status in sections 18/23/24 |
+
+## 4. Existing Repository Audit Findings
+
+Repository origin verified; clean assigned branch was created locally by tracking existing `origin/feat/11-tenant-schema-foundation`. It contains fetched `origin/main` commit `56e51ee` (UI scope CI guard); `git merge-base --is-ancestor origin/main HEAD` exited 0 before changes. No user changes were discarded. `feat/4-arabic-filament-shell` was never checked out or modified.
+
+Existing framework tables: users, password_reset_tokens, sessions, cache, cache_locks, jobs, job_batches, failed_jobs and migrations bookkeeping. Users has unsigned BIGINT id/unique email; sessions.user_id is indexed without an FK. No existing tenant tables. Three applied framework migration files and UserFactory are unchanged. User preserves fillable/hidden attributes, password cast and Authenticatable/Notifiable behavior; only membership/organization relationships were added. Existing Laravel 13.39.0, PHP 8.4.27, Filament 5.11.0, Livewire 4.4.8, PHPUnit 12.5.42, Pint 1.32.1, Composer 2.10.3 and Node 24.22.2/npm 11.19.1 are retained; no package or lockfile changes. Baseline general suite: 5 passed/12 assertions.
+
+Existing Redis connections used PhpRedis, DB 0/default and DB 1/cache, database cache/queue defaults and after_commit=false. Sessions were database-backed and remain so. Docker Desktop was initially stopped; it was started for task-local test containers. Local host MySQL 9.7 binary was not used; a separate MySQL 8.4 container on loopback port 33068 and Redis on loopback 6387 were used. No developer database or production service was migrated.
+
+## 5. Database Schema Overview
+
+See `docs/architecture/tenant-schema-foundation.md` for the plan recorded before migrations. Organizations is the tenant root. Global User has many OrganizationMembership records and belongs to many Organizations through that table. Each unit belongs to an Organization and optionally to another unit in that same Organization. No membership state, organization state machine, roles or provisioning behavior.
+
+## 6. Tables, Columns, and Data Types
+
+| Table | Columns |
+| --- | --- |
+| organizations | id BIGINT UNSIGNED auto-increment PK; public_id CHAR(26) unique required ULID; name VARCHAR(255) required; nullable Laravel timestamps |
+| organization_memberships | id BIGINT UNSIGNED auto-increment PK; user_id/organization_id BIGINT UNSIGNED required; timestamps |
+| organizational_units | id BIGINT UNSIGNED auto-increment PK; public_id CHAR(26) unique required ULID; organization_id BIGINT UNSIGNED required; parent_id BIGINT UNSIGNED nullable; name VARCHAR(255) required; timestamps |
+
+No existing columns altered, users recreated, data backfilled or real records seeded. Laravel's ULID concern is restricted to `public_id` so `id` remains incrementing/int. A small shared model concern rejects persisted public_id changes through model updates; guarded fillable fields prevent request-array assignment. Raw SQL/query-builder/quiet saves can bypass model events: no public bulk-write surface is introduced, and future Actions must preserve immutability. ULIDs are identifiers, not credentials.
+
+## 7. Foreign Keys and Indexes
+
+Membership user_id -> users.id and organization_id -> organizations.id use RESTRICT for update/delete. Unique (user_id,organization_id) prevents duplicate membership; organization_id index supports inverse lookup. Units.organization_id -> organizations.id is restrictive. Candidate key UNIQUE (organization_id,id) permits standard MySQL 8.4 referenced-key enforcement. Index (organization_id,parent_id) supports hierarchy lookups and FK checks. Composite FK (organization_id,parent_id) -> organizational_units(organization_id,id) rejects cross-tenant parents on insert/update. Public IDs have database uniqueness constraints. No destructive CASCADE.
+
+## 8. Tenant Isolation Guarantees
+
+TESTED database guarantees: required ownership, existing referenced user/organization/parent, unique membership pair and public IDs, same-organization parent references, parent organization-change rejection with children, restrictive deletion. NOT IMPLEMENTED: tenant context resolver, authenticated organization selection, scoped read services/policies, HTTP IDOR protection, file/download/job authorization. No global scope or implicit administrator bypass. Membership/ULID knowledge confers no access. Organization-owned fields are not mass assignable; trusted backend association/factories remain possible.
+
+Documented global allowlist: users, password_reset_tokens, sessions, cache, cache_locks, jobs, job_batches, failed_jobs and migrations are global/framework infrastructure. Organizations is the root; membership/unit records carry organization_id. Framework jobs/cache rows are not permission-bearing domain records.
+
+## 9. Organization Membership Design
+
+Normal Eloquent model with its own BIGINT id, explicit belongsTo user/organization, HasMany and BelongsToMany inverse relations; no custom pivot package. Guard all membership fields from mass assignment. The two FK values must be assigned explicitly using trusted association/context. Factories intentionally unguard synthetic fixtures. Multiple organizations per global user is supported, not automatically granted. Existing hashing and password/remember-token hiding are regression tested.
+
+## 10. Organizational Hierarchy Integrity
+
+NULL parent permits roots. Composite FK enforces tenant integrity, not graph acyclicity. MySQL CHECK cannot reference AUTO_INCREMENT id; narrow BEFORE INSERT/UPDATE triggers reject direct self-parenting even for raw SQL. Eloquent saving also rejects direct self-parenting in isolated SQLite tests. Complete multi-level cycle detection and safe concurrent parent changes remain DEFERRED to an approved Application Action. No tenant organization migration/reparent API was added.
+
+MySQL binary logging initially rejected trigger creation (error 1419). The initial Phase 03A test setup changed a disposable server setting; that workaround is **removed by the PR #15 correction**. Current CI uses the existing disposable migration-operator account only for migration-bearing steps and leaves global settings unchanged; runtime steps retain database-scoped credentials. Trigger exceptions now compensate their newly created empty table under a WRITE lock and retain the original failure; existing data/unsafe cleanup requires explicit operator recovery. See section 25. MySQL DDL still commits per statement; this is not transaction-wide atomicity.
+
+## 11. Redis Architecture and Configuration
+
+Compose pins official Redis 8.2.11-alpine, loopback-only configurable published port, health check, local named AOF volume and no committed production password. Existing PhpRedis connections reused; no dependencies added. .env.example edits are Redis cache/queue/DB/prefix lines only; localization and database session lines unchanged. Docker image/runtime observed: Redis 8.2.11; PhpRedis extension 6.1.0. MySQL remains authoritative.
+
+## 12. Cache and Queue Strategy
+
+Default Redis namespace `quality:{APP_ENV}:`; cache store adds `cache:`. Future allowed tenant keys must include tenant ULID, category, resource/version, explicit finite TTL and invalidation after committed source changes. No institutional content, tokens or authorization decisions are cached. Redis unavailable while configured is an error; no silent failover added. after_commit=true is verified against installed RedisConnector/Queue transaction callback code and real queue behavior. No domain jobs/workers; the no-op job class exists only within integration tests and is never processed. Queue/cache keys in tests use UUIDs and exact individual cleanup, never FLUSHDB/FLUSHALL. General tests remain SQLite/array/sync with the original phpunit.xml unchanged.
+
+## 13. Files Created and Modified
+
+Created: three timestamped migrations; Organization, OrganizationMembership, OrganizationalUnit and HasPublicUlid concern; three factories; TenantSchemaTest; MySQL test base/integration suite/config; Redis integration suite/config; compose.redis.yml; schema design/local Redis setup; this report. Modified: User relationships only, config/database.php prefix, config/cache.php prefix, config/queue.php Redis after_commit, .env.example Redis settings, CI service/integration steps, README/docs index/setup/foundation status. The final changed-file manifest is appended after diff review. No files deleted. No composer/npm dependency/lockfiles or forbidden UI paths changed. Existing Issue #4 CI guard preserved verbatim.
+
+## 14. SQLite Test Results
+
+`P artisan test`: **17 passed, 60 assertions**, exit 0 after schema implementation; original five tests preserved. Coverage: organization creation/multiple organizations, ULID uniqueness/integer key and binding, global user with multiple memberships/relations, authentication hashing/hiding compatibility, duplicate membership, roots/children, immutability on both public models, protected mass assignment, direct self-parent rejection and SQLite composite FK negative case. SQLite is not presented as proof of MySQL semantics. The same counts passed final local regression and remote CI.
+
+Here and below `P` means the actual local prefix `php -d sys_temp_dir=.local-tools/tmp`; `C` means `P C:/Users/nabil/.config/herd/bin/composer.phar`. The writable temp override addresses the already-known host PHP temp-path restriction without changing global tools. Windows commands use npm.cmd with the existing workspace Node 24 first on PATH.
+
+## 15. MySQL Integration Test Results
+
+Dedicated config `phpunit.mysql.xml`; `MYSQL_TESTS_ENABLED=1`, DB_HOST=127.0.0.1, DB_PORT=33068, DB_USERNAME=quality_platform_ci, DB_PASSWORD=disposable-ci-password. These values refer only to the task-created container/database. Before destructive hooks: reject cached config, require testing/mysql/explicit opt-in/exact configured AND actual database `quality_platform_ci`/no DB_URL override. No normal developer DB can be selected by the config.
+
+`P vendor/bin/phpunit --configuration phpunit.mysql.xml --stop-on-error`: **15 passed, 40 assertions**, exit 0, actual MySQL **8.4.11**. Each test's DatabaseMigrations executes fresh migration and cleanup; additional explicit rollback/remigration test passed. Tests verify BIGINT types, candidate/composite keys, existing references, duplicate membership/ULID rejection, valid roots/children/multi-memberships, cross-tenant parent insert/update, referenced parent's organization update, raw self-parent insert/update and restrictive user/organization/parent deletion (including unit-only organization).
+
+Initial attempt before disposable trigger prerequisite: exit 1, **15 errors/0 assertions**, all MySQL 1419. After initializing only the disposable server, 15/39 passed; added independent unit-only organization deletion coverage then 15/40 passed. No failing assertion removed or skipped. Without MYSQL_TESTS_ENABLED, filtered suite deliberately exits **2** with the opt-in error before migration, confirming the safety barrier.
+
+## 16. Redis Integration Test Results
+
+`REDIS_TESTS_ENABLED=1 REDIS_HOST=127.0.0.1 REDIS_PORT=6387 P vendor/bin/phpunit --configuration phpunit.redis.xml --stop-on-failure`: **4 passed, 19 assertions**, exit 0, real Redis **8.2.11** / PhpRedis **6.1.0**. Physical namespaced key checked by independent raw client, write/read/invalidation and TTL expiration verified, cache operations emitted zero SQL and preserved an isolated organization sentinel, queue only pushed after commit and not on rollback. Redis suite uses in-memory SQLite rather than developer/MySQL data, preserving independence; zero SQL during cache operations is the demonstrated database non-interference evidence.
+
+First run: exit 1, four tests/13 assertions with two failures. Runtime prefix change happened after Laravel had already resolved a Redis client; fixed by forcing the testing prefix in dedicated XML before application bootstrap, retaining the physical key assertion. Second failure compared creation-vs-hydration attribute order; corrected the baseline to an actual reloaded persisted snapshot, preserving strict equality. No claim was weakened. Without REDIS_TESTS_ENABLED, the filtered suite deliberately exits **2**, not skip/success. Unavailable-service behavior and final formatted rerun are recorded in the final addendum.
+
+## 17. Regression Test Results
+
+| Actual command | Observed result |
+| --- | --- |
+| git status / git branch --show-current / git merge-base --is-ancestor origin/main HEAD | Clean start, assigned branch, approved base ancestor; exit 0 |
+| C validate --strict | Passed exit 0; current lockfile valid |
+| C install --no-interaction --prefer-dist --no-progress | Passed exit 0 with workspace COMPOSER_CACHE_DIR and permitted network/filesystem access; nothing installed/updated/removed; package discovery/Filament assets completed |
+| C check-platform-reqs | Passed exit 0; all installed package platform requirements satisfied |
+| P artisan --version | Passed exit 0; Laravel 13.39.0 |
+| P artisan about | Passed exit 0; PHP 8.4.27, Filament 5.11.0, Livewire 4.4.8; debug off. Existing ignored local .env retained SQLite/database cache; Redis explicitly exercised via integration config |
+| P artisan route:list --path=admin | Passed exit 0; existing admin dashboard/login/logout routes present |
+| C audit | Passed exit 0, no vulnerability advisories |
+| P vendor/bin/pint --test | Initial Redis test formatting issue; ran Pint on that file and recheck passed exit 0 |
+| php -l over app/config/database/tests PHP files | Passed exit 0, 37 files |
+| npm.cmd ci | Passed exit 0, 87 packages, no vulnerabilities; upstream esbuild script-policy warning, no bypass |
+| npm.cmd run build | Passed exit 0; Vite 7.3.7, 61 modules |
+| docker compose -p quality-platform-phase03a -f compose.redis.yml config --quiet | Passed exit 0 |
+| git diff --check | Passed exit 0 for tracked changes; staged check repeated before commit |
+
+No existing tests changed or disabled. Static analysis/coverage/HTTP tenant authorization tests NOT RUN (not implemented/configured in scope). Existing Filament routes and frontend assets remain regression targets, not approval of production access.
+
+## 18. CI Results
+
+Existing MySQL 8.4 service, PHP/Laravel validation, SHA-pinned actions, all framework tests, Pint, frontend/HTTP checks and Issue #4 scope-validation block retained. Added pinned Redis service/health, redis PHP extension and separate MySQL/Redis test steps. The initial disposable global-setting step is superseded/removed by section 25. MySQL integration cleanup is followed by migration for existing HTTP/session checks. No repository secrets, write token permission or deployment steps. Integration absence/errors fail the job.
+
+Initial remote [run 41231860965](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41231860965), adfa8d7: **FAILED**, Redis step exit 2, four errors/zero assertions. All preceding validation/installation/audit/route/migration/17-test SQLite and 15-test MySQL steps passed. Redis's environment guard correctly rejected inherited MySQL settings before migrations; PHP exposes CI environment variables in $_SERVER, which Laravel Dotenv can read ahead of PHPUnit's forced $_ENV/getenv. Corrected both dedicated configs by forcing the same safe values in server AND env entries. The safety check and test assertions remain intact. Pint/build/HTTP steps were SKIPPED in this failed run, not claimed as passed; subsequent full run is recorded below.
+
+Final implementation [run 41232136765](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41232136765), commit `37d9d9523981a1591cba781e843fd42189a0aa47`: **SUCCESS**. All applicable steps passed (exit 0): locked install/validation/platform/audit, admin routes, MySQL migration/rollback/remigration, isolated SQLite suite, separate MySQL integrity suite, separate real Redis suite, Pint, npm ci/build, configuration/route/view cache checks, actual HTTP `/`, `/up`, `/admin/login`, and cleanup. The Issue #4 guard is correctly SKIPPED for this Issue #11 branch by its existing condition; its source block remains identical to main. No integration test was skipped. Remote test counts: SQLite **17/60**, MySQL **15/40**, Redis **4/19** (tests/assertions).
+
+## 19. Security Review
+
+RESTRICT references and composite tenant FK are tested. Ownership is not user-array fillable; no request contracts or implicit grants. ULIDs do not authorize. Existing password security retained. New rows/factories are synthetic; no production data, private SRS text or secrets committed. CI credentials are known disposable container-only fixtures. Redis port is loopback and test namespace/key cleanup precise. Production admin/tenant context/authorization/IDOR/job/file policies remain NOT IMPLEMENTED. No repository protection, contributor branch, deployment, production settings or real credentials changed.
+
+## 20. Performance and Scalability Considerations
+
+BIGINT internal keys keep relational indexes narrow; ULIDs are separate public IDs. Only justified unique/FK/hierarchy indexes added. Standard relationships permit eager loading; no speculative cache/repository abstractions. No hot HTTP use case/query optimization, benchmark, P95 or SLA is claimed. Future approved use cases require query-count/N+1 and load testing; structural cache setup is not evidence of business performance.
+
+## 21. Unresolved Product-owner Decisions
+
+DEFERRED: D-001 support access, D-002 roles/delegation, D-008 residency/retention, D-021 membership grant/switch business rules, D-022 self-review, D-023 organization suspension, D-024 invitations/reset/MFA and D-027 business relationships. D-017 and D-021 technical data shape follow accepted ADRs; business authority is not inferred. No organization/membership status field invented.
+
+## 22. Known Limitations and Risks
+
+Complete hierarchy cycles and safe concurrent reparenting require a future approved Action. Model public-ID guards are bypassable through low-level writes; no such external contract is added. DB integrity is not tenant read authorization. New trigger creation has documented migration privilege/binlog prerequisites and no deployment approval is implied. Named Redis volume persistence is development-only; production backup/retention/HA are not selected. No performance/legal compliance claim. Test containers affect only known task resources; cleanup status is recorded at handover.
+
+## 23. Git Branch, Commit IDs, and Pull Request URL
+
+Repository: https://github.com/NabilAlsaidaly/quality-excellence-platform. Base main `56e51ee7c8eba5600454d5152b149b286d7ae29d`; assigned/push-only branch `feat/11-tenant-schema-foundation`. Implementation commit `adfa8d79b20cb9884b62c6570357ab879f0e3b28`; integration isolation/report follow-up `37d9d9523981a1591cba781e843fd42189a0aa47`; both pushed successfully. Verified Draft PR: https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/15 (open, draft, unmerged, targeting main). Report-only follow-up commit IDs are available in branch git log. No merge authorized/performed. UI contributor branch and owned files untouched. Mandatory report persistence checked with `git ls-files docs/engineering/reports/PHASE-03A-TENANT-SCHEMA.md` (listed); PR changed-file readback also confirms the report.
+
+## 24. Final Engineering Verdict
+
+**COMPLETE — READY FOR ENGINEERING-LEAD REVIEW.** Implementation, local 36-test/119-assertion verification, independent successful MySQL/Redis CI, pushed branch, Draft PR and persisted report are verified. No required implementation blocker remains. Lead review is required before merge, especially schema triggers and CI. Tenant authorization, full hierarchy-cycle Actions and open business/production policies remain deliberately NOT IMPLEMENTED/DEFERRED; do not interpret structural integrity as production-ready tenant authorization. No merge performed.
+
+### Verification addendum
+
+- Composer's first restricted install warned about unwritable user cache/unreachable proxy and was interrupted during autoload generation (exit 1). A permitted rerun with COMPOSER_CACHE_DIR inside ignored .local-tools completed exit 0 from the existing lockfile; dependencies unchanged. No global tool or host PHP setting changed.
+- Redis required-but-unavailable negative probe: REDIS_TESTS_ENABLED=1, port 63998, filtered real_connection test exited **2** with connection error, confirming absent Redis cannot silently pass/skip. Normal real-service rerun follows in final evidence.
+- Normal opt-out safety probes: both MySQL and Redis configurations returned expected exit **2** and explicit opt-in diagnostics. These deliberate negative runs are distinct from successful integration suites.
+- Final post-format regression: `P artisan test` exit 0, **17 tests / 60 assertions**; `P vendor/bin/pint --test` exit 0; real Redis `P vendor/bin/phpunit --configuration phpunit.redis.xml` exit 0, **4 tests / 19 assertions**. MySQL final suite above passed **15 tests / 40 assertions**. Total successful local suites: **36 tests / 119 assertions**, zero failed/skipped on the final runs.
+- Existing UI scope validation block was compared against origin/main and preserved verbatim. No forbidden presentation/translation/Vite/UI-test paths, composer/npm manifests/lockfiles or general phpunit.xml changed.
+- Task-created local MySQL and Redis containers/network were stopped/removed after successful local checks; the newly created Redis development volume was retained. No other container, volume, database or host service was stopped/deleted. Any later task-only retest setup/cleanup is recorded with its outcome.
+- CI-environment reproduction after the isolation fix: with inherited DB_CONNECTION=mysql / DB_DATABASE=quality_platform_ci and the separate real Redis service on 6387, dedicated Redis tests still used in-memory SQLite and passed **4/19**, exit 0. That retest container/network was then removed, retaining its test-only volume. Final code CI independently passed all gates afterward.
+- Successful CI observed PHP 8.4.27, Composer 2.11.1, Node 24.22.1, MySQL **8.4.13** and the pinned Redis **8.2.11** service. Pint checked **42 files** successfully. This supplements the actual local MySQL 8.4.11 evidence rather than rewriting it.
+
+### Changed-file manifest
+
+- `.env.example`
+- `.github/workflows/ci.yml`
+- `app/Models/Concerns/HasPublicUlid.php`
+- `app/Models/Organization.php`
+- `app/Models/OrganizationalUnit.php`
+- `app/Models/OrganizationMembership.php`
+- `app/Models/User.php`
+- `compose.redis.yml`
+- `config/cache.php`
+- `config/database.php`
+- `config/queue.php`
+- `database/factories/OrganizationalUnitFactory.php`
+- `database/factories/OrganizationFactory.php`
+- `database/factories/OrganizationMembershipFactory.php`
+- `database/migrations/2026_10_31_000001_create_organizations_table.php`
+- `database/migrations/2026_10_31_000002_create_organization_memberships_table.php`
+- `database/migrations/2026_10_31_000003_create_organizational_units_table.php`
+- `docs/architecture/foundation.md`
+- `docs/architecture/tenant-schema-foundation.md`
+- `docs/engineering/reports/PHASE-03A-TENANT-SCHEMA.md`
+- `docs/README.md`
+- `docs/setup/local-development.md`
+- `docs/setup/redis-local.md`
+- `phpunit.mysql.xml`
+- `phpunit.redis.xml`
+- `README.md`
+- `tests/Feature/TenantSchemaTest.php`
+- `tests/Integration/MySql/TenantIntegrityTest.php`
+- `tests/Integration/Redis/RedisInfrastructureTest.php`
+- `tests/Support/MySqlTestCase.php`
+
+## 25. PR #15 trigger-migration safety and portability correction
+
+### Review finding
+
+**High severity — corrected:** organizational_units CREATE TABLE and two CREATE TRIGGER statements commit separately on MySQL. Error 1419 (or another trigger failure) could leave a table/first trigger without Laravel's migration journal entry, causing the next ordinary migrate to fail on table-exists. Initial successful CI had masked deployment privilege requirements by changing a global setting on its disposable server. That step has been removed; no global setting is changed by this correction, its tests or CI.
+
+### Minimal implementation
+
+Preserve the original table schema, migration identity and both trigger bodies. Wrap only trigger installation after this invocation's successful Schema::create. On exception, acquire a MySQL WRITE table lock, check emptiness and drop only that new empty table, automatically removing any first trigger. The lock makes the empty check/DROP indivisible with respect to competing table writers. Release the lock and rethrow the original trigger error so Laravel cannot journal a successful migration. A pre-existing table fails before entering this cleanup path and is never adopted/replaced. Unexpected rows are retained. LOCK/SELECT/DROP/UNLOCK failure raises an explicit operator-recovery exception containing the original trigger exception as its cause; no success/constraint bypass is manufactured.
+
+No business rule, FK, self-parent guarantee, existing test assertion, dependency, UI path or global setting was removed/weakened. This unmerged phase migration is corrected in place; it does not rerun or mutate already-recorded successful deployments.
+
+### Deployment prerequisites and remaining risks
+
+- Use one approved migration operator with appropriate schema CREATE/ALTER/REFERENCES/TRIGGER privileges and SELECT/DROP/LOCK TABLES for cleanup. Under binary logging, the provider may require additional administrative privilege for CREATE TRIGGER (1419). Review actual grants/provider support before rollout. Application runtime credentials must not inherit these privileges.
+- CI/local tests use the existing root fixture **only in the disposable MySQL container** for migration-bearing checks; other CI/runtime HTTP steps use the original scoped service account. The restricted fixture reproduces 1419. No GRANT, privilege escalation or server-setting modification is performed by the migration/tests/workflow.
+- A provider that refuses required trigger privileges under its existing configuration is a deployment blocker; do not omit the invariant, alter global logging/trust settings, or assume ordinary hosting credentials are portable. An alternate design/operations policy needs lead approval outside this patch.
+- Pause HTTP/background/scheduled/external writes until migrations and integrity verification complete. A trigger definer is the creating operator account; preserve its existence/activation privileges and review exports/replicas/managed-service import behavior. No environment-specific DEFINER is hard-coded.
+- This is compensating cleanup, not a multi-statement DDL transaction. Process death, disconnect/failover, earlier table/FK creation failure or revoked cleanup privileges can still leave artifacts requiring operator recovery. Old failed-attempt tables are deliberately not auto-adopted or dropped. Keep writes paused; inspect table/data, triggers and journal; remove only an operator-verified empty failed-attempt table with provenance/dependency/backup review, or reconcile preserved rows. Never run migrate:fresh or fabricate journal entries on shared data. Full procedure is in docs/setup/redis-local.md.
+
+Official review references: [MySQL implicit DDL commits](https://dev.mysql.com/doc/refman/8.4/en/implicit-commit.html), [CREATE TRIGGER privileges/definer](https://dev.mysql.com/doc/refman/8.4/en/create-trigger.html), [binary logging restrictions](https://dev.mysql.com/doc/refman/8.4/en/stored-programs-logging.html). No claim of portability to providers that prohibit triggers is made.
+
+### Regression and failure-path evidence
+
+New `tests/Integration/MySql/TriggerMigrationSafetyTest.php` covers six meaningful scenarios against real MySQL:
+
+1. Actual restricted-account error **1419** after table creation with @@GLOBAL.log_bin=1 and trust_function_creators=0: no table/triggers/journal residue, existing organization retained, ordinary migrate retry succeeds with both triggers enforced; both global settings remain unchanged.
+2. Injected second-trigger exception after confirming the first trigger exists: cleanup removes both table and first trigger, original error propagates, normal retry succeeds and rejects raw self-parent update (1644).
+3. Existing table with a synthetic row: actual error 1050 propagates, row and both triggers remain.
+4. Independent competing connection attempts INSERT between empty check and DROP: actual lock-wait error **1205**, then successful cleanup/retry. Only that test session's timeout is shortened; no global setting is changed.
+5. Unexpected concurrent row before cleanup: row is preserved, journal absent, explicit recovery error retains original cause. Fixture-only teardown is separate from application recovery.
+6. Injected cleanup DROP denial: table retained, journal absent and explicit error retains original trigger failure. Tests disarm only their own fault injection for fixture teardown.
+
+Local environment: existing Laravel/PHP/PhpRedis tooling retained; separate task container `quality-pr15-mysql` on loopback 33068, unchanged MySQL 8.4 defaults, and Compose project `quality-pr15-review` Redis on loopback 6387. No developer database was used. `P` remains the documented local `php -d sys_temp_dir=.local-tools/tmp` prefix.
+
+| Command / check | Actual result |
+| --- | --- |
+| P vendor/bin/phpunit --configuration phpunit.mysql.xml --stop-on-error --stop-on-failure | Exit 0; **21 tests, 91 assertions** (all original 15/40 plus six recovery/locking cases) |
+| P artisan test | Exit 0; **18 tests, 68 assertions**, original 17/60 intact plus one driver-isolation regression test |
+| P vendor/bin/phpunit --configuration phpunit.redis.xml | Exit 0; **4 tests, 19 assertions**, real Redis |
+| P vendor/bin/pint --test | Exit 0, passed |
+| git diff --check | Exit 0 |
+
+An intermediate recovery version passed 20 MySQL tests/80 assertions before adding locked cleanup and the competing-writer case. The initial local general rerun passed its unchanged 17 tests/60 assertions; the new isolation regression brings that suite to 18/68. Final successful local total: **43 tests, 178 assertions**, zero failed/skipped. CI and publication evidence for this correction are added below after observation.
+
+Correction CI [run 41233668745](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41233668745), de2ea1d, **FAILED** at the general suite: **15 failed, 2 passed, 2 assertions, exit 2**. Inherited CI MySQL values in $_SERVER overrode the old general phpunit.xml's forced getenv/$_ENV values. Its CREATE TRIGGER attempts correctly failed with 1419 under the newly unchanged global defaults. MySQL migration verification passed; later integration/Pint/build/HTTP steps were skipped in that run. This exposes that earlier general CI runs labelled SQLite could actually use the disposable MySQL service; those historic results must not be interpreted as SQLite isolation evidence. Local prior SQLite results remain genuine.
+
+Fixed the general phpunit.xml to force safe values in both PHP environment sources (the same already-tested isolation mechanism used by dedicated suites), and added IsolationConfigurationTest. It asserts the actual PDO driver is SQLite and the database is :memory:, along with testing/array cache/sync queue/array sessions/array mail settings. Direct PHPUnit with deliberately inherited mysql/Redis/database-session/smtp/production environment variables passed **18 tests/68 assertions**, exit 0; normal `P artisan test` also passed **18/68**. No existing assertion was removed or changed. This follow-up is required to provide trustworthy SQLite regression evidence instead of restoring the global-setting workaround.
+
+### Changed paths for this correction
+
+- database/migrations/2026_10_31_000003_create_organizational_units_table.php — locked, non-destructive compensation for trigger failures.
+- tests/Integration/MySql/TriggerMigrationSafetyTest.php — actual MySQL failure/retry/data/lock coverage; original tests unchanged.
+- phpunit.xml and tests/Feature/IsolationConfigurationTest.php — prevent inherited CI/external-service settings from escaping SQLite/array/sync isolation and prove actual PDO/driver selection.
+- .github/workflows/ci.yml — remove global-setting mutation, scope privileged disposable credentials to migration steps.
+- docs/setup/redis-local.md — deployment privilege/definer/maintenance/recovery prerequisites; remove global-setting instructions.
+- docs/architecture/tenant-schema-foundation.md — explain compensating behavior and its boundary.
+- This permanent report — findings, test evidence, limitations and delivery records.
+
+### Correction delivery status
+
+**CORRECTION COMPLETE — READY FOR ENGINEERING-LEAD REVIEW.** Working branch: feat/11-tenant-schema-foundation. Existing Draft PR: https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/15 (open, draft, unmerged). Pushed correction commits: `de2ea1dfc09998608c85593264e029b9a8d849af` (safe migration recovery/tests/CI privilege separation) and `d37c61ec5f6650ba953ebf82e3eb3d5f8f61c400` (general-suite isolation/regression). Final report-only commit can be identified in git log.
+
+Fresh [CI run 41233929286](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41233929286), d37c61e: **SUCCESS**, all applicable steps exit 0. Verified actual SQLite **18 tests/68 assertions**, independent real MySQL **21/91**, Redis **4/19**, total **43/178**, no integration test skipped. Composer validation/locked install/platform/audit, admin routes, MySQL migrate/rollback/remigrate, Pint (**44 files**), npm ci/build, configuration caches and HTTP checks all passed. CI used PHP 8.4.27, Composer 2.11.1, Node 24.22.1, MySQL **8.4.13** and pinned Redis 8.2.11. The existing Issue #4 scope step is correctly skipped on this Issue #11 branch. The real 1419/default-global-settings and locking recovery cases now pass in CI; neither a global-setting workaround nor weakened assertions are used.
+
+Read-only local server verification after tests: MySQL **8.4.11**, @@GLOBAL.log_bin=**1**, @@GLOBAL.log_bin_trust_function_creators=**0**. Task-created quality-pr15-mysql and quality-pr15-review Redis container/network were stopped/removed after checks; only their development Redis volume retained. No other resource or database setting changed. Deployment prerequisites and the explicitly bounded crash/cleanup/manual-recovery risks above remain for lead review. Report is committed/pushed and included in PR changed files; publication readback is part of handover. No merge or deployment performed. Stop for engineering-lead review.

@@ -8,7 +8,7 @@ Multi-organization institutional quality and excellence management platform (Ara
 - MySQL **8.x** target; isolated SQLite PHPUnit bootstrap tests
 - Node.js **24** LTS, Vite, Tailwind, PHPUnit, Laravel Pint and GitHub Actions CI
 
-**Not implemented:** organization/membership tables, tenant authorization, full RBAC, evidence/document workflows, maturity stages, production admin access and end-user UI. Installed Filament login routes do not imply an authorized production panel.
+Phase 03A adds structural organizations, memberships and hierarchical units with same-tenant database constraints, plus Redis infrastructure. **Not implemented:** tenant context/authorization, full RBAC, evidence/document workflows, maturity stages, production admin access and end-user UI. A membership alone grants no permission. Installed Filament login routes do not imply an authorized production panel.
 
 ## Setup from the default branch
 Clone the repository and work on `main` only to **update your local base**, then use a task branch for any modification:
@@ -22,6 +22,8 @@ php artisan key:generate
 ```
 
 On Windows PowerShell, replace `cp` with `Copy-Item .env.example .env`. Configure a dedicated local MySQL database and credentials in the untracked `.env` as described in [local setup](docs/setup/local-development.md). Never overwrite an existing production/application key.
+
+Start the local Redis service and review MySQL trigger migration prerequisites in [Redis and integration setup](docs/setup/redis-local.md). `.env.example` selects Redis cache/queues via PhpRedis while retaining database sessions. MySQL remains authoritative. The regular tests stay independent of both services.
 
 ```sh
 php artisan migrate

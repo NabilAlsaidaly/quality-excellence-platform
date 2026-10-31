@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
 
     /*
@@ -112,7 +110,8 @@ return [
     |
     */
 
-    'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
+    // Redis adds the project/environment prefix from database.redis.options.
+    'prefix' => env('CACHE_PREFIX', 'cache:'),
 
     /*
     |--------------------------------------------------------------------------
