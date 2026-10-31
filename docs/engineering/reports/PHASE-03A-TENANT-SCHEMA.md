@@ -238,17 +238,22 @@ Local environment: existing Laravel/PHP/PhpRedis tooling retained; separate task
 | Command / check | Actual result |
 | --- | --- |
 | P vendor/bin/phpunit --configuration phpunit.mysql.xml --stop-on-error --stop-on-failure | Exit 0; **21 tests, 91 assertions** (all original 15/40 plus six recovery/locking cases) |
-| P artisan test | Exit 0; **17 tests, 60 assertions**, original SQLite suite intact |
+| P artisan test | Exit 0; **18 tests, 68 assertions**, original 17/60 intact plus one driver-isolation regression test |
 | P vendor/bin/phpunit --configuration phpunit.redis.xml | Exit 0; **4 tests, 19 assertions**, real Redis |
 | P vendor/bin/pint --test | Exit 0, passed |
 | git diff --check | Exit 0 |
 
-An intermediate recovery version passed 20 MySQL tests/80 assertions before adding locked cleanup and the competing-writer case; the final count above supersedes it without suppressing failures. Final successful local total: **42 tests, 170 assertions**, zero failed/skipped. CI and publication evidence for this correction are added below after observation.
+An intermediate recovery version passed 20 MySQL tests/80 assertions before adding locked cleanup and the competing-writer case. The initial local general rerun passed its unchanged 17 tests/60 assertions; the new isolation regression brings that suite to 18/68. Final successful local total: **43 tests, 178 assertions**, zero failed/skipped. CI and publication evidence for this correction are added below after observation.
+
+Correction CI [run 41233668745](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41233668745), de2ea1d, **FAILED** at the general suite: inherited CI MySQL values in $_SERVER overrode the old general phpunit.xml's forced getenv/$_ENV values. Its CREATE TRIGGER attempts correctly failed with 1419 under the newly unchanged global defaults. MySQL migration verification passed; later integration/Pint/build/HTTP steps were skipped in that run. This exposes that earlier general CI runs labelled SQLite could actually use the disposable MySQL service; those historic results must not be interpreted as SQLite isolation evidence. Local prior SQLite results remain genuine.
+
+Fixed the general phpunit.xml to force safe values in both PHP environment sources (the same already-tested isolation mechanism used by dedicated suites), and added IsolationConfigurationTest. It asserts the actual PDO driver is SQLite and the database is :memory:, along with testing/array cache/sync queue/array sessions/array mail settings. Direct PHPUnit with deliberately inherited mysql/Redis/database-session/smtp/production environment variables passed **18 tests/68 assertions**, exit 0; normal `P artisan test` also passed **18/68**. No existing assertion was removed or changed. This follow-up is required to provide trustworthy SQLite regression evidence instead of restoring the global-setting workaround.
 
 ### Changed paths for this correction
 
 - database/migrations/2026_10_31_000003_create_organizational_units_table.php — locked, non-destructive compensation for trigger failures.
 - tests/Integration/MySql/TriggerMigrationSafetyTest.php — actual MySQL failure/retry/data/lock coverage; original tests unchanged.
+- phpunit.xml and tests/Feature/IsolationConfigurationTest.php — prevent inherited CI/external-service settings from escaping SQLite/array/sync isolation and prove actual PDO/driver selection.
 - .github/workflows/ci.yml — remove global-setting mutation, scope privileged disposable credentials to migration steps.
 - docs/setup/redis-local.md — deployment privilege/definer/maintenance/recovery prerequisites; remove global-setting instructions.
 - docs/architecture/tenant-schema-foundation.md — explain compensating behavior and its boundary.
