@@ -4,7 +4,7 @@ Date: 2026-10-31 (Asia/Damascus). Contract: Issue #11 and owner-supplied phase3A
 
 ## 1. Executive Summary
 
-IMPLEMENTED: additive organizations, organization_memberships and organizational_units schema, models/relationships/factories, public ULID generation/model immutability, composite same-tenant parent FK, restrictive references and MySQL direct-self-parent triggers. Redis development Compose, PhpRedis cache/queue configuration, after-commit behavior, independent integration suites and CI extensions are implemented. TESTED locally on SQLite, real MySQL 8.4.11 and Redis 8.2.11. Draft PR/remote CI publication evidence will be added once observed. No UI, role/permission, tenant authorization workflow or production change.
+IMPLEMENTED: additive organizations, organization_memberships and organizational_units schema, models/relationships/factories, public ULID generation/model immutability, composite same-tenant parent FK, restrictive references and MySQL direct-self-parent triggers. Redis development Compose, PhpRedis cache/queue configuration, after-commit behavior, independent integration suites and CI extensions are implemented. TESTED locally on SQLite, real MySQL 8.4.11 and Redis 8.2.11. Published as Draft PR #15; remote CI result is recorded below once observed. No UI, role/permission, tenant authorization workflow or production change.
 
 ## 2. Scope and Objectives
 
@@ -124,7 +124,9 @@ No existing tests changed or disabled. Static analysis/coverage/HTTP tenant auth
 
 ## 18. CI Results
 
-Existing MySQL 8.4 service, PHP/Laravel validation, SHA-pinned actions, all framework tests, Pint, frontend/HTTP checks and Issue #4 scope-validation block retained. Added pinned Redis service/health, redis PHP extension, disposable trigger initialization and separate MySQL/Redis test steps. MySQL integration cleanup is followed by migration for existing HTTP/session checks. No repository secrets, write token permission or deployment steps. Integration absence/errors fail the job. Remote results pending publication; no CI success claimed from configuration alone.
+Existing MySQL 8.4 service, PHP/Laravel validation, SHA-pinned actions, all framework tests, Pint, frontend/HTTP checks and Issue #4 scope-validation block retained. Added pinned Redis service/health, redis PHP extension, disposable trigger initialization and separate MySQL/Redis test steps. MySQL integration cleanup is followed by migration for existing HTTP/session checks. No repository secrets, write token permission or deployment steps. Integration absence/errors fail the job.
+
+Initial remote [run 41231860965](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41231860965), adfa8d7: **FAILED**, Redis step exit 2, four errors/zero assertions. All preceding validation/installation/audit/route/migration/17-test SQLite and 15-test MySQL steps passed. Redis's environment guard correctly rejected inherited MySQL settings before migrations; PHP exposes CI environment variables in $_SERVER, which Laravel Dotenv can read ahead of PHPUnit's forced $_ENV/getenv. Corrected both dedicated configs by forcing the same safe values in server AND env entries. The safety check and test assertions remain intact. Pint/build/HTTP steps were SKIPPED in this failed run, not claimed as passed; subsequent full run is recorded below.
 
 ## 19. Security Review
 
@@ -144,7 +146,7 @@ Complete hierarchy cycles and safe concurrent reparenting require a future appro
 
 ## 23. Git Branch, Commit IDs, and Pull Request URL
 
-Repository: https://github.com/NabilAlsaidaly/quality-excellence-platform. Base main `56e51ee`; assigned/push-only branch `feat/11-tenant-schema-foundation`. Focused Conventional Commit IDs and verified Draft PR URL will be appended after publication. No merge authorized/performed. UI contributor branch and owned files untouched. Mandatory report persistence is checked using git ls-files and PR changed-file readback.
+Repository: https://github.com/NabilAlsaidaly/quality-excellence-platform. Base main `56e51ee7c8eba5600454d5152b149b286d7ae29d`; assigned/push-only branch `feat/11-tenant-schema-foundation`. Implementation commit `adfa8d79b20cb9884b62c6570357ab879f0e3b28` pushed successfully. Verified Draft PR: https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/15 (open, draft, unmerged, targeting main). Report-only follow-up commit IDs are available in branch git log. No merge authorized/performed. UI contributor branch and owned files untouched. Mandatory report persistence checked with `git ls-files docs/engineering/reports/PHASE-03A-TENANT-SCHEMA.md` (listed); PR changed-file readback also confirms the report.
 
 ## 24. Final Engineering Verdict
 
@@ -155,7 +157,9 @@ Implementation and local database/Redis verification are ready for review; deliv
 - Composer's first restricted install warned about unwritable user cache/unreachable proxy and was interrupted during autoload generation (exit 1). A permitted rerun with COMPOSER_CACHE_DIR inside ignored .local-tools completed exit 0 from the existing lockfile; dependencies unchanged. No global tool or host PHP setting changed.
 - Redis required-but-unavailable negative probe: REDIS_TESTS_ENABLED=1, port 63998, filtered real_connection test exited **2** with connection error, confirming absent Redis cannot silently pass/skip. Normal real-service rerun follows in final evidence.
 - Normal opt-out safety probes: both MySQL and Redis configurations returned expected exit **2** and explicit opt-in diagnostics. These deliberate negative runs are distinct from successful integration suites.
+- Final post-format regression: `P artisan test` exit 0, **17 tests / 60 assertions**; `P vendor/bin/pint --test` exit 0; real Redis `P vendor/bin/phpunit --configuration phpunit.redis.xml` exit 0, **4 tests / 19 assertions**. MySQL final suite above passed **15 tests / 40 assertions**. Total successful local suites: **36 tests / 119 assertions**, zero failed/skipped on the final runs.
 - Existing UI scope validation block was compared against origin/main and preserved verbatim. No forbidden presentation/translation/Vite/UI-test paths, composer/npm manifests/lockfiles or general phpunit.xml changed.
+- Task-created local MySQL and Redis containers/network were stopped/removed after successful local checks; the newly created Redis development volume was retained. No other container, volume, database or host service was stopped/deleted. Any later task-only retest setup/cleanup is recorded with its outcome.
 
 ### Changed-file manifest
 
