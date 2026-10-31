@@ -22,7 +22,7 @@ Copy `.env.example` to `.env` (`cp .env.example .env`, or `Copy-Item .env.exampl
 php artisan key:generate
 ```
 
-The example defaults to MySQL and `APP_DEBUG=false`. Set `APP_ENV=local`, `APP_URL=http://127.0.0.1:8000`; enable debug only for local development if needed. Never commit `.env`, a generated key or credentials. Keep debug disabled outside local development. The example includes optional framework Redis/AWS/mail placeholders; no external service is required.
+The example defaults to MySQL, Redis cache/queues and `APP_DEBUG=false`. Set `APP_ENV=local`, `APP_URL=http://127.0.0.1:8000`; enable debug only for local development if needed. Never commit `.env`, a generated key or credentials. Keep debug disabled outside local development. Start the local Redis container and read the MySQL trigger prerequisites in [Redis/integration setup](redis-local.md) before migrating. AWS/mail placeholders do not require an external service. Sessions remain database-backed.
 
 ## MySQL
 

@@ -5,6 +5,9 @@
 - [Decision ledger — approved technical choices vs pending owner policy](architecture/decision-ledger.md).
 - [Contributor and security posture](engineering/collaboration-security.md).
 - [Local development](setup/local-development.md).
+- [Local Redis and independent MySQL/Redis tests](setup/redis-local.md).
+- [Phase 03A schema design and authorization boundaries](architecture/tenant-schema-foundation.md).
+- [Phase 03A engineering report](engineering/reports/PHASE-03A-TENANT-SCHEMA.md).
 - [Phase 01 Laravel bootstrap evidence](engineering/reports/PHASE-01-LARAVEL-BOOTSTRAP.md).
 - [Phase 02 Filament evidence](engineering/reports/PHASE-02-FILAMENT-FOUNDATION.md).
 - [Architecture approval and repository audit](engineering/reports/ISSUE-7-ARCHITECTURE-APPROVAL.md).
