@@ -1,4 +1,4 @@
-# Phase 01 â€” Laravel bootstrap engineering report
+# Phase 01 أ¢â‚¬â€‌ Laravel bootstrap engineering report
 
 Date: 2026-10-31 (Asia/Damascus). Task: [Issue #3](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/3), owner-supplied `phase1.md`.
 
@@ -104,6 +104,10 @@ Earlier failed attempts (resolved): plain `php artisan about` and `php artisan t
 
 ## I. Code Quality
 
+Remote validation: [Foundation CI run 41203045391](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41203045391), implementation c45d3fc, completed **success**. All steps passed (exit 0): clean checkout/locked Composer install; strict validation/platform/audit; Laravel 13.39.0 on PHP 8.4.27 / Composer 2.11.1; MySQL **8.4.13** migrate/status/rollback/remigrate (three migrations each); five SQLite tests / 12 assertions; Pint 27 files; npm ci/build (Node 24.22.1, 61 modules); config/route/view caching, actual artisan serve HTTP and cache cleanup. CI proves fresh Linux installation and MySQL framework migration compatibility, not future MySQL business constraints. Initial curl connection-refused was handled by the configured startup retry and final requests succeeded. Upstream v4 checkout/setup-node emitted a deprecated Node 20 runtime warning; both pins were upgraded to verified upstream v6 tags (native Node 24) in the follow-up. No test assertions were weakened.
+
+Additional clean Windows archive installation (`git archive HEAD --format=zip --output=.local-tools/fresh.zip`, extract under `.local-tools/fresh`, install from committed lockfile) initially failed, exit 1: Composer could not delete a temporary Symfony FunctionNode.php during extraction, reporting possible antivirus/search-indexer file locking. Subsequent migration/tests/npm commands in that attempt were not executed. The independent clean Linux CI install passed. Retry outcome is recorded in the final verification addendum.
+
 Pint and 26 PHP syntax checks passed; Composer validation/platform checks passed; Composer/npm audits returned no advisories at verification time. npm reported an unapproved esbuild postinstall script under its install-script policy; the build nevertheless completed using the platform binary, with no policy bypass. Kept standard framework files and dependency choices. No static-analysis or coverage result claimed. CI actions are full-SHA pinned to verified official/upstream tags, read-only contents permission, npm cache keyed by lockfile, no deployments. Service MySQL image tracks maintained 8.4 patches; upstream action pins need reviewed maintenance. CI requires lead review before merge.
 
 ## J. Security Review
@@ -116,12 +120,12 @@ No real credentials, keys, data dumps or private user data in tracked applicatio
 - Default/base: main, verified fetched commit `9589ca4ecd5b2cde367405317f6b019e7a225bc6` (initial README only).
 - Working branch: `chore/phase-01-laravel-bootstrap`.
 - Governance dependency: PR #2, draft/open/unmerged when inspected; branch `chore/1-repository-governance`.
-- Implementation commit / Draft PR publication: pending final publication; update below once verified.
+- Implementation commit: `c45d3fc49899b6754c1906976acdbf5b80af3eb4` pushed to origin. Draft PR: https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/5 (verified open, draft, unmerged).
 - Merge status: not merged; human lead review required, particularly workflow changes.
 
 ## L. Problems and Limitations
 
-Resolved local network sandbox/temp-path/invocation issues are listed in H. Node 25 host runtime was avoided with a verified portable Node 24; no global modifications. Local MySQL 8.x not tested. CI run must be observed separately; configuration alone is not evidence of passing CI. Upstream default welcome screen is a framework diagnostic page, not the future Arabic RTL product interface. No approved product design/authentication/tenancy architecture is inferred. PR #2 should be resolved by the lead; this bootstrap does not merge or duplicate governance files.
+Resolved local network sandbox/temp-path/invocation issues are listed in H. Node 25 host runtime was avoided with a verified portable Node 24; no global modifications. Local MySQL 8.x not tested; remote CI verified MySQL 8.4.13 migrations successfully. Upstream default welcome screen is a framework diagnostic page, not the future Arabic RTL product interface. No approved product design/authentication/tenancy architecture is inferred. PR #2 should be resolved by the lead; this bootstrap does not merge or duplicate governance files.
 
 ## M. Deferred Decisions
 
@@ -129,11 +133,11 @@ Tenant isolation, identity/membership, authorization/RBAC, product modules/schem
 
 ## N. Next Phase Readiness
 
-Laravel boot, reproducible locked installs, frontend build, isolated tests, documentation and CI configuration are ready for review. Lead must review CI and governance dependency and examine target MySQL verification before integrating. Next phase must use owner-approved requirements/ADRs before introducing modules or database design. See docs/setup/local-development.md for onboarding and exact local MySQL setup.
+Laravel boot, reproducible locked installs, frontend build, isolated tests, documentation and CI configuration are ready for review. Lead must review CI, the successful target MySQL verification and governance dependency before integrating. Next phase must use owner-approved requirements/ADRs before introducing modules or database design. See docs/setup/local-development.md for onboarding and exact local MySQL setup.
 
 ## O. Final Engineering Verdict
 
-Local foundation ready for human review with explicit MySQL/remote-CI limitations. Publication status and final task completion depend on the verified evidence in K. No merge performed or authorized.
+Foundation published and ready for human lead review. Initial remote CI passed, including target MySQL migrations; final action-pin update is being verified separately below. No merge performed or authorized.
 
 ## File manifest
 
