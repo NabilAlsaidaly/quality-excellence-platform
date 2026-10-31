@@ -137,7 +137,15 @@ Laravel boot, reproducible locked installs, frontend build, isolated tests, docu
 
 ## O. Final Engineering Verdict
 
-Foundation published and ready for human lead review. Initial remote CI passed, including target MySQL migrations; final action-pin update is being verified separately below. No merge performed or authorized.
+Foundation published and ready for human lead review. Remote CI passed, including target MySQL migrations; action-pin follow-up verification is recorded in the addendum. No merge performed or authorized.
+
+### Final verification addendum
+
+- Implementation: c45d3fc; current-action/handover follow-up: e776381. Report-only follow-up commits can be inspected with `git log` on the published branch.
+- [Current-action CI run 41203257556](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41203257556), e776381, completed **success**, verifying the v6 action pins and all foundation gates. Completion status: **Complete — ready for human review**; the extra Windows archive limitation does not invalidate the successful root installation and clean Linux/MySQL CI verification.
+- Draft PR #5 is open, unmerged and targets main. No user work was discarded and no governance files were duplicated.
+- Clean Windows archive retry: `composer install --no-interaction --prefer-dist --no-progress` (with the documented temp override), exit 1. Symfony installed this time; PHPUnit extraction failed to delete a temporary CollectingDispatcher.php with the same Windows file-lock diagnostic. Further commands in that attempt were not executed. No antivirus/system setting was changed. This extra host-specific archive check remains a documented limitation; root local installation/tests and independent clean Linux CI passed. For this host, investigate Windows file locking before repeating a nested clean install.
+- Static analysis and coverage remain not executed. Local MySQL was not exercised; actual remote MySQL 8.4.13 migration coverage is recorded above. No failed test was hidden or skipped.
 
 ## File manifest
 
