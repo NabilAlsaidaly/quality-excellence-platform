@@ -5,6 +5,9 @@
 - [Decision ledger — approved technical choices vs pending owner policy](architecture/decision-ledger.md).
 - [Contributor and security posture](engineering/collaboration-security.md).
 - [Local development](setup/local-development.md).
+- [Windows Herd local setup](setup/herd-windows.md).
+- [Phase 03B local readiness evidence](engineering/reports/PHASE-03B-A-HERD-LOCAL-READINESS.md).
+- [Proposed authorization decision preview — not owner approved](engineering/PHASE-03B-RBAC-DECISION-PREVIEW.md).
 - [Local Redis and independent MySQL/Redis tests](setup/redis-local.md).
 - [Phase 03A schema design and authorization boundaries](architecture/tenant-schema-foundation.md).
 - [Phase 03A engineering report](engineering/reports/PHASE-03A-TENANT-SCHEMA.md).

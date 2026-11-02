@@ -1,5 +1,7 @@
 # Local development
 
+For Windows + Laravel Herd, follow [Herd local setup](herd-windows.md). It serves this repository at `http://quality-excellence-platform.test`, preserves the independent phpMyAdmin site and documents the verified MySQL/Redis ports. The CLI server commands below remain an optional alternative, not a requirement for Herd browsing.
+
 ## Prerequisites
 
 - PHP 8.4 with Composer 2; required extensions include ctype, curl, dom, fileinfo, filter, hash, mbstring, openssl, pcre, PDO, session, tokenizer and XML. Enable pdo_mysql for development and pdo_sqlite for the isolated test suite.

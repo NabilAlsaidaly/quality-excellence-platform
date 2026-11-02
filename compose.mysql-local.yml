@@ -1,0 +1,23 @@
+name: quality-platform-development
+
+# Optional local fallback when no accessible, supported MySQL 8.x exists.
+# Start with --env-file .local-tools/herd-mysql.env; never commit that file.
+services:
+  mysql:
+    image: mysql:8.4.13
+    ports:
+      - "127.0.0.1:${QUALITY_MYSQL_PORT:-13306}:3306"
+    environment:
+      MYSQL_DATABASE: quality_platform
+      MYSQL_ROOT_PASSWORD: ${QUALITY_MYSQL_ROOT_PASSWORD:?Provide a private local root password}
+    volumes:
+      - mysql-local-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "--host=127.0.0.1", "ping", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: "no"
+
+volumes:
+  mysql-local-data:
