@@ -34,6 +34,8 @@ php artisan serve
 
 Health: `/up`. Filament admin login route: `/admin/login`; it is **not yet production hardened**. Never publish demo credentials or tenant data.
 
+On Windows with Laravel Herd, use the [Herd setup guide](docs/setup/herd-windows.md) and browse `http://quality-excellence-platform.test` directly; ordinary browsing does not require `php artisan serve`. The guide preserves an existing `phpMyAdmin.test` site, documents optional loopback-only MySQL 8.4/Redis services, and keeps application data separate from disposable integration databases. [Phase 03B local evidence](docs/engineering/reports/PHASE-03B-A-HERD-LOCAL-READINESS.md) and the [proposed authorization preview](docs/engineering/PHASE-03B-RBAC-DECISION-PREVIEW.md) record verified behavior and decisions still awaiting approval.
+
 ## Verification
 ```sh
 composer validate --strict
