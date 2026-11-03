@@ -17,6 +17,8 @@ The repository contains Laravel bootstrap, PHPUnit/Pint/CI, Filament 5 and its `
 
 Phase 04A implements the [internal organizational hierarchy service](organizational-hierarchy-management.md), with organization-row serialization, current ancestor reads, multi-level cycle validation and separate unit-change history. It adds no user-facing route/Resource/capability; hierarchy position grants no privilege. Existing schema/triggers and deny-by-default RBAC remain unchanged. Raw SQL remains outside application cycle/audit guarantees.
 
+Phase 04B adds [internal organization provisioning and scoped metadata](organization-management-foundation.md), preserving existing identity/membership/RBAC/hierarchy semantics. Global actor attribution is not platform-administrator authority; initial provisioning grants no membership. FR-ID-001 is partial pending operational-state and user-facing policy approval. No status column, management endpoint or production access is enabled.
+
 ## Business and compliance policy still requiring product-owner decisions
 D-001 support access, D-002 role matrix/delegation, D-008 location/retention, D-022 self-review/separation of duties, D-023 suspension, D-024 invitation/reset/MFA, and D-027 domain relationship flexibility. These cannot be invented as part of a technical implementation. The data model's capacity for multi-org membership does not itself grant membership.
 

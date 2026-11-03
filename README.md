@@ -12,6 +12,8 @@ Phase 03A adds structural organizations, memberships and hierarchical units with
 
 Phase 04A adds [internal organizational hierarchy management](docs/architecture/organizational-hierarchy-management.md): create/rename/move/tree operations, serialized multi-level cycle checks and separate transactional unit-change history. No management endpoint or implicit hierarchy permission is enabled. Raw SQL can still bypass application cycle checks; deployment/recovery boundaries and actual concurrency evidence are in the [engineering report](docs/engineering/reports/PHASE-04A-ORGANIZATIONAL-HIERARCHY.md).
 
+Phase 04B adds [internal organization provisioning/rename and scoped metadata reads](docs/architecture/organization-management-foundation.md), with exact name validation, current rename locks and separate transactional organization history. Provisioning creates no membership or privilege and grants no tenant-content access. FR-ID-001 remains partial: operational state and user-facing management authority are deferred. See the [permanent report](docs/engineering/reports/PHASE-04B-ORGANIZATION-MANAGEMENT.md).
+
 ## Setup from the default branch
 Clone the repository and work on `main` only to **update your local base**, then use a task branch for any modification:
 
