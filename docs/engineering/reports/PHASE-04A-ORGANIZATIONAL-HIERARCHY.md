@@ -4,7 +4,7 @@ Date: 2026-11-03. Issue [#20](https://github.com/NabilAlsaidaly/quality-excellen
 
 ## 1. Executive summary
 
-**IMPLEMENTED / TESTED:** organizational-unit create/rename/move/tree service using the existing adjacency list and verified TenantContext, iterative multi-level cycle prevention, organization-row transaction serialization/current reads, and separate durable unit-change history. All original constraints/triggers/RBAC boundaries remain. Local validation: **156 tests / 968 assertions passed**: SQLite66/393, MySQL86/556, Redis4/19. No final test failures/skips. Composer strict/platform/audit, Pint, existing Node24 build, admin routes and actual Herd/phpMyAdmin smoke passed.
+**IMPLEMENTED / TESTED:** organizational-unit create/rename/move/tree service using the existing adjacency list and verified TenantContext, iterative multi-level cycle prevention, organization-row transaction serialization/current reads, and separate durable unit-change history. All original constraints/triggers/RBAC boundaries remain. Local validation: **156 tests / 968 assertions passed**: SQLite66/394, MySQL86/557, Redis4/19. No final test failures/skips. Composer strict/platform/audit, Pint, existing Node24 build, admin routes and actual Herd/phpMyAdmin smoke passed.
 
 The real two-process race proves that a waiting move cannot use an old REPEATABLE READ snapshot to create an opposing cycle after the first move commits. Valid competing moves can proceed. Raw SQL still bypasses multi-level cycle protection; that limitation is explicit. No merge/deployment or production authorization is approved.
 
@@ -96,19 +96,19 @@ No audit read/edit/purge interface or retention policy. Runtime DML/operator can
 
 ## 16. SQLite/general test results
 
-**PASS:** php artisan test on actual SQLite :memory:, array cache/sessions, sync queue. **66 tests / 393 assertions**, comprising the original44/207 plus22 shared hierarchy scenarios/186 assertions. Existing driver isolation and Filament/RBAC tests remain. SQLite tests validate algorithms/constraints/transactions, not MySQL row-lock semantics.
+**PASS:** php artisan test on actual SQLite :memory:, array cache/sessions, sync queue. **66 tests / 394 assertions**, comprising the original44/207 plus22 shared hierarchy scenarios/187 assertions. Existing driver isolation and Filament/RBAC tests remain. SQLite tests validate algorithms/constraints/transactions, not MySQL row-lock semantics.
 
-Initial new-test run had8 failures because strict attribute-array snapshots compared factory insertion key order with reloaded DB column order. Fixed the fixture snapshots to read persisted rows first; strict unchanged-value assertions remain. No application behavior was weakened to pass. New-file Pint findings were fixed.
+Initial new-test run had8 failures because strict attribute-array snapshots compared factory insertion key order with reloaded DB column order. Fixed the fixture snapshots to read persisted rows first; strict unchanged-value assertions remain. No application behavior was weakened to pass. New-file Pint findings were fixed. Final review strengthened no-op checks by advancing the clock one minute and strictly comparing both parent/child persisted timestamps and attributes, preventing same-second false passes; this adds one assertion per database suite without removing any check.
 
 ## 17. MySQL integration results
 
-**PASS:** complete final suite **86 tests / 556 assertions**, about115 seconds locally, MySQL8.4.13 in a dedicated disposable container on loopback33068, quality_platform_ci, explicit opt-in and existing safety guards. Includes all53 original cases,22 shared hierarchy scenarios,5 concurrency/revocation cases and6 history/migration cases. No final failures/skips.
+**PASS:** complete final suite **86 tests / 557 assertions**, about123 seconds locally, MySQL8.4.13 in a dedicated disposable container on loopback33068, quality_platform_ci, explicit opt-in and existing safety guards. Includes all53 original cases,22 shared hierarchy scenarios,5 concurrency/revocation cases and6 history/migration cases. No final failures/skips.
 
 Destructive fresh/rollback/rename/corrupt fixtures operate only in this disposable schema. Existing native3306 and persistent application13306 databases never receive destructive test fixtures. No global binlog/trust change.
 
 ## 18. Redis regression results
 
-**PASS:** real Redis8.2.11 integration, **4 tests / 19 assertions**, isolated UUID namespace/targeted cleanup. Existing cache/queue/after_commit behavior preserved; no broad flush or new hierarchy/permission cache. Total across all suites: **156 tests / 968 assertions**.
+**PASS:** real Redis8.2.11 integration, **4 tests / 19 assertions**, isolated UUID namespace/targeted cleanup. Existing cache/queue/after_commit behavior preserved; no broad flush or new hierarchy/permission cache. Total across all suites: **156 tests / 970 assertions**.
 
 ## 19. Existing test regressions
 
@@ -125,8 +125,8 @@ Minimal existing test adaptations only: migration count12->13; permission rollba
 | composer audit | PASS, no known advisories at check time |
 | artisan about | PASS; existing stack/drivers retained |
 | artisan migrate:status | PASS;13 applied locally after separate-operator additive migration |
-| artisan test | PASS,66/393 |
-| Complete MySQL suite | PASS,86/556 |
+| artisan test | PASS,66/394 |
+| Complete MySQL suite | PASS,86/557 |
 | Redis suite | PASS,4/19 |
 | Pint --test | PASS |
 | npm run build | PASS, existing Node24.22.2/Vite7.3.7,61 modules |
@@ -180,16 +180,16 @@ No old migration/model/factory/RBAC/route/controller/Filament/Blade/Vite/localiz
 
 ## 25. Git commits
 
-Baseline2ef8caaec867f464684dda24219b6e194ba25387; branch feat/20-organizational-unit-hierarchy. Implementation/evidence commit identifiers will be persisted after creating the reviewed commits; no self-referential SHA is fabricated.
+Baseline2ef8caaec867f464684dda24219b6e194ba25387; branch feat/20-organizational-unit-hierarchy. Implementation: **4922acb7f58981bcbb18f56855fc212ddce99edf**, feat: add safe organizational hierarchy management. The follow-up strengthens the timestamp no-op test and persists CI/PR evidence; its SHA is available in PR history rather than a fabricated self-reference.
 
 ## 26. Draft Pull Request
 
-Draft PR URL will be persisted after creation against main. Mandatory report and architecture must be included among the20 reviewed changed paths. No merge/deployment authorized.
+[Draft PR #21](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/21) targets main. Remote changed-file readback confirms this mandatory report and architecture among the20 reviewed paths; contributor UI/old schema/RBAC/CI files are unchanged. PR remains open, draft and unmerged. No merge/deployment authorized.
 
 ## 27. CI result and URL
 
-Remote CI is **NOT RUN yet**, not PASS. Existing unchanged Foundation CI will discover the new feature/MySQL tests, exercise fresh migration rollback/repeat, and run dependency/Redis/format/build/runtime HTTP checks. Its observed result and URL will be recorded during handover, with final feature-commit status verified after pushing.
+**PASS:** unchanged [Foundation CI41655747379](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41655747379), job125985442808, on implementation4922acb7f58981bcbb18f56855fc212ddce99edf. All applicable dependency/platform/audit, migration rollback/repeat, SQLite66/394, MySQL86/557, Redis4/19, Pint, clean Linux npm ci/build and cached-runtime HTTP steps succeeded. Logs confirm the initial156/968 totals. The Issue #4 branch-specific scope guard is correctly inapplicable, not a skipped security suite. A subsequent review strengthens no-op timestamp checks beyond one-second precision; final local counts are recorded above, and the follow-up's final-commit CI is checked independently in PR #21 before handover. CI configuration/permissions unchanged.
 
 ## 28. Final engineering verdict
 
-**IMPLEMENTED / TESTED locally:** the authorized internal hierarchy foundation, transactional change history and real MySQL synchronization/current-read cycle protection. **DEFERRED:** all user-facing management/deletion/archive/business privileges and owner-dependent rollout. **BLOCKED for production:** existing owner decisions/Issue #13. Ready for engineering-lead review after observed remote CI and committed PR evidence; do not self-merge or deploy.
+**IMPLEMENTED / TESTED locally and in CI:** the authorized internal hierarchy foundation, transactional change history and real MySQL synchronization/current-read cycle protection. **DEFERRED:** all user-facing management/deletion/archive/business privileges and owner-dependent rollout. **BLOCKED for production:** existing owner decisions/Issue #13. Draft PR #21 contains the committed permanent report, architecture and actual test/CI evidence. Ready for engineering-lead review after final-head CI verification; do not self-merge or deploy.

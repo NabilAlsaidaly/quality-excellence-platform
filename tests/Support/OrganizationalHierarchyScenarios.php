@@ -152,12 +152,21 @@ trait OrganizationalHierarchyScenarios
         $parent = OrganizationalUnit::factory()->for($this->organization)->create();
         $child = OrganizationalUnit::factory()->childOf($parent)->create();
         $before = $child->fresh()->getAttributes();
-        $this->inOrganization(function () use ($parent, $child): void {
-            $this->service()->move($this->actor, $child->public_id, $parent->public_id);
-            $this->service()->rename($this->actor, $child->public_id, $child->name);
-            $this->service()->move($this->actor, $parent->public_id, null);
-        });
+        $parentBefore = $parent->fresh()->getAttributes();
+        // Advance beyond timestamp precision so an accidental save cannot hide
+        // behind all fixture/operation writes happening in the same second.
+        $this->travel(1)->minutes();
+        try {
+            $this->inOrganization(function () use ($parent, $child): void {
+                $this->service()->move($this->actor, $child->public_id, $parent->public_id);
+                $this->service()->rename($this->actor, $child->public_id, $child->name);
+                $this->service()->move($this->actor, $parent->public_id, null);
+            });
+        } finally {
+            $this->travelBack();
+        }
         $this->assertSame($before, $child->fresh()->getAttributes());
+        $this->assertSame($parentBefore, $parent->fresh()->getAttributes());
         $this->assertDatabaseCount('organizational_unit_changes', 0);
     }
 
