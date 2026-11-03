@@ -116,7 +116,7 @@ Actual 1419 trigger privilege failure still cleans/retries safely; second-trigge
 
 ## 19. CI results
 
-Existing Foundation CI is unchanged and automatically discovers the new general/MySQL tests. Final feature-commit CI verification will be recorded with the Draft PR handover after pushing. Until that result is observed, remote CI is **NOT RUN**, not PASS. Local required checks above are actual results.
+**TESTED / PASS:** unchanged [Foundation CI run 41641559476](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41641559476) on implementation commit **0e32c5209be5d5e06ab08d8b8437932e17ffb548**, job 125936075699. All dependency/platform/audit, migrations/rollback/repeat, SQLite, MySQL, Redis, Pint, clean Linux npm ci/build and cached-runtime HTTP steps completed successfully. The branch-specific Issue #4 scope guard was correctly inapplicable, not a skipped security suite. Remote logs confirm SQLite 44/207, MySQL 53/271 and Redis 4/19, matching **101/497** locally. This documentation-only follow-up persists the verified run, implementation SHA and Draft PR link; its own final-commit CI is verified again in the PR before handover. No CI file or permission was modified.
 
 ## 20. Files created and modified
 
@@ -167,12 +167,12 @@ Audit history is not tamper-proof and has unresolved retention/read policies. Re
 
 ## 24. Git commit identifiers
 
-Baseline: 4da072c7fd41c4c10f0f6682391f2c0e2a0184d4. Branch: feat/18-tenant-rbac-foundation. Implementation and evidence commit identifiers will be persisted after creating the reviewed commits; no self-referential final-commit hash is fabricated.
+Baseline: 4da072c7fd41c4c10f0f6682391f2c0e2a0184d4. Branch: feat/18-tenant-rbac-foundation. Implementation: **0e32c5209be5d5e06ab08d8b8437932e17ffb548** (feat: add scoped tenant authorization foundation). The subsequent documentation-only handover commit persists the CI/PR evidence; its identifier is visible in PR history rather than a fabricated self-reference.
 
 ## 25. Draft Pull Request
 
-Draft PR URL will be persisted after creation against main. This report and architecture must be included in its changed paths. No merge authorized.
+[Draft PR #19](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/19) targets main. Remote changed-file readback confirmed this report and architecture among the 34 reviewed files, with no contributor-owned UI/CI path. PR is open, draft and unmerged; no merge authorized.
 
 ## 26. Final engineering verdict
 
-**IMPLEMENTED / TESTED locally:** the authorized technical RBAC foundation with no default business privilege. **DEFERRED:** product policies/public management/tenant workflows. **BLOCKED for production rollout:** owner decisions and Issue #13. Engineering lead must review internal boundaries, restrictive schema, migration recovery and test evidence before merging or enabling a future management interface. Remote CI/delivery evidence remains pending until the recorded handover update.
+**IMPLEMENTED / TESTED locally and in CI:** the authorized technical RBAC foundation with no default business privilege. **DEFERRED:** product policies/public management/tenant workflows. **BLOCKED for production rollout:** owner decisions and Issue #13. Draft PR #19 includes this permanent report and architecture; the lead must review internal boundaries, restrictive schema, migration recovery and test evidence before merging or enabling a future management interface. No self-merge; stop for engineering-lead review.
