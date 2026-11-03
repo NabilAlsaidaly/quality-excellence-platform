@@ -10,6 +10,8 @@ Multi-organization institutional quality and excellence management platform (Ara
 
 Phase 03A adds structural organizations, memberships and hierarchical units with same-tenant database constraints, plus Redis infrastructure. Phase 03C adds the [technical tenant authorization foundation](docs/architecture/tenant-authorization-foundation.md): Spatie Permission 8.3.2 Teams, verified scoped context, explicit resource authorization and internal role-management services. The capability registry ships empty; no business role/permission matrix or public management interface is approved. Evidence/document workflows, maturity stages, production admin access and end-user UI remain unimplemented. A membership alone grants no permission; the admin development shell is explicitly denied outside local/testing.
 
+Phase 04A adds [internal organizational hierarchy management](docs/architecture/organizational-hierarchy-management.md): create/rename/move/tree operations, serialized multi-level cycle checks and separate transactional unit-change history. No management endpoint or implicit hierarchy permission is enabled. Raw SQL can still bypass application cycle checks; deployment/recovery boundaries and actual concurrency evidence are in the [engineering report](docs/engineering/reports/PHASE-04A-ORGANIZATIONAL-HIERARCHY.md).
+
 ## Setup from the default branch
 Clone the repository and work on `main` only to **update your local base**, then use a task branch for any modification:
 

@@ -15,6 +15,8 @@ These are **engineering approvals**, not silent approval of unresolved product-o
 ## Implementation status
 The repository contains Laravel bootstrap, PHPUnit/Pint/CI, Filament 5 and its `/admin` panel. Phase 03A adds structural organizations, memberships and hierarchical units plus Redis cache/queue infrastructure; see [schema design](tenant-schema-foundation.md). Phase 03C adds the [technical tenant authorization foundation](tenant-authorization-foundation.md), with an empty capability registry and no business grants or public management interface. Document/evidence workflows and owner-approved business authorization remain unimplemented. Built-in users/cache/jobs migrations are preserved; production/staging panel access is explicitly denied pending an approved policy.
 
+Phase 04A implements the [internal organizational hierarchy service](organizational-hierarchy-management.md), with organization-row serialization, current ancestor reads, multi-level cycle validation and separate unit-change history. It adds no user-facing route/Resource/capability; hierarchy position grants no privilege. Existing schema/triggers and deny-by-default RBAC remain unchanged. Raw SQL remains outside application cycle/audit guarantees.
+
 ## Business and compliance policy still requiring product-owner decisions
 D-001 support access, D-002 role matrix/delegation, D-008 location/retention, D-022 self-review/separation of duties, D-023 suspension, D-024 invitation/reset/MFA, and D-027 domain relationship flexibility. These cannot be invented as part of a technical implementation. The data model's capacity for multi-org membership does not itself grant membership.
 
