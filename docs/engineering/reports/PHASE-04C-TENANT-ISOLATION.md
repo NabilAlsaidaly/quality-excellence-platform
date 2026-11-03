@@ -8,7 +8,7 @@ Date: 2026-11-03. Issue [#24](https://github.com/NabilAlsaidaly/quality-excellen
 
 **TESTED:** actual migrated-schema classification, controlled unknown-table/FK/CHECK mutations and synthetic changes to copies of real metadata, with exact restoration. Existing application/authorization/provisioning/hierarchy behavior and all pre-existing tests are unchanged. No permanent schema, migration, UI, configuration, permission, dependency or deployment change.
 
-Final local regression after the last helper/test change: **229 tests /1817 assertions passed**, comprising SQLite94/744, MySQL131/1054 and Redis4/19. All required local checks passed; remote delivery evidence is recorded below after observation.
+Final local regression after the last helper/test change: **229 tests /1817 assertions passed**, comprising SQLite94/744, MySQL131/1054 and Redis4/19. All required local checks passed; successful remote CI independently confirms the same counts. [Draft PR #25](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/25) contains the eight authorized paths and remains unmerged.
 
 ## 2. Starting state and references
 
@@ -148,10 +148,12 @@ No app/database/bootstrap/routes/resources/lang/config/CI/dependency/phpunit/con
 
 ## 12. Commits, Draft PR and CI
 
-Starting main: **5b16aaaf529b8492a45efc1c99bf0400549c2f77**. Plan-before-code commit: **103c7a5fe69c262bcbc6f815d3510b0268fbd61b**. Implementation/final code SHA and Draft PR URL will be recorded after publication. Final report-containing HEAD and actual CI must be verified in the PR before handover; no fabricated self-referential commit hash.
+Starting main: **5b16aaaf529b8492a45efc1c99bf0400549c2f77**. Plan-before-code commit: **103c7a5fe69c262bcbc6f815d3510b0268fbd61b**. Final implementation/code SHA: **f46a5ef7cd9b92286e5ee14acfec0ebd8e6469af**, test: enforce reviewed tenant schema isolation contract. This subsequent report-only commit persists the observed CI and publication evidence; its exact final HEAD and CI run are recorded in the PR handover after verification and available in git history.
 
-Remote CI: **NOT VERIFIED** before publication. Existing Foundation CI must run unchanged with SQLite, MySQL, Redis, dependency/audit, Pint, Node and cached HTTP stages. The Issue #4 branch-specific path guard is inapplicable to this branch, not a skipped security suite.
+**PASS:** [Foundation CI #36 / run41708535506](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/41708535506), job126170210697, on final code SHA **f46a5ef7cd9b92286e5ee14acfec0ebd8e6469af**. Remote logs independently confirm SQLite94/744, MySQL131/1054 and Redis4/19, total **229/1817**. All applicable dependency/platform/audit, target migration/rollback/repeat, Pint, clean Linux npm ci/build (61 modules) and cached-runtime HTTP stages succeeded. The Issue #4 branch-specific path guard is correctly inapplicable, not a skipped security suite. CI configuration/permissions are unchanged. The report-only final HEAD is independently checked in [PR #25 checks](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/25/checks) before handover.
+
+[Draft PR #25](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/25) targets main from test/24-tenant-isolation-contract. Remote changed-file readback confirms all eight allowed paths, including this permanent report and architecture. PR is open, draft and unmerged; no auto-merge or deployment.
 
 ## 13. Engineering recommendation
 
-**IMPLEMENTED / TESTED locally:** the test/documentation contract and all required local regression checks pass within scope. Complete remote final-HEAD CI/publication verification before handover, retain a Draft PR, then stop for engineering-lead review. No merge, auto-merge, deployment or owner-policy approval is authorized by this phase.
+**IMPLEMENTED / TESTED locally and in CI:** the approved test/documentation contract and required regression checks pass within scope. Draft PR #25 supplies the permanent report, architecture, plan-before-code evidence and actual CI results for engineering-lead review. Final report-containing HEAD verification is recorded in its handover. No implementation blocker remains within the approved scope; owner policies and production rollout remain separate gates. Stop for engineering-lead review; do not merge, enable auto-merge or deploy.
