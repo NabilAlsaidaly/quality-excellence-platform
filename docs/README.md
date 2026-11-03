@@ -1,6 +1,8 @@
 # Project documentation
 
 ## Current references
+- [Technical tenant authorization foundation — no business permission matrix](architecture/tenant-authorization-foundation.md).
+- [Phase 03C / 03B-B authorization implementation report](engineering/reports/PHASE-03B-B-RBAC-AUTHORIZATION.md).
 - [Architecture foundation and accepted ADRs](architecture/foundation.md).
 - [Decision ledger — approved technical choices vs pending owner policy](architecture/decision-ledger.md).
 - [Contributor and security posture](engineering/collaboration-security.md).
