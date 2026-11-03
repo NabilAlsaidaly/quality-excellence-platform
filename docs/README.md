@@ -1,6 +1,8 @@
 # Project documentation
 
 ## Current references
+- [Organization provisioning versus member-scoped metadata](architecture/organization-management-foundation.md).
+- [Phase 04B organization management engineering report](engineering/reports/PHASE-04B-ORGANIZATION-MANAGEMENT.md).
 - [Internal organizational hierarchy management and concurrency guarantees](architecture/organizational-hierarchy-management.md).
 - [Phase 04A hierarchy engineering report](engineering/reports/PHASE-04A-ORGANIZATIONAL-HIERARCHY.md).
 - [Technical tenant authorization foundation — no business permission matrix](architecture/tenant-authorization-foundation.md).

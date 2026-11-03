@@ -92,6 +92,14 @@ Phase 04A adds only `2026_11_03_000007_create_organizational_unit_changes_table`
 
 Review [hierarchy guarantees and recovery](../architecture/organizational-hierarchy-management.md) before deployment. The new history FK must be considered before any later unit-table maintenance. SQL creation failure is atomic; a process crash between DDL and journaling still requires inspection rather than automatic table adoption/deletion. Rollback drops history and is not a production data recovery plan; destructive rollback/repeat/corruption fixtures ran only in the opted-in disposable integration database. Unit deletion/archive and audit retention/read/purge policies remain deferred.
 
+## Phase 04B organization-history migration
+
+Phase 04B adds only `2026_11_03_000008_create_organization_changes_table`. Review [organization provisioning/audit/DDL boundaries](../architecture/organization-management-foundation.md) and reuse the existing separate operator; preserve runtime DML credentials, APP_KEY, existing volumes/native3306/Herd/phpMyAdmin. The new table has inline restrictive organization/actor FKs and a created/renamed event CHECK. No old table or migration is altered, and provisioning creates no default user/membership/role/unit.
+
+The local operator verification on 2026-11-03 applied this single pending migration:14 journal entries, new organization history empty, all original tenant/RBAC/hierarchy DDL/row counts and both trigger definitions/definers preserved, runtime still DML-only, private environment/credentials and binlog1/trust0 unchanged. Herd /up/login and phpMyAdmin HTTP checks passed. No operational-state feature or production rollout is approved.
+
+SQL CREATE failures are atomic, but DDL-to-journal process interruption still requires operator inspection; never auto-adopt/drop an unexpected table. Rollback destroys history and is not a production recovery procedure. The14-migration rollback/repeat/failure fixtures run only in the guarded disposable integration database. Original trigger deployment prerequisites remain; no global MySQL setting is changed.
+
 ## Existing verification commands
 
 ```powershell

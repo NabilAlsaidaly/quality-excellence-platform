@@ -80,14 +80,14 @@ class HierarchyHistoryIntegrityTest extends MySqlTestCase
         DB::table('permissions')->insert(['name' => 'fixture.history.regression', 'guard_name' => 'web']);
         $before = $unit->fresh()->getAttributes();
         $settings = DB::selectOne('SELECT @@GLOBAL.log_bin AS binlog, @@GLOBAL.log_bin_trust_function_creators AS trusted');
-        $this->artisan('migrate:rollback', ['--step' => 1, '--force' => true])->assertExitCode(0);
+        $this->rollbackHistoryMigration();
         $this->assertFalse(Schema::hasTable('organizational_unit_changes'));
-        $this->assertSame(12, DB::table('migrations')->count());
+        $this->assertSame(13, DB::table('migrations')->count());
         $this->assertSame($before, $unit->fresh()->getAttributes());
         $this->assertDatabaseCount('permissions', 1);
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         $this->assertTrue(Schema::hasTable('organizational_unit_changes'));
-        $this->assertSame(13, DB::table('migrations')->count());
+        $this->assertSame(14, DB::table('migrations')->count());
         $this->assertSame($before, $unit->fresh()->getAttributes());
         $this->assertDatabaseCount('permissions', 1);
         $this->assertSame(2, (int) DB::selectOne("SELECT COUNT(*) AS total FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE = 'organizational_units'")->total);
@@ -96,7 +96,7 @@ class HierarchyHistoryIntegrityTest extends MySqlTestCase
 
     public function test_failed_inline_history_fk_create_leaves_no_partial_table_and_allows_retry(): void
     {
-        $this->artisan('migrate:rollback', ['--step' => 1, '--force' => true])->assertExitCode(0);
+        $this->rollbackHistoryMigration();
         $migration = require database_path('migrations/'.self::MIGRATION.'.php');
         DB::statement('RENAME TABLE organizational_units TO hierarchy_units_fixture');
         try {
@@ -108,7 +108,7 @@ class HierarchyHistoryIntegrityTest extends MySqlTestCase
         }
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         $this->assertTrue(Schema::hasTable('organizational_unit_changes'));
-        $this->assertSame(13, DB::table('migrations')->count());
+        $this->assertSame(14, DB::table('migrations')->count());
     }
 
     public function test_existing_history_table_and_rows_are_never_adopted_or_deleted_on_create_failure(): void
@@ -121,6 +121,15 @@ class HierarchyHistoryIntegrityTest extends MySqlTestCase
         $this->sqlFailure(fn () => $migration->up(), 1050);
         $this->assertEquals($before, DB::table('organizational_unit_changes')->sole());
         $this->assertDatabaseCount('organizational_units', 1);
+    }
+
+    private function rollbackHistoryMigration(): void
+    {
+        // Newer migrations need not be removed to exercise this exact fixture.
+        $this->artisan('migrate:rollback', [
+            '--path' => 'database/migrations/'.self::MIGRATION.'.php',
+            '--step' => DB::table('migrations')->count(), '--force' => true,
+        ])->assertExitCode(0);
     }
 
     private function sqlFailure(Closure $operation, int $code): void
