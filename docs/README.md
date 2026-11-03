@@ -1,6 +1,8 @@
 # Project documentation
 
 ## Current references
+- [Executable tenant-isolation schema contract and reviewed exceptions](architecture/tenant-isolation-schema-contract.md).
+- [Phase 04C schema regression engineering report](engineering/reports/PHASE-04C-TENANT-ISOLATION.md).
 - [Organization provisioning versus member-scoped metadata](architecture/organization-management-foundation.md).
 - [Phase 04B organization management engineering report](engineering/reports/PHASE-04B-ORGANIZATION-MANAGEMENT.md).
 - [Internal organizational hierarchy management and concurrency guarantees](architecture/organizational-hierarchy-management.md).

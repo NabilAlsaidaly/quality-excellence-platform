@@ -23,4 +23,6 @@ Phase 04B adds [internal organization provisioning and scoped metadata](organiza
 D-001 support access, D-002 role matrix/delegation, D-008 location/retention, D-022 self-review/separation of duties, D-023 suspension, D-024 invitation/reset/MFA, and D-027 domain relationship flexibility. These cannot be invented as part of a technical implementation. The data model's capacity for multi-org membership does not itself grant membership.
 
 ## Quality controls
+Phase04C adds the [test-only tenant-isolation schema contract](tenant-isolation-schema-contract.md): every actual MySQL base table needs an explicit reviewed classification, and required scope/relationship/key/history constraints are verified from database metadata. Unknown tables and weakened critical constraints fail existing CI discovery. Application behavior, production schema and authorization remain unchanged.
+
 Use MySQL-specific migration/constraint tests as domain schema evolves; SQLite bootstrap tests alone cannot prove tenant integrity. Preserve immutable historical versions. Keep private evidence private. Record changes and evidence in `docs/engineering/reports/`.
