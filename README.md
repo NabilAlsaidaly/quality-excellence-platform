@@ -8,7 +8,7 @@ Multi-organization institutional quality and excellence management platform (Ara
 - MySQL **8.x** target; isolated SQLite PHPUnit bootstrap tests
 - Node.js **24** LTS, Vite, Tailwind, PHPUnit, Laravel Pint and GitHub Actions CI
 
-Phase 03A adds structural organizations, memberships and hierarchical units with same-tenant database constraints, plus Redis infrastructure. **Not implemented:** tenant context/authorization, full RBAC, evidence/document workflows, maturity stages, production admin access and end-user UI. A membership alone grants no permission. Installed Filament login routes do not imply an authorized production panel.
+Phase 03A adds structural organizations, memberships and hierarchical units with same-tenant database constraints, plus Redis infrastructure. Phase 03C adds the [technical tenant authorization foundation](docs/architecture/tenant-authorization-foundation.md): Spatie Permission 8.3.2 Teams, verified scoped context, explicit resource authorization and internal role-management services. The capability registry ships empty; no business role/permission matrix or public management interface is approved. Evidence/document workflows, maturity stages, production admin access and end-user UI remain unimplemented. A membership alone grants no permission; the admin development shell is explicitly denied outside local/testing.
 
 ## Setup from the default branch
 Clone the repository and work on `main` only to **update your local base**, then use a task branch for any modification:
