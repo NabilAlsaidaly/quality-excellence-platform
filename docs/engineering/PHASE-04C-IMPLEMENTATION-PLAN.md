@@ -55,4 +55,6 @@ After the last test/helper edit, run full SQLite, full guarded MySQL and real na
 
 ## Boundaries and findings requiring separate scope
 
+Execution refinement within the same allowed paths: final review added a fifth focused MySQL fixture to prove CHECK formatting preserves literal contents and that actual NOT ENFORCED metadata fails the gate. The exact original CHECK is restored in finally; full regression is rerun after this test/helper change. The original plan commit still precedes all implementation.
+
 The gate detects reviewed structural regressions; it cannot infer ownership of new columns or authorize SQL, services, queues, files or downloads. Global exceptions are not permission to store unscoped private tenant content. No claim of DB-wide multi-level acyclicity, raw SQL ULID immutability, tamper-proof audit, production permissions or migration crash recovery. DATA-04/05/06 domain features and open owner policies stay deferred. Any newly reproduced application/schema defect requiring forbidden changes must become a separate proposed remediation, with compatibility impact, rather than an in-scope fix.
