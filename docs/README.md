@@ -1,6 +1,8 @@
 # Project documentation
 
 ## Current references
+- [Internal organizational hierarchy management and concurrency guarantees](architecture/organizational-hierarchy-management.md).
+- [Phase 04A hierarchy engineering report](engineering/reports/PHASE-04A-ORGANIZATIONAL-HIERARCHY.md).
 - [Technical tenant authorization foundation — no business permission matrix](architecture/tenant-authorization-foundation.md).
 - [Phase 03C / 03B-B authorization implementation report](engineering/reports/PHASE-03B-B-RBAC-AUTHORIZATION.md).
 - [Architecture foundation and accepted ADRs](architecture/foundation.md).

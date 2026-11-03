@@ -86,6 +86,12 @@ The local operator application on 2026-11-03 verified 12 applied migrations, all
 
 Validate unauthenticated `/admin` -> login, login form, CSRF rejection and database-backed session persistence through actual Herd HTTP. A temporary synthetic account with no roles/memberships may be used only in a confirmed new/local database. Verify invalid-password rejection, successful local shell login, logout and revoked session, then remove only that fixture and its owned session rows. Follow the Livewire update URL advertised by the page, not a hard-coded pre-v4 URL. Do not log CSRF/session/password values. No authentication gate or authorization bypass is added; local shell success does not satisfy Issue #13 or authorize production access.
 
+## Phase 04A unit-history migration
+
+Phase 04A adds only `2026_11_03_000007_create_organizational_unit_changes_table`. Use the same separate operator and verified target procedure; do not rewrite applied migrations, regenerate secrets or change runtime DML grants. It creates one tenant-scoped history table with inline restrictive FKs. Existing unit/RBAC tables and both triggers remain unchanged. The verified local operator application on 2026-11-03 left 13 journal entries and the new history table empty, preserving original DDL/counts/triggers, environment/credential hashes and binlog=1/trust=0. Herd and phpMyAdmin HTTP checks passed.
+
+Review [hierarchy guarantees and recovery](../architecture/organizational-hierarchy-management.md) before deployment. The new history FK must be considered before any later unit-table maintenance. SQL creation failure is atomic; a process crash between DDL and journaling still requires inspection rather than automatic table adoption/deletion. Rollback drops history and is not a production data recovery plan; destructive rollback/repeat/corruption fixtures ran only in the opted-in disposable integration database. Unit deletion/archive and audit retention/read/purge policies remain deferred.
+
 ## Existing verification commands
 
 ```powershell

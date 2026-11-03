@@ -24,7 +24,7 @@ class TenantIntegrityTest extends MySqlTestCase
         $this->assertFalse(Schema::hasTable('organizational_units'));
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         $this->assertTrue(Schema::hasTable('organization_memberships'));
-        $this->assertSame(12, DB::table('migrations')->count());
+        $this->assertSame(13, DB::table('migrations')->count());
     }
 
     public function test_internal_primary_and_foreign_keys_are_unsigned_bigint(): void

@@ -194,10 +194,14 @@ class TriggerMigrationSafetyTest extends MySqlTestCase
     private function removeUnitsMigration(): void
     {
         // Additional additive migrations may follow units. Select all journal
-        // candidates but roll back only this exact path, retaining the original
+        // candidates but roll back units and its new dependent history table,
+        // retaining the original
         // successful Artisan rollback assertion and every safety assertion.
         $this->artisan('migrate:rollback', [
-            '--path' => 'database/migrations/'.self::MIGRATION.'.php',
+            '--path' => [
+                'database/migrations/'.self::MIGRATION.'.php',
+                'database/migrations/2026_11_03_000007_create_organizational_unit_changes_table.php',
+            ],
             '--step' => DB::table('migrations')->count(), '--force' => true,
         ])->assertExitCode(0);
         $this->assertFalse(Schema::hasTable('organizational_units'));
