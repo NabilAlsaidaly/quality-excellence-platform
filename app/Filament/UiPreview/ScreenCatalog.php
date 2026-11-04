@@ -7,15 +7,17 @@ namespace App\Filament\UiPreview;
 final class ScreenCatalog
 {
     /**
-     * The complete catalog of UI preview screens.
+     * The explicit and immutable catalog of all preview entries.
      *
-     * Each screen has a unique slug, a group identifier,
-     * and an Arabic display title.
+     * Every view is statically mapped.
+     * shared.states intentionally points to the gallery view.
      *
      * @var array<int, array{
      *     slug: string,
      *     group: string,
-     *     title: string
+     *     title: string,
+     *     view: string,
+     *     srs: list<string>
      * }>
      */
     private const SCREENS = [
@@ -24,16 +26,22 @@ final class ScreenCatalog
             'slug' => 'platform.overview',
             'group' => 'platform',
             'title' => 'نظرة عامة على المنصة',
+            'view' => 'filament.ui-preview.screens.platform.overview',
+            'srs' => ['FR-ID-001'],
         ],
         [
             'slug' => 'platform.organizations',
             'group' => 'platform',
             'title' => 'المؤسسات',
+            'view' => 'filament.ui-preview.screens.platform.organizations',
+            'srs' => ['FR-ID-001'],
         ],
         [
             'slug' => 'platform.organization-details',
             'group' => 'platform',
             'title' => 'تفاصيل المؤسسة',
+            'view' => 'filament.ui-preview.screens.platform.organization-details',
+            'srs' => ['FR-ID-001'],
         ],
 
         // Organization
@@ -41,21 +49,29 @@ final class ScreenCatalog
             'slug' => 'organization.overview',
             'group' => 'organization',
             'title' => 'نظرة عامة على المؤسسة',
+            'view' => 'filament.ui-preview.screens.organization.overview',
+            'srs' => ['FR-ID-002', 'FR-ID-003'],
         ],
         [
             'slug' => 'organization.units',
             'group' => 'organization',
             'title' => 'الوحدات التنظيمية',
+            'view' => 'filament.ui-preview.screens.organization.units',
+            'srs' => ['FR-ID-002'],
         ],
         [
             'slug' => 'organization.users',
             'group' => 'organization',
             'title' => 'المستخدمون',
+            'view' => 'filament.ui-preview.screens.organization.users',
+            'srs' => ['FR-ID-003'],
         ],
         [
-            'slug' => 'organization.permissions-overview',
+            'slug' => 'organization.permissions',
             'group' => 'organization',
             'title' => 'نظرة عامة على الصلاحيات',
+            'view' => 'filament.ui-preview.screens.organization.permissions-overview',
+            'srs' => ['FR-ID-006'],
         ],
 
         // Approaches
@@ -63,46 +79,64 @@ final class ScreenCatalog
             'slug' => 'approaches.index',
             'group' => 'approaches',
             'title' => 'منهجيات الجودة',
+            'view' => 'filament.ui-preview.screens.approaches.index',
+            'srs' => ['FR-APP-001', 'FR-APP-006'],
         ],
         [
-            'slug' => 'approaches.create-shell',
+            'slug' => 'approaches.create',
             'group' => 'approaches',
             'title' => 'إنشاء منهجية',
+            'view' => 'filament.ui-preview.screens.approaches.create-shell',
+            'srs' => ['FR-APP-002'],
         ],
         [
             'slug' => 'approaches.summary',
             'group' => 'approaches',
             'title' => 'ملخص المنهجية',
+            'view' => 'filament.ui-preview.screens.approaches.summary',
+            'srs' => ['FR-APP-007'],
         ],
         [
             'slug' => 'approaches.content',
             'group' => 'approaches',
             'title' => 'محتوى المنهجية',
+            'view' => 'filament.ui-preview.screens.approaches.content',
+            'srs' => ['FR-APP-005'],
         ],
         [
             'slug' => 'approaches.participants',
             'group' => 'approaches',
             'title' => 'المشاركون',
+            'view' => 'filament.ui-preview.screens.approaches.participants',
+            'srs' => ['FR-APP-003', 'FR-APP-004'],
         ],
         [
             'slug' => 'approaches.evidence',
             'group' => 'approaches',
             'title' => 'الأدلة والشواهد',
+            'view' => 'filament.ui-preview.screens.approaches.evidence',
+            'srs' => ['FR-DOC-004', 'FR-DOC-005'],
         ],
         [
             'slug' => 'approaches.reviews',
             'group' => 'approaches',
             'title' => 'مراجعات المنهجية',
+            'view' => 'filament.ui-preview.screens.approaches.reviews',
+            'srs' => ['FR-REV-001', 'FR-REV-006'],
         ],
         [
             'slug' => 'approaches.maturity',
             'group' => 'approaches',
             'title' => 'مستوى النضج',
+            'view' => 'filament.ui-preview.screens.approaches.maturity',
+            'srs' => ['FR-MAT-001', 'FR-MAT-002'],
         ],
         [
             'slug' => 'approaches.activity',
             'group' => 'approaches',
             'title' => 'نشاط المنهجية',
+            'view' => 'filament.ui-preview.screens.approaches.activity',
+            'srs' => ['FR-APP-008', 'FR-UX-005'],
         ],
 
         // Documents
@@ -110,21 +144,29 @@ final class ScreenCatalog
             'slug' => 'documents.index',
             'group' => 'documents',
             'title' => 'الوثائق',
+            'view' => 'filament.ui-preview.screens.documents.index',
+            'srs' => ['FR-DOC-002', 'FR-DOC-006'],
         ],
         [
             'slug' => 'documents.details',
             'group' => 'documents',
             'title' => 'تفاصيل الوثيقة',
+            'view' => 'filament.ui-preview.screens.documents.details',
+            'srs' => ['FR-DOC-002', 'FR-DOC-005'],
         ],
         [
             'slug' => 'documents.versions',
             'group' => 'documents',
             'title' => 'إصدارات الوثيقة',
+            'view' => 'filament.ui-preview.screens.documents.versions',
+            'srs' => ['FR-DOC-003', 'FR-DOC-006'],
         ],
         [
-            'slug' => 'documents.upload-shell',
+            'slug' => 'documents.upload',
             'group' => 'documents',
             'title' => 'واجهة رفع الوثائق',
+            'view' => 'filament.ui-preview.screens.documents.upload-shell',
+            'srs' => ['FR-DOC-001'],
         ],
 
         // Reviews
@@ -132,11 +174,20 @@ final class ScreenCatalog
             'slug' => 'reviews.inbox',
             'group' => 'reviews',
             'title' => 'صندوق المراجعات',
+            'view' => 'filament.ui-preview.screens.reviews.inbox',
+            'srs' => ['FR-REV-001', 'FR-REV-002'],
         ],
         [
             'slug' => 'reviews.details',
             'group' => 'reviews',
             'title' => 'تفاصيل المراجعة',
+            'view' => 'filament.ui-preview.screens.reviews.details',
+            'srs' => [
+                'FR-REV-003',
+                'FR-REV-004',
+                'FR-REV-005',
+                'FR-REV-006',
+            ],
         ],
 
         // Shared
@@ -144,11 +195,22 @@ final class ScreenCatalog
             'slug' => 'shared.notifications',
             'group' => 'shared',
             'title' => 'الإشعارات',
+            'view' => 'filament.ui-preview.screens.shared.notifications',
+            'srs' => ['FR-UX-003', 'FR-UX-004'],
         ],
         [
             'slug' => 'shared.activity-log',
             'group' => 'shared',
             'title' => 'سجل النشاط',
+            'view' => 'filament.ui-preview.screens.shared.activity-log',
+            'srs' => ['FR-UX-005'],
+        ],
+        [
+            'slug' => 'shared.states',
+            'group' => 'shared',
+            'title' => 'معرض الحالات المشتركة',
+            'view' => 'filament.ui-preview.gallery',
+            'srs' => ['FR-UX-001'],
         ],
     ];
 
@@ -158,21 +220,23 @@ final class ScreenCatalog
      * @var array<string, string>
      */
     private const GROUP_LABELS = [
-        'platform' => 'المنصة',
+        'platform' => 'إدارة المنصة',
         'organization' => 'المؤسسة',
-        'approaches' => 'منهجيات الجودة',
-        'documents' => 'الوثائق',
+        'approaches' => 'بنك المنهجيات',
+        'documents' => 'الوثائق والأدلة',
         'reviews' => 'المراجعات',
-        'shared' => 'الشاشات المشتركة',
+        'shared' => 'المشتركات',
     ];
 
     /**
-     * Return all registered screens.
+     * Return all registered preview entries.
      *
      * @return array<int, array{
      *     slug: string,
      *     group: string,
-     *     title: string
+     *     title: string,
+     *     view: string,
+     *     srs: list<string>
      * }>
      */
     public static function all(): array
@@ -181,7 +245,7 @@ final class ScreenCatalog
     }
 
     /**
-     * Return all registered screen slugs.
+     * Return all registered preview slugs.
      *
      * @return list<string>
      */
@@ -191,26 +255,22 @@ final class ScreenCatalog
     }
 
     /**
-     * Check whether a screen slug exists.
+     * Check whether a preview slug is registered.
      */
     public static function has(string $slug): bool
     {
-        foreach (self::SCREENS as $screen) {
-            if ($screen['slug'] === $slug) {
-                return true;
-            }
-        }
-
-        return false;
+        return self::find($slug) !== null;
     }
 
     /**
-     * Find a screen by its unique slug.
+     * Find a preview entry using its exact registered slug.
      *
      * @return array{
      *     slug: string,
      *     group: string,
-     *     title: string
+     *     title: string,
+     *     view: string,
+     *     srs: list<string>
      * }|null
      */
     public static function find(string $slug): ?array
@@ -225,14 +285,16 @@ final class ScreenCatalog
     }
 
     /**
-     * Return screens grouped by their category.
+     * Return preview entries grouped by category.
      *
      * @return array<string, array{
      *     label: string,
      *     screens: list<array{
      *         slug: string,
      *         group: string,
-     *         title: string
+     *         title: string,
+     *         view: string,
+     *         srs: list<string>
      *     }>
      * }>
      */
@@ -255,7 +317,7 @@ final class ScreenCatalog
     }
 
     /**
-     * Return the total number of registered screens.
+     * Return the total number of registered preview entries.
      */
     public static function count(): int
     {
