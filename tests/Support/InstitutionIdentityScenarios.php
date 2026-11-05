@@ -122,6 +122,46 @@ trait InstitutionIdentityScenarios
         }
     }
 
+    public function test_malformed_and_internationalized_contacts_cannot_create_or_resolve_new_principals(): void
+    {
+        $org = Organization::factory()->create();
+        foreach (['', 'not-an-address', 'a..b@example.test', 'user@@example.test', 'user@', '@example.test',
+            'user@example.test extra', 'user name@example.test', "user\r\n@example.test", "user\0@example.test",
+            'é@example.test', 'user@مثال.test', 'user@exämple.test', 'ｕｓｅｒ@example.test'] as $email) {
+            $this->assertNull(LoginEmail::normalize($email));
+            $this->assertNull(Auth::createUserProvider('institution')->retrieveByCredentials(['organization' => $org->public_id, 'email' => $email]));
+            try {
+                $this->institutionAccount($org, 'valid-account-password', $email);
+                $this->fail('Unsupported contact must not create a principal.');
+            } catch (InvalidArgumentException $error) {
+                $this->assertNotEmpty($error->getMessage());
+            }
+        }
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('organization_memberships', 0);
+    }
+
+    public function test_supported_address_normalization_preserves_alias_punctuation_and_historical_legacy_contacts(): void
+    {
+        $org = Organization::factory()->create();
+        $account = $this->institutionAccount($org, 'valid-account-password', ' First.Last+Tag@Example.Test ');
+        $this->assertSame('first.last+tag@example.test', $account->email);
+        $this->assertSame($account->id, Auth::createUserProvider('institution')->retrieveByCredentials([
+            'organization' => $org->public_id, 'email' => 'FIRST.LAST+TAG@EXAMPLE.TEST'])->id);
+        $this->assertNull(Auth::createUserProvider('institution')->retrieveByCredentials([
+            'organization' => $org->public_id, 'email' => 'firstlast@example.test']));
+        $account->email = ' Updated+Tag@Example.Test ';
+        $account->save();
+        $this->assertSame('updated+tag@example.test', $account->fresh()->email);
+        $legacy = User::factory()->create(['email' => 'Legacy.Case+Tag@Example.Test']);
+        $unicodeLegacy = User::factory()->create(['email' => 'legacy@مثال.test']);
+        $legacy->name = 'Synthetic legacy rename';
+        $legacy->save();
+        $this->assertSame('Legacy.Case+Tag@Example.Test', $legacy->fresh()->email);
+        $this->assertSame('legacy@مثال.test', $unicodeLegacy->fresh()->email);
+        $this->assertSame($legacy->id, Auth::createUserProvider('users')->retrieveById($legacy->id)->id);
+    }
+
     public function test_legacy_zero_single_and_multiple_memberships_are_preserved_but_quarantined_from_institution_login(): void
     {
         $org = Organization::factory()->create();

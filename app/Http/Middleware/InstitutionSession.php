@@ -36,6 +36,7 @@ final class InstitutionSession
         $organization = $request->route('organization');
         try {
             if ($user === null || ! is_string($organization)
+                || $request->session()->get('identity.active_guard') !== 'institution'
                 || $request->session()->get('institution.organization') !== $organization
                 || ! hash_equals((string) $user->getAuthPassword(), (string) $request->session()->get('institution.password_hash'))) {
                 throw new AuthorizationException;

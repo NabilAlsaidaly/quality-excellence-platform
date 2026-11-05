@@ -291,4 +291,24 @@ class InstitutionEntryTest extends TestCase
         $response->assertRedirect();
         $this->assertSame('trusted.example.test', parse_url($response->headers->get('Location'), PHP_URL_HOST));
     }
+
+    public function test_uppercase_recovery_and_unsupported_address_requests_follow_the_same_mvp_normalizer(): void
+    {
+        Notification::fake();
+        $org = Organization::factory()->create();
+        $account = $this->account($org);
+        $this->post('/institution/recovery', ['organization' => $org->public_id, 'email' => ' EMPLOYEE@EXAMPLE.TEST '])->assertRedirect();
+        $message = session('status');
+        $mail = Notification::sent($account, InstitutionPasswordReset::class)->sole();
+        $this->assertSame('employee@example.test', $account->routeNotificationFor('mail', $mail));
+        foreach (['missing-domain', 'a..b@example.test', 'é@example.test', 'employee@مثال.test', "employee\r\n@example.test"] as $email) {
+            $this->post('/institution/recovery', ['organization' => $org->public_id, 'email' => $email])->assertRedirect();
+            $this->assertSame($message, session('status'));
+            $this->post('/institution/login', ['organization' => $org->public_id, 'email' => $email, 'password' => 'first-account-password'])->assertSessionHasErrors('email');
+            $this->assertGuest('institution');
+        }
+        Notification::assertCount(1);
+        $this->assertDatabaseCount('institution_password_reset_tokens', 1);
+        $this->assertDatabaseCount('users', 1);
+    }
 }

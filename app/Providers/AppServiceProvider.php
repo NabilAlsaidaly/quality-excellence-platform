@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Actions\Identity\BrowserAccountSession;
 use App\Authorization\RoleManagement;
 use App\Authorization\TenantAuthorization;
 use App\Authorization\TenantContext;
@@ -11,7 +12,9 @@ use App\Identity\InstitutionUserProvider;
 use App\Identity\LegacyUserProvider;
 use App\Models\User;
 use App\Policies\InstitutionAccountPolicy;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Commands\AssignRoleCommand;
@@ -46,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(Login::class, [BrowserAccountSession::class, 'authenticated']);
         Auth::provider('institution', fn ($app, $config) => new InstitutionUserProvider($app['hash'], $config['model']));
         Auth::provider('legacy', fn ($app, $config) => new LegacyUserProvider($app['hash'], $config['model']));
         Gate::define('institution-account', fn (User $actor, string $organization) => app(InstitutionAccountPolicy::class)->view($actor, $organization));

@@ -2,12 +2,23 @@
 
 namespace App\Identity;
 
+use App\Actions\Identity\BrowserAccountSession;
 use App\Models\Organization;
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Support\Str;
 
 final class InstitutionUserProvider extends EloquentUserProvider
 {
+    public function retrieveById($identifier)
+    {
+        return app(BrowserAccountSession::class)->allowsRestoring('institution') ? parent::retrieveById($identifier) : null;
+    }
+
+    public function retrieveByToken($identifier, #[\SensitiveParameter] $token)
+    {
+        return app(BrowserAccountSession::class)->allowsRestoring('institution') ? parent::retrieveByToken($identifier, $token) : null;
+    }
+
     protected function newModelQuery($model = null)
     {
         return parent::newModelQuery($model)->where('principal_type', 'institution')
