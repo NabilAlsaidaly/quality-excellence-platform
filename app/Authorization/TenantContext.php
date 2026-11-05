@@ -35,7 +35,9 @@ final class TenantContext
         return $actor !== null && $actor->exists
             && $this->actorId !== null && $this->organizationId !== null
             && (int) $actor->getKey() === $this->actorId
-            && User::query()->whereKey($this->actorId)->exists()
+            && User::query()->whereKey($this->actorId)->where(fn ($query) => $query
+                ->where('principal_type', 'legacy')
+                ->orWhere(fn ($query) => $query->where('principal_type', 'institution')->where('organization_id', $this->organizationId)))->exists()
             && Organization::query()->whereKey($this->organizationId)->exists()
             && OrganizationMembership::query()->where('user_id', $this->actorId)
                 ->where('organization_id', $this->organizationId)->exists();
