@@ -17,6 +17,7 @@ Authorized private requirements were read and compared with current source and i
 | G4 — Configurable domain history | Resolve D-003/D-014 and versioned configuration semantics before the dependent module; no invented aggregate result or automatic historical cascade. |
 | G5 — Operational evidence safety | Security/operations approve upload handling, private access, deployment location, retention/recovery and verification procedures before relevant exposure. Provisional operating amounts remain proposals. |
 | G6 — Pilot acceptance | Owner confirms the complete pilot checklist and supplies authorized test/reference material; a first increment is not the full pilot or a license to shrink it. |
+| G7 — Dependency security | Current Composer advisory audit fails on existing locked dependencies; a separately authorized security correction and successful final-HEAD regression are required before green-check handover. See the [actual report](../engineering/reports/26.md). |
 
 G1/G2 block the next identity/authorized-entry implementation. G3/G4 block their dependent domain slices. G5/G6 block relevant pilot/release acceptance. Issues #4/#6/#12/#13 retain their independent owner/lead gates.
 
