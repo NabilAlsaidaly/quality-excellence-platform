@@ -24,3 +24,9 @@
 - Every product policy still marked OPEN requires an owner decision or a task that explicitly excludes the unknown behavior.
 - Do not silently change the original SRS decision register. If the owner approves business items, amend the authoritative SRS and this ledger together.
 - To avoid unnecessary blocking, narrowly scoped infrastructure tasks may proceed without implementing unresolved business logic.
+
+## Phase05A reconciliation checkpoint — 2026-11-05
+
+**RECEIVED / SRS RECONCILIATION PENDING:** authorized private decision evidence has been reviewed under Issue #26. The table above preserves the canonical register's historical OPEN statuses; it is not a claim that no later responses exist. The canonical source has not been edited by this task. Detailed rules, source names and amendments remain in the private lead handover.
+
+D-021 / ADR-002 compatibility and D-002 authority require an explicit implementation gate. D-003/D-014 and remaining context-specific details stay unresolved where no complete decision exists. Receipt is neither acceptance of a new architecture nor an operational grant. Accepted ADR-001/002/003 remain unchanged; dependent implementation requires reconciled source authority and lead acceptance of any technical revision. See [Phase05A gates](PHASE-05A-ARCHITECTURE-GATES.md).
