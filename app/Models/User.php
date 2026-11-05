@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Identity\LoginEmail;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -13,6 +14,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
+use LogicException;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password'])]
@@ -22,10 +26,32 @@ class User extends Authenticatable implements FilamentUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
+    protected $attributes = ['principal_type' => 'legacy'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (in_array($user->principal_type, ['institution', 'platform'], true)) {
+                $user->public_id ??= (string) Str::ulid();
+                $user->email = LoginEmail::normalize($user->email)
+                    ?? throw new InvalidArgumentException('New account email requires an ASCII mailbox and domain.');
+            }
+        });
+        static::updating(function (User $user): void {
+            if ($user->isDirty(['principal_type', 'organization_id', 'public_id'])) {
+                throw new LogicException('Account binding is immutable; an explicit migration is required.');
+            }
+            if ($user->principal_type !== 'legacy' && $user->isDirty('email')) {
+                $user->email = LoginEmail::normalize($user->email)
+                    ?? throw new InvalidArgumentException('New account email requires an ASCII mailbox and domain.');
+            }
+        });
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         // Development shell only; no production policy or tenant privilege is implied.
-        return $panel->getId() === 'admin' && app()->environment(['local', 'testing']);
+        return $this->principal_type === 'legacy' && $panel->getId() === 'admin' && app()->environment(['local', 'testing']);
     }
 
     public function memberships(): HasMany
@@ -46,6 +72,7 @@ class User extends Authenticatable implements FilamentUser
     protected function casts(): array
     {
         return [
+            'organization_id' => 'integer',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];

@@ -29,6 +29,10 @@ Modify after full-file inspection: `app/Models/User.php`, `app/Authorization/Ten
 
 The unrelated change to `docs/engineering/collaboration-security.md` appeared concurrently after initial status; preserve it unstaged. Preserve the existing untracked storage artifact and contributor branch. Never stage private files or unrelated work.
 
+Scope clarification after inspecting full regression files: also modify `tests/Integration/MySql/OrganizationHistoryIntegrityTest.php`, `HierarchyHistoryIntegrityTest.php`, `PermissionIntegrityTest.php` for exact19/18 journal expectations (five new migrations), and `TenantIsolationSchemaContractTest.php` to assert the new nullable User binding explicitly while retaining every other global/root exception. Organization-history rollback must target its original migration by path now that later migrations exist. These are necessary additive-schema expectation updates, not removed/weakened negative coverage; their current integrity assertions stay intact.
+
+Concurrency-test support: add `tests/Support/identity-worker.php` for guarded real two-process account-token issuance/consumption and old-snapshot tests, using the established existing concurrency-test approach. Recovery also binds each token to the current contact/password digest, so a subsequent credential/contact change invalidates an outstanding token. No new production service or package is introduced.
+
 ## Validation and physical deliverables
 
 Test same-address/different-password namespaces, ASCII/case/Unicode validation, platform/legacy isolation, immutable binding and raw cross-tenant membership/pivots; populated MySQL legacy/history/retry and rollback refusal. Feature tests cover correct/wrong/fake-scope login, session/CSRF/logout, cross-account/revoked/stale/remembered context, generic recovery, signed URLs, account-bound token/expiry/replay/throttle/concurrency and unchanged production panel/entry denial. Existing suite assertion expectations change only where this approved additive schema necessarily changes the inventory; no test or guard weakening.

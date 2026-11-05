@@ -6,6 +6,12 @@ use App\Authorization\RoleManagement;
 use App\Authorization\TenantAuthorization;
 use App\Authorization\TenantContext;
 use App\Authorization\UnavailablePermissionCommand;
+use App\Identity\AccountPasswordBrokerManager;
+use App\Identity\InstitutionUserProvider;
+use App\Identity\LegacyUserProvider;
+use App\Models\User;
+use App\Policies\InstitutionAccountPolicy;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Commands\AssignRoleCommand;
@@ -20,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Extension also applies when the framework's deferred broker is loaded.
+        $this->app->extend('auth.password', fn ($manager, $app) => new AccountPasswordBrokerManager($app));
         $this->app->scoped(TenantContext::class);
         $this->app->scoped(TenantAuthorization::class);
         $this->app->scoped(RoleManagement::class);
@@ -38,6 +46,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Auth::provider('institution', fn ($app, $config) => new InstitutionUserProvider($app['hash'], $config['model']));
+        Auth::provider('legacy', fn ($app, $config) => new LegacyUserProvider($app['hash'], $config['model']));
+        Gate::define('institution-account', fn (User $actor, string $organization) => app(InstitutionAccountPolicy::class)->view($actor, $organization));
         Gate::define('tenant-capability', fn ($actor, $capability, $resource) => app(TenantAuthorization::class)->allows($actor, $capability, $resource));
     }
 }

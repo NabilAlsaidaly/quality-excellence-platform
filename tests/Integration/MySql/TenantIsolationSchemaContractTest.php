@@ -18,11 +18,16 @@ class TenantIsolationSchemaContractTest extends MySqlTestCase
         $this->assertContractPasses($schema);
 
         // These genuine exceptions must pass without inventing organization_id.
-        foreach (['organizations' => 'root', 'users' => 'global', 'permissions' => 'catalog',
+        foreach (['organizations' => 'root', 'permissions' => 'catalog',
             'role_has_permissions' => 'indirect'] as $table => $scope) {
             $this->assertSame($scope, Contract::TABLES[$table]);
             $this->assertArrayNotHasKey('organization_id', $schema[$table]['columns']);
         }
+        // Mixed principal storage now has an explicitly nullable institution
+        // binding. Historical/global principals remain valid; it is not blanket
+        // direct tenant ownership or a reason to weaken any other exception.
+        $this->assertSame('global', Contract::TABLES['users']);
+        $this->assertSame(['type' => 'bigint unsigned', 'nullable' => true], $schema['users']['columns']['organization_id']);
     }
 
     public function test_an_unknown_actual_table_fails_even_with_an_organization_column(): void
