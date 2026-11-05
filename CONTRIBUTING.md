@@ -9,6 +9,7 @@ This is a **public** repository, but repository Write permission does not author
 5. Run formatting/tests and record **actual** outcomes. Add a report in `docs/engineering/reports/<issue>.md`.
 6. Open a PR targeting `main`; request review. Do not force-push, edit GitHub rules or self-merge.
 7. Never commit secrets, private documents, real tenant records or production database exports to the **public** repository.
+8. Review source authority/conflicts and public confidentiality before implementation. Prefer framework capabilities and small, maintainable changes with concrete SOLID/DRY/KISS/YAGNI justification; a new abstraction must solve an observed need.
 
 **GitHub rule visibility:** `main.protected=true` is verified; individual classic-branch protection controls are not readable by this integration. Owner must verify required CI/review and contributor-side denial of direct pushes via Settings, per [security checklist](docs/engineering/collaboration-security.md).
 

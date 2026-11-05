@@ -1,6 +1,8 @@
 # Project documentation
 
 ## Current references
+- [Phase05A architecture decision gates](architecture/PHASE-05A-ARCHITECTURE-GATES.md).
+- [Phase05A gated roadmap](engineering/PHASE-05A-MVP-IMPLEMENTATION-ROADMAP.md) and [reconciliation report](engineering/reports/26.md).
 - [Executable tenant-isolation schema contract and reviewed exceptions](architecture/tenant-isolation-schema-contract.md).
 - [Phase 04C schema regression engineering report](engineering/reports/PHASE-04C-TENANT-ISOLATION.md).
 - [Organization provisioning versus member-scoped metadata](architecture/organization-management-foundation.md).
