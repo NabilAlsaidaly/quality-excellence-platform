@@ -32,7 +32,7 @@ Five new journaled migrations: atomic users ALTER; one membership INSERT guard; 
 
 Maintenance/exclusive deployment window is required: no new account writes or old email-only binary while expanding/cutting over. Before that window, inspect pending SQL, backups, target, privileges and separately authorized legacy inventory. Ambiguous legacy rows remain ineligible for institutional entry. One trigger per migration means denied creation leaves no multi-object partial migration; earlier successful migrations remain journaled. Process death between successful DDL and journal insertion still requires operator verification; do not adopt/drop an existing unjournaled expansion automatically.
 
-Rollback refuses to discard nonlegacy account semantics or live institution reset tokens. Empty/legacy-only fixtures can roll back and repeat; after new semantics exist, old global-unique-email code/schema is unsafe and a reviewed forward correction is preferred. Never delete duplicate-email accounts/history or rewrite old actor IDs to make rollback pass.
+Rollback refuses to discard nonlegacy account semantics or live institution reset tokens. The first reverse step checks account state even with no tokens; every guard migration independently refuses before removing integrity protection. Empty/legacy-only fixtures can roll back and repeat; after new semantics exist, old global-unique-email code/schema is unsafe and a reviewed forward correction is preferred. Never delete duplicate-email accounts/history or rewrite old actor IDs to make rollback pass.
 
 ## Acceptance and review
 

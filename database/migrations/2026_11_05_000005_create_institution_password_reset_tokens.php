@@ -24,8 +24,9 @@ SQL.(DB::getDriverName() === 'mysql' ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 C
     public function down(): void
     {
         // Tokens are live authentication state, not disposable migration fixtures.
-        if (DB::table('institution_password_reset_tokens')->exists()) {
-            throw new RuntimeException('Live account recovery tokens exist; rollback requires reviewed account cutover.');
+        if (DB::table('users')->where('principal_type', '!=', 'legacy')->exists()
+            || DB::table('institution_password_reset_tokens')->exists()) {
+            throw new RuntimeException('Account identity or recovery state exists; rollback requires reviewed account cutover.');
         }
         Schema::drop('institution_password_reset_tokens');
     }

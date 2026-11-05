@@ -24,6 +24,8 @@ Candidate technical parameters: login five failures per namespace/email/IP minut
 
 Deploy nothing from this task. Any later reviewed deployment requires matching APP_URL host, HTTPS/proxy/session/transport configuration, required migration/trigger privileges, an exclusive cutover window, backups and a separately authorized legacy inventory. No old binary may email-resolve new namespaces. Rollback must preserve accounts/history and refuses incompatible semantic loss; DDL/journal crash windows require inspection. See the [proposed ADR](../adr/ADR-004-institution-identity-candidate.md) for the five migration boundaries.
 
+With any nonlegacy account, ordinary rollback refuses at the first reverse step before dropping the reset table, even without live tokens. Each trigger down independently refuses too, preventing partial removal of account integrity protections. This requires exclusive maintenance writes as above; concurrent provisioning during rollback is unsupported.
+
 ## Tests and limits
 
 The new shared identity scenarios run on SQLite and actual guarded MySQL. HTTP feature tests cover scope/credential/session/reset/host/CSRF/production-denial paths. MySQL-specific tests cover populated legacy/history, failed atomic ALTER/retry, rollback refusal, revoked membership under old snapshot and real competing token operations. Existing schema contract adds explicit users binding/key and tenant-token FK facts without relaxing original isolation/history checks.

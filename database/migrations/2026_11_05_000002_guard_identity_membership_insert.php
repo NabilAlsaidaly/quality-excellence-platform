@@ -30,6 +30,9 @@ SQL);
 
     public function down(): void
     {
+        if (DB::table('users')->where('principal_type', '!=', 'legacy')->exists()) {
+            throw new RuntimeException('Account principals exist; preserve membership integrity and use a reviewed forward correction.');
+        }
         DB::unprepared('DROP TRIGGER IF EXISTS identity_membership_insert');
     }
 };

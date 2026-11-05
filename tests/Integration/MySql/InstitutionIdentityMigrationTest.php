@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\InstitutionPasswordReset;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -117,6 +118,25 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
         Notification::fake();
         $org = Organization::factory()->create();
         $account = $this->account($org);
+        // Even with no live tokens, the FIRST reverse migration must refuse
+        // before dropping a table or any integrity trigger for existing accounts.
+        try {
+            Artisan::call('migrate:rollback', ['--step' => 5, '--force' => true]);
+            $this->fail('Ordinary rollback must refuse before its first DROP.');
+        } catch (RuntimeException $error) {
+            $this->assertNotEmpty($error->getMessage());
+        }
+        $this->assertSame(19, DB::table('migrations')->count());
+        foreach (glob(database_path('migrations/2026_11_05_*.php')) as $path) {
+            try {
+                (require $path)->down();
+                $this->fail('Every reverse step must refuse while principals exist.');
+            } catch (RuntimeException $error) {
+                $this->assertNotEmpty($error->getMessage());
+            }
+        }
+        $this->assertTrue(Schema::hasTable('institution_password_reset_tokens'));
+        $this->assertSame(3, (int) DB::selectOne("SELECT COUNT(*) AS total FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND TRIGGER_NAME IN ('identity_membership_insert','identity_membership_update','identity_binding_update')")->total);
         app(InstitutionRecovery::class)->request($org->public_id, $account->email);
         $before = $account->fresh()->getAttributes();
         foreach ([fn () => $this->expansion()->up(), fn () => $this->expansion()->down(),

@@ -29,6 +29,9 @@ SQL);
 
     public function down(): void
     {
+        if (DB::table('users')->where('principal_type', '!=', 'legacy')->exists()) {
+            throw new RuntimeException('Account principals exist; preserve immutable bindings and use a reviewed forward correction.');
+        }
         DB::unprepared('DROP TRIGGER IF EXISTS identity_binding_update');
     }
 };
