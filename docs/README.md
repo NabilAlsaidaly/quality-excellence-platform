@@ -1,6 +1,7 @@
 # Project documentation
 
 ## Current references
+- [Phase05B-0 identity/authorization gates](architecture/PHASE-05B-0-IDENTITY-AUTHORIZATION-GATES.md), [proposed next entry contract](engineering/PHASE-05B-1-ENTRY-IMPLEMENTATION-CONTRACT.md) and [reconciliation report](engineering/reports/30.md).
 - [Phase05A architecture decision gates](architecture/PHASE-05A-ARCHITECTURE-GATES.md).
 - [Phase05A gated roadmap](engineering/PHASE-05A-MVP-IMPLEMENTATION-ROADMAP.md) and [reconciliation report](engineering/reports/26.md).
 - [Executable tenant-isolation schema contract and reviewed exceptions](architecture/tenant-isolation-schema-contract.md).
