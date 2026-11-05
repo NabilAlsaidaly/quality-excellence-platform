@@ -1,0 +1,33 @@
+# Institution identity entry candidate
+
+Issue32 / Phase05B-1. Implemented candidate; [ADR-004](../adr/ADR-004-institution-identity-candidate.md) is PROPOSED, not accepted. No account provisioning/privileged seed, invitation, D-002 operational grant, production/staging entry or private domain content is exposed.
+
+## Implemented path
+
+`/institution/login` supplies an institution public ULID, email and password to InstitutionEntry. LoginEmail accepts trimmed lowercase ASCII mailbox/domain syntax and rejects Unicode/control input. InstitutionUserProvider resolves only institutional principals with that persisted organization and current matching membership. Laravel's independent session guard verifies password hashes, regenerates the session and records selected scope/password hash. No remember-me option or membership-switch UI is offered.
+
+Each `/institution/{organization}/account` and scoped logout request reloads the principal through its provider, verifies scope/password freshness, enters TenantContext and authorizes the self-account Policy. Context/relationships clear in finally. The landing exposes only the authenticated account greeting/session controls, not tenant data. Wrong/stale/revoked/remember-only scope is logged out. Legacy principals still support the historical internal membership contracts but cannot enter the new institutional path. Platform principals cannot inherit a tenant membership or either existing/new entry by default.
+
+Recovery requests use institution+email and generic feedback. The Laravel institution broker/token repository stores a hash keyed by account_id with organization scope and current contact/password digest. Both issuance and consumption serialize on the stable User row and current membership; token queries use current locking reads even inside an older InnoDB snapshot. A changed contact/password, expired/consumed/foreign token or revoked membership cannot reset an account. Reset changes only that principal and rotates its remember token; session hash checks invalidate old sessions on the next protected request. Verification state is independent and not automatically copied or granted.
+
+Notifications use real registered email and an account/organization-bound signed relative route prefixed by trusted APP_URL. The new request middleware rejects unexpected Host and all production/staging requests, even if routes were cached elsewhere. Forms/redirects never accept an arbitrary intended destination or Referer as a target. Responses are no-store/private with no-referrer/nosniff; no external assets. Automated mail uses Notification::fake only; no real recipient/delivery is claimed.
+
+Routes, including reset GET/POST and logout POST, use the ordinary web CSRF/session middleware. Feature tests explicitly enable real CSRF checks. No Livewire institutional component is introduced; existing Filament web guard excludes new principals and its production/staging gate remains denied. A future Livewire adapter must recreate this verified boundary on every update, not reuse a remembered context.
+
+## Schema and compatibility
+
+users remains mixed principal/actor storage, with nullable organization binding only under an enforced principal-shape CHECK. New generated identity_namespace is derived from type and organization; namespace/email uniqueness handles institutional reuse and non-null platform/legacy namespaces. Public account identifiers and `(id,organization_id)` are unique; the root FK and new token composite FK are RESTRICT. The new token table is direct tenant-scoped. Existing role/membership/history FKs retain exact shapes. DB membership and identity-binding triggers defend raw SQL paths; User model guards additionally protect ordinary updates/mass assignment.
+
+Existing zero/single/multiple-membership principals remain explicitly legacy, with unchanged IDs, contact data, hashes, memberships and historical references. No production/application rows were inspected. Populated synthetic fixtures and ordinary retry prove only the tested migration paths; a real mapping/backfill needs independent authority. Explicit platform rows are not administrators and NULL never implies platform privilege.
+
+Candidate technical parameters: login five failures per namespace/email/IP minute; recovery five requests per namespace/email/IP minute plus broker per-account60-second issuance throttle; broker/reset-link expiry60minutes; new password12..128 characters; CSRF, session regeneration, generic failures and host validation. These are reviewable technical candidate settings, not claimed owner lifecycle/MFA policy or final production tuning. Existing Redis/array configuration supplies rate limiter storage; no service or global configuration changed.
+
+Deploy nothing from this task. Any later reviewed deployment requires matching APP_URL host, HTTPS/proxy/session/transport configuration, required migration/trigger privileges, an exclusive cutover window, backups and a separately authorized legacy inventory. No old binary may email-resolve new namespaces. Rollback must preserve accounts/history and refuses incompatible semantic loss; DDL/journal crash windows require inspection. See the [proposed ADR](../adr/ADR-004-institution-identity-candidate.md) for the five migration boundaries.
+
+## Tests and limits
+
+The new shared identity scenarios run on SQLite and actual guarded MySQL. HTTP feature tests cover scope/credential/session/reset/host/CSRF/production-denial paths. MySQL-specific tests cover populated legacy/history, failed atomic ALTER/retry, rollback refusal, revoked membership under old snapshot and real competing token operations. Existing schema contract adds explicit users binding/key and tenant-token FK facts without relaxing original isolation/history checks.
+
+No account-admin/domain grant, invitation/activation/MFA/suspension workflow, private document, queue feature, production rollout, actual delivery, real-data backfill or broad delegation engine is delivered. [Permanent report](../engineering/reports/32.md) records actual results and any failed/pending checks.
+
+Version-specific technical evidence: installed Laravel13.39 provider/guard/broker/token and transaction code; [Laravel13 authentication](https://laravel.com/docs/13.x/authentication), [passwords](https://laravel.com/docs/13.x/passwords), [authorization](https://laravel.com/docs/13.x/authorization), [transactions](https://laravel.com/docs/13.x/database), [MySQL8.4 FKs](https://dev.mysql.com/doc/refman/8.4/en/create-table-foreign-keys.html), [Filament5 access](https://filamentphp.com/docs/5.x/users/overview). Framework examples grant no business authority.
