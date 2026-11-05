@@ -5,10 +5,12 @@
 - **Accepted technical ADRs**: [ADR-001](docs/adr/ADR-001-tenant-isolation.md), [ADR-002](docs/adr/ADR-002-identity-authorization.md) and [ADR-003](docs/adr/ADR-003-identifiers-and-integrity.md).
 - Consult [decision ledger](docs/architecture/decision-ledger.md) and task Issue before coding. An engineering approval **never** fills in OPEN owner policies.
 - Stop and report requirements conflicts. Do not invent roles, permissions, lifecycle rules, maturity percentages, audit outcomes or external integrations.
+- When a newer explicit owner requirement conflicts with an accepted ADR, record the conflict and block dependent implementation until source reconciliation and engineering-lead acceptance of a scoped technical revision. Keep private source evidence outside public artifacts.
 
 ## Architecture
 - Laravel pragmatic Modular Monolith + lightweight DDD. Keep business rules in domain/application Actions/Services, not Filament Resources, controllers or views.
 - Filament 5 is installed for administrative presentation; no new packages without explicit authorization.
+- Prefer existing Laravel/Filament/MySQL capabilities. Apply SOLID at concrete responsibility boundaries, reuse existing logic (DRY), and keep designs simple (KISS/YAGNI); add no generic layer or framework without a demonstrated need.
 - Shared MySQL + tenant `organization_id`; global identities support organization memberships; scoped deny-by-default authorization; internal BIGINT + external ULID. Test tenant isolation at service, DB, jobs, files and downloads.
 
 ## Security

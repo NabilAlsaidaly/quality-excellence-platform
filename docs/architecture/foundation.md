@@ -13,10 +13,16 @@ Conceptual flow: Presentation → Application → Domain → Infrastructure. Kee
 These are **engineering approvals**, not silent approval of unresolved product-owner rules. Implement only against explicit acceptance criteria and with negative cross-tenant tests.
 
 ## Implementation status
-The repository contains Laravel bootstrap, PHPUnit/Pint/CI, MySQL migration validation, Filament 5 and its `/admin` panel. **No tenancy, membership, custom RBAC, document/evidence domain or workflow has been implemented yet.** Built-in users/cache/jobs migrations remain provisional framework scaffolding. No production administrator access policy is in place.
+The repository contains Laravel bootstrap, PHPUnit/Pint/CI, Filament 5 and its `/admin` panel. Phase 03A adds structural organizations, memberships and hierarchical units plus Redis cache/queue infrastructure; see [schema design](tenant-schema-foundation.md). Phase 03C adds the [technical tenant authorization foundation](tenant-authorization-foundation.md), with an empty capability registry and no business grants or public management interface. Document/evidence workflows and owner-approved business authorization remain unimplemented. Built-in users/cache/jobs migrations are preserved; production/staging panel access is explicitly denied pending an approved policy.
+
+Phase 04A implements the [internal organizational hierarchy service](organizational-hierarchy-management.md), with organization-row serialization, current ancestor reads, multi-level cycle validation and separate unit-change history. It adds no user-facing route/Resource/capability; hierarchy position grants no privilege. Existing schema/triggers and deny-by-default RBAC remain unchanged. Raw SQL remains outside application cycle/audit guarantees.
+
+Phase 04B adds [internal organization provisioning and scoped metadata](organization-management-foundation.md), preserving existing identity/membership/RBAC/hierarchy semantics. Global actor attribution is not platform-administrator authority; initial provisioning grants no membership. FR-ID-001 is partial pending operational-state and user-facing policy approval. No status column, management endpoint or production access is enabled.
 
 ## Business and compliance policy still requiring product-owner decisions
 D-001 support access, D-002 role matrix/delegation, D-008 location/retention, D-022 self-review/separation of duties, D-023 suspension, D-024 invitation/reset/MFA, and D-027 domain relationship flexibility. These cannot be invented as part of a technical implementation. The data model's capacity for multi-org membership does not itself grant membership.
 
 ## Quality controls
+Phase04C adds the [test-only tenant-isolation schema contract](tenant-isolation-schema-contract.md): every actual MySQL base table needs an explicit reviewed classification, and required scope/relationship/key/history constraints are verified from database metadata. Unknown tables and weakened critical constraints fail existing CI discovery. Application behavior, production schema and authorization remain unchanged.
+
 Use MySQL-specific migration/constraint tests as domain schema evolves; SQLite bootstrap tests alone cannot prove tenant integrity. Preserve immutable historical versions. Keep private evidence private. Record changes and evidence in `docs/engineering/reports/`.

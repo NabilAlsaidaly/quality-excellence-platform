@@ -8,7 +8,11 @@ Multi-organization institutional quality and excellence management platform (Ara
 - MySQL **8.x** target; isolated SQLite PHPUnit bootstrap tests
 - Node.js **24** LTS, Vite, Tailwind, PHPUnit, Laravel Pint and GitHub Actions CI
 
-**Not implemented:** organization/membership tables, tenant authorization, full RBAC, evidence/document workflows, maturity stages, production admin access and end-user UI. Installed Filament login routes do not imply an authorized production panel.
+Phase 03A adds structural organizations, memberships and hierarchical units with same-tenant database constraints, plus Redis infrastructure. Phase 03C adds the [technical tenant authorization foundation](docs/architecture/tenant-authorization-foundation.md): Spatie Permission 8.3.2 Teams, verified scoped context, explicit resource authorization and internal role-management services. The capability registry ships empty; no business role/permission matrix or public management interface is approved. Evidence/document workflows, maturity stages, production admin access and end-user UI remain unimplemented. A membership alone grants no permission; the admin development shell is explicitly denied outside local/testing.
+
+Phase 04A adds [internal organizational hierarchy management](docs/architecture/organizational-hierarchy-management.md): create/rename/move/tree operations, serialized multi-level cycle checks and separate transactional unit-change history. No management endpoint or implicit hierarchy permission is enabled. Raw SQL can still bypass application cycle checks; deployment/recovery boundaries and actual concurrency evidence are in the [engineering report](docs/engineering/reports/PHASE-04A-ORGANIZATIONAL-HIERARCHY.md).
+
+Phase 04B adds [internal organization provisioning/rename and scoped metadata reads](docs/architecture/organization-management-foundation.md), with exact name validation, current rename locks and separate transactional organization history. Provisioning creates no membership or privilege and grants no tenant-content access. FR-ID-001 remains partial: operational state and user-facing management authority are deferred. See the [permanent report](docs/engineering/reports/PHASE-04B-ORGANIZATION-MANAGEMENT.md).
 
 ## Setup from the default branch
 Clone the repository and work on `main` only to **update your local base**, then use a task branch for any modification:
@@ -23,6 +27,8 @@ php artisan key:generate
 
 On Windows PowerShell, replace `cp` with `Copy-Item .env.example .env`. Configure a dedicated local MySQL database and credentials in the untracked `.env` as described in [local setup](docs/setup/local-development.md). Never overwrite an existing production/application key.
 
+Start the local Redis service and review MySQL trigger migration prerequisites in [Redis and integration setup](docs/setup/redis-local.md). `.env.example` selects Redis cache/queues via PhpRedis while retaining database sessions. MySQL remains authoritative. The regular tests stay independent of both services.
+
 ```sh
 php artisan migrate
 npm ci
@@ -31,6 +37,8 @@ php artisan serve
 ```
 
 Health: `/up`. Filament admin login route: `/admin/login`; it is **not yet production hardened**. Never publish demo credentials or tenant data.
+
+On Windows with Laravel Herd, use the [Herd setup guide](docs/setup/herd-windows.md) and browse `http://quality-excellence-platform.test` directly; ordinary browsing does not require `php artisan serve`. The guide preserves an existing `phpMyAdmin.test` site, documents optional loopback-only MySQL 8.4/Redis services, and keeps application data separate from disposable integration databases. [Phase 03B local evidence](docs/engineering/reports/PHASE-03B-A-HERD-LOCAL-READINESS.md) and the [proposed authorization preview](docs/engineering/PHASE-03B-RBAC-DECISION-PREVIEW.md) record verified behavior and decisions still awaiting approval.
 
 ## Verification
 ```sh

@@ -24,3 +24,15 @@
 - Every product policy still marked OPEN requires an owner decision or a task that explicitly excludes the unknown behavior.
 - Do not silently change the original SRS decision register. If the owner approves business items, amend the authoritative SRS and this ledger together.
 - To avoid unnecessary blocking, narrowly scoped infrastructure tasks may proceed without implementing unresolved business logic.
+
+## Phase05A reconciliation checkpoint — 2026-11-05
+
+**RECEIVED / SRS RECONCILIATION PENDING:** authorized private decision evidence has been reviewed under Issue #26. The table above preserves the canonical register's historical OPEN statuses; it is not a claim that no later responses exist. The canonical source has not been edited by this task. Detailed rules, source names and amendments remain in the private lead handover.
+
+D-021 / ADR-002 compatibility and D-002 authority require an explicit implementation gate. D-003/D-014 and remaining context-specific details stay unresolved where no complete decision exists. Receipt is neither acceptance of a new architecture nor an operational grant. Accepted ADR-001/002/003 remain unchanged; dependent implementation requires reconciled source authority and lead acceptance of any technical revision. See [Phase05A gates](PHASE-05A-ARCHITECTURE-GATES.md).
+
+## Phase05B-0 reconciliation checkpoint — 2026-11-05
+
+**ANALYSIS COMPLETE / IMPLEMENTATION GATED:** Issue [#30](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/30) checked actual source contents/revision and current implementation. Additional D-021 clarification was received; do not reopen answered functional choices. G1 now requires source reconciliation and engineering acceptance of the complete compatibility design. A detailed D-002 proposal was explicitly supplied as **PROPOSED, not final owner approval**; its grants remain unavailable pending ratification. D-013 has received user-visible requirements; its concurrency mechanism is proposed engineering work, not a repeated owner question. D-003/D-014 remain deferred to their dependent module.
+
+The historical table and accepted ADRs above are preserved. No canonical source amendment, accepted replacement ADR, operational permission or implementation is claimed. Detailed policies/alternatives/amendments remain private. The current [Phase05B-0 gates](PHASE-05B-0-IDENTITY-AUTHORIZATION-GATES.md) and [proposed next contract](../engineering/PHASE-05B-1-ENTRY-IMPLEMENTATION-CONTRACT.md) refine the planning checkpoint without authorizing code. The prior dependency blocker was resolved separately by merged PR #29 and is verified clean again; historical Phase05A failure text is not current gate evidence.
