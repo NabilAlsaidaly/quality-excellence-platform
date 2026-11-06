@@ -1,0 +1,65 @@
+
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+@source '../../../../resources/views/components/quality-ui/**/*.blade.php';
+
+/*
+|--------------------------------------------------------------------------
+| Quality & Excellence Platform - Design Tokens
+|--------------------------------------------------------------------------
+*/
+
+.qep-preview {
+    /* Brand colors */
+    --qep-primary: #17324D;
+    --qep-secondary: #087F78;
+
+    /* Backgrounds and surfaces */
+    --qep-background: #F8FAFC;
+    --qep-surface: #FFFFFF;
+
+    /* Text */
+    --qep-text: #172B3A;
+    --qep-text-muted: #64748B;
+
+    /* Borders */
+    --qep-border: #E2E8F0;
+
+    /* Status */
+    --qep-danger: #B91C1C;
+
+    /* Typography */
+    --qep-font-sans: Tahoma, 'Segoe UI', system-ui, sans-serif;
+    font-family: var(--qep-font-sans);
+}
+
+/*
+|--------------------------------------------------------------------------
+| Preview styling only: Filament owns the body, login and dark mode
+|--------------------------------------------------------------------------
+*/
+
+/*
+|--------------------------------------------------------------------------
+| Future preview components
+|--------------------------------------------------------------------------
+*/
+
+.qep-surface {
+    background-color: var(--qep-surface);
+    border: 1px solid var(--qep-border);
+}
+
+.qep-muted {
+    color: var(--qep-text-muted);
+}
+
+.qep-primary {
+    color: var(--qep-primary);
+}
+
+.qep-secondary {
+    color: var(--qep-secondary);
+}
