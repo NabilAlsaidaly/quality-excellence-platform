@@ -89,6 +89,12 @@ No fake endpoint, extra capability or new service was added for testing. No old 
 
 ## Safe extension and limits
 
+### Issue32 candidate extension (Phase05B-1)
+
+The preceding Phase04C inventory is historical. Issue32 adds five migrations and one direct table, `institution_password_reset_tokens`, with account/organization composite RESTRICT FK to `users(id,organization_id)` and unique account token identity. users remains mixed global principal/actor storage, now with nullable organization_id under explicit legacy/platform/institution shape rules, public account ULID, generated namespace and namespace/email uniqueness; root FK and candidate keys are explicitly checked. It is no longer an example of a table having no organization_id at all. Legacy actors/history and every original FK/unique/CHECK expectation remain protected.
+
+The helper's single TABLES map and explicit FK/unique/type checks extend accordingly. The original global/root/catalog/indirect exceptions remain tested; the users test now asserts its precise nullable binding rather than wrongly requiring the new column absent. Existing migration-count tests assert19 applied/18 after removing one migration; path/rollback-step adjustments still target and exercise the same original migrations. No original negative assertion is removed. New raw identity/membership/token tests and populated/concurrent MySQL tests prove the added invariants; this is an authorized schema extension, not an unknown-table bypass. See [candidate architecture](institution-identity-entry.md) and [Issue32 report](../engineering/reports/32.md). ADR-004 remains PROPOSED.
+
 For a future approved schema change:
 
 1. Define its SRS/ADR authority and ownership in a separate Issue. Global exceptions need explicit review under ADR-001; a neutral table name is insufficient.

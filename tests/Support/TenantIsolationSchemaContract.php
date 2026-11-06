@@ -16,6 +16,7 @@ final class TenantIsolationSchemaContract
         'failed_jobs' => 'global',
         'job_batches' => 'global',
         'jobs' => 'global',
+        'institution_password_reset_tokens' => 'direct',
         'migrations' => 'global',
         'model_has_permissions' => 'direct',
         'model_has_roles' => 'direct',
@@ -35,6 +36,8 @@ final class TenantIsolationSchemaContract
     // Ordered local columns => [target table, ordered target columns]. All are
     // same-schema RESTRICT/RESTRICT. Global actors are NOT membership references.
     private const FOREIGN_KEYS = [
+        'users' => ['organization_id' => ['organizations', 'id']],
+        'institution_password_reset_tokens' => ['account_id,organization_id' => ['users', 'id,organization_id']],
         'organization_memberships' => [
             'user_id' => ['users', 'id'], 'organization_id' => ['organizations', 'id'],
         ],
@@ -70,7 +73,8 @@ final class TenantIsolationSchemaContract
     ];
 
     private const UNIQUE_KEYS = [
-        'users' => ['id'],
+        'users' => ['id', 'public_id', 'id,organization_id', 'identity_namespace,email'],
+        'institution_password_reset_tokens' => ['account_id'],
         'organizations' => ['id', 'public_id'],
         'organization_memberships' => ['id', 'user_id,organization_id'],
         'organizational_units' => ['id', 'public_id', 'organization_id,id'],
@@ -176,6 +180,14 @@ SQL);
                 continue;
             }
             $actual = $schema[$table];
+            if ($table === 'users') {
+                foreach (['organization_id' => ['bigint unsigned', true], 'public_id' => ['char(26)', true],
+                    'principal_type' => ['varchar(16)', false], 'identity_namespace' => ['varchar(48)', true]] as $column => [$type, $nullable]) {
+                    if (($actual['columns'][$column] ?? null) !== ['type' => $type, 'nullable' => $nullable]) {
+                        $errors[] = "users: $column must retain its reviewed identity type and nullability.";
+                    }
+                }
+            }
             if ($actual['engine'] !== 'InnoDB') {
                 $errors[] = "$table: expected InnoDB for the reviewed integrity contract.";
             }

@@ -42,6 +42,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'institution' => [
+            'driver' => 'session',
+            'provider' => 'institution',
+        ],
     ],
 
     /*
@@ -63,8 +67,12 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            'driver' => 'legacy',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'institution' => [
+            'driver' => 'institution',
+            'model' => User::class,
         ],
 
         // 'users' => [
@@ -93,6 +101,13 @@ return [
     */
 
     'passwords' => [
+        'institution' => [
+            'driver' => 'institution-account',
+            'provider' => 'institution',
+            'table' => 'institution_password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
