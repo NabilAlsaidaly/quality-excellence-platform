@@ -1,15 +1,4 @@
-<nav aria-label="مسار التنقل" dir="rtl" class="mb-4">
-    <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <li>الرئيسية</li>
-        <li aria-hidden="true">/</li>
-        <li class="font-medium text-gray-900 dark:text-white">الإشعارات</li>
-    </ol>
-</nav>
-
-<x-quality-ui.page-header
-    title="مركز الإشعارات"
-    description="عرض تصوري للإشعارات المرتبطة بسياق المستخدم، مع توضيح الرسالة وسببها وسياقها وحالة قراءتها."
-/>
+<p class="mb-5 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-400">عرض تصوري للإشعارات المرتبطة بسياق المستخدم، مع توضيح الرسالة وسببها وسياقها وحالة قراءتها.</p>
 
 <div class="space-y-6">
 

@@ -13,6 +13,12 @@ final class UiPreviewPage extends Page
 
     protected static ?string $title = 'معرض معاينة الواجهات';
 
+    /**
+     * The gallery provides its own dynamic page heading.
+     * Keep the static title for the browser document title.
+     */
+    protected ?string $heading = '';
+
     protected static bool $shouldRegisterNavigation = false;
 
     protected string $view = 'filament.ui-preview.gallery';

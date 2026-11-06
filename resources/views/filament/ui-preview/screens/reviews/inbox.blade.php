@@ -1,15 +1,4 @@
-<nav aria-label="مسار التنقل" dir="rtl" class="mb-4">
-    <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-        <li>إدارة الجودة</li>
-        <li aria-hidden="true">/</li>
-        <li class="font-medium text-gray-900 dark:text-white">صندوق المراجعات</li>
-    </ol>
-</nav>
-
-<x-quality-ui.page-header
-    title="صندوق مراجعات الجودة"
-    description="عرض تصوري للمراجعات الواقعة ضمن نطاق المؤسسة والصلاحيات المخولة."
-/>
+<p class="mb-5 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-400">عرض تصوري للمراجعات الواقعة ضمن نطاق المؤسسة والصلاحيات المخولة.</p>
 
 <div class="space-y-6">
 

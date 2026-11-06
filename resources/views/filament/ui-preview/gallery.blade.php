@@ -184,9 +184,9 @@
                             aria-hidden="true"
                         />
 
-                        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                        <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-200">
                             نطاق المعاينة
-                        </h3>
+                        </h2>
                     </div>
 
                     <p class="mt-2 text-xs leading-6 text-gray-600 dark:text-gray-400">
@@ -253,11 +253,11 @@
                             =================================================== --}}
                             <div class="space-y-6">
 
-                                <x-quality-ui.section-card
-                                    title="معرض الحالات المشتركة"
-                                    description="نماذج موحدة للحالات البصرية التي يمكن إعادة استخدامها في شاشات المنصة. جميع الأمثلة التالية توضيحية فقط."
-                                >
-                                    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
+                                <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                                    <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+                                        <p class="text-sm leading-6 text-gray-600 dark:text-gray-400">نماذج موحدة للحالات البصرية التي يمكن إعادة استخدامها في شاشات المنصة. جميع الأمثلة التالية توضيحية فقط.</p>
+                                    </div>
+                                    <div class="grid grid-cols-1 gap-5 p-5 md:grid-cols-2 2xl:grid-cols-3">
 
                                         {{-- ======================================
                                              1. Empty state
@@ -477,7 +477,7 @@
                                             </div>
                                         </x-quality-ui.section-card>
                                     </div>
-                                </x-quality-ui.section-card>
+                                </div>
 
                                 {{-- ==================================================
                                      Shared component previews:
@@ -583,9 +583,6 @@
                                                         {{ $screen['title'] }}
                                                     </h3>
 
-                                                    <p class="break-all font-mono text-xs text-gray-500 dark:text-gray-400">
-                                                        {{ $screen['slug'] }}
-                                                    </p>
                                                 </div>
 
                                                 <span class="shrink-0 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">

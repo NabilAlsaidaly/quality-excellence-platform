@@ -106,11 +106,11 @@
             />
 
         </div>
-    </x-quality-ui.section-card>
 
-    <x-quality-ui.empty-state
-        title="لا توجد مصفوفة صلاحيات معتمدة للعرض"
-        description="لن تظهر أدوار أو إجراءات أو خيارات تفويض قبل اعتماد القرار D-002."
-    />
+    <x-quality-ui.empty-state class="mt-4"
+            title="لا توجد مصفوفة صلاحيات معتمدة للعرض"
+            description="لن تظهر أدوار أو إجراءات أو خيارات تفويض قبل اعتماد القرار D-002."
+        />
+    </x-quality-ui.section-card>
 
 </div>

@@ -1,7 +1,4 @@
-<x-quality-ui.page-header
-    title="مكتبة الوثائق"
-    description="عرض تصوري لهوية الوثائق وإصداراتها وحالة اعتمادها المؤسسي وروابط الأدلة المرتبطة بها."
-/>
+<p class="mb-5 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-400">عرض تصوري لهوية الوثائق وإصداراتها وحالة اعتمادها المؤسسي وروابط الأدلة المرتبطة بها.</p>
 
 <x-quality-ui.info-alert
     variant="info"

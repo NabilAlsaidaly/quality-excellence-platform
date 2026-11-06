@@ -1,7 +1,4 @@
-<x-quality-ui.page-header
-    title="تفاصيل الوثيقة"
-    description="عرض تصوري للمعلومات التعريفية للوثيقة ومالكها وحالة اعتمادها المؤسسي وسجل إصداراتها."
-/>
+<p class="mb-5 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-400">عرض تصوري للمعلومات التعريفية للوثيقة ومالكها وحالة اعتمادها المؤسسي وسجل إصداراتها.</p>
 
 <div class="space-y-6">
 

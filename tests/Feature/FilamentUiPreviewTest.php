@@ -286,6 +286,14 @@ class FilamentUiPreviewTest extends TestCase
     // Authentication and existing admin routes
     // -------------------------------------------------------------------------
 
+    public function test_array_screen_query_parameter_returns_not_found(): void
+    {
+        $this->actingAsPreviewUser();
+
+        $this->get('/admin/ui-preview?screen%5B%5D=platform.overview')
+            ->assertNotFound();
+    }
+
     public function test_guest_is_redirected_to_admin_login(): void
     {
         $this->get('/admin/ui-preview')

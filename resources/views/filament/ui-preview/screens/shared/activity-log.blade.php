@@ -1,11 +1,7 @@
 
 <div class="space-y-6" dir="rtl">
 
-    <x-quality-ui.page-header
-        eyebrow="إدارة المنصة"
-        title="سجل النشاط والتدقيق"
-        description="عرض توضيحي لسجل الأنشطة والأحداث المرتبطة بالمنصة."
-    />
+    <p class="mb-5 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-400">عرض توضيحي لسجل الأنشطة والأحداث المرتبطة بالمنصة.</p>
 
     <x-quality-ui.info-alert
         variant="info"
