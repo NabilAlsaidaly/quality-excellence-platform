@@ -195,6 +195,7 @@ class FilamentUiPreviewTest extends TestCase
                 'local' => true,
                 'testing' => true,
                 'production' => false,
+                'staging' => false,
             ] as $environment => $expectedAccess) {
                 app()->detectEnvironment(
                     static fn (): string => $environment,
@@ -687,22 +688,74 @@ class FilamentUiPreviewTest extends TestCase
     // Test helpers
     // -------------------------------------------------------------------------
 
+    public function test_institution_guard_cannot_authenticate_the_web_preview(): void
+    {
+        $this->actingAs(User::factory()->make(['principal_type' => 'institution']), 'institution');
+        $this->get('/admin/ui-preview')->assertRedirect('/admin/login');
+    }
+
+    public function test_nonlegacy_principals_cannot_enter_the_preview_even_on_the_web_guard(): void
+    {
+        foreach (['institution', 'platform'] as $type) {
+            $this->actingAs(User::factory()->make(['principal_type' => $type]), 'web');
+            $this->get('/admin/ui-preview')->assertForbidden();
+        }
+    }
+
+    public function test_invalid_scalar_and_nested_screen_values_cannot_select_a_view(): void
+    {
+        $this->actingAsPreviewUser();
+        $this->get('/admin/ui-preview?screen=')->assertOk();
+        foreach (['0', '../institution/account', 'filament.ui-preview.gallery'] as $slug) {
+            $this->get('/admin/ui-preview?screen='.rawurlencode($slug))->assertNotFound();
+        }
+        $this->get('/admin/ui-preview?screen%5Bview%5D=platform.overview')->assertNotFound();
+    }
+
+    public function test_group_navigation_targets_exist_in_gallery_and_selected_screens(): void
+    {
+        $this->actingAsPreviewUser();
+        $gallery = $this->get('/admin/ui-preview')->assertOk();
+        $selected = $this->get('/admin/ui-preview?screen=documents.details')->assertOk();
+        foreach (ScreenCatalog::grouped() as $key => $group) {
+            $gallery->assertSee('href="#group-'.$key.'"', false)->assertSee('id="group-'.$key.'"', false);
+            $selected->assertSee('screen='.$group['screens'][0]['slug'], false);
+        }
+    }
+
+    public function test_every_preview_screen_keeps_business_controls_disabled(): void
+    {
+        $this->actingAsPreviewUser();
+        foreach (ScreenCatalog::slugs() as $slug) {
+            $response = $this->get('/admin/ui-preview?screen='.$slug)->assertOk()
+                ->assertSee('معاينة تصميمية — لا توجد بيانات أو وظائف مفعّلة');
+            $document = new \DOMDocument;
+            @$document->loadHTML('<?xml encoding="utf-8" ?>'.$response->getContent());
+            $xpath = new \DOMXPath($document);
+            $scope = '//*[contains(concat(" ", normalize-space(@class), " "), " qep-preview ")]';
+            $this->assertSame(1, $xpath->query($scope)->length);
+            $this->assertSame(0, $xpath->query($scope.'//form')->length);
+            $this->assertSame(0, $xpath->query($scope.'//*[self::button or self::input or self::select or self::textarea][not(@disabled)]')->length);
+            $this->assertSame(0, $xpath->query($scope.'//main')->length);
+        }
+    }
+
+    public function test_component_text_and_table_headings_are_escaped(): void
+    {
+        $payload = '<script>alert(1)</script>';
+        $html = Blade::render('<x-quality-ui.detail-pair :label="$payload" :value="$payload" /><x-quality-ui.table-shell :columns="[$payload]" />', compact('payload'));
+        $this->assertStringNotContainsString($payload, $html);
+        $this->assertStringContainsString(e($payload), $html);
+    }
+
     /**
      * Authenticate a preview user for Filament feature tests.
      *
-     * The model intentionally remains unchanged and does not implement
-     * FilamentUser. Filament allows such users to access panels locally.
-     *
-     * The Laravel application environment remains "testing" so the
-     * UiPreviewPage::canAccess() testing restriction is still exercised.
-     *
-     * Only Filament's app.env fallback is set to "local" for this test
-     * process, avoiding changes to the real authentication configuration.
+     * The real User implements FilamentUser and allows the admin shell in
+     * testing. No configuration fallback or permission grant is necessary.
      */
     private function actingAsPreviewUser(): void
     {
-        config()->set('app.env', 'local');
-
         $this->actingAs(
             User::factory()->make(),
             'web',

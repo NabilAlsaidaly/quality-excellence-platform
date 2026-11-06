@@ -60,7 +60,7 @@
         }
     @endphp
 
-    <div dir="rtl" class="space-y-6">
+    <div dir="rtl" class="qep-preview space-y-6">
 
         {{-- ==========================================================
              Platform identity
@@ -146,7 +146,7 @@
                                                 aria-current="location"
                                             @endif
                                             @class([
-                                                'flex min-h-11 items-center justify-between gap-3 rounded-lg border px-3 py-2.5 transition-colors',
+                                                'flex min-h-11 items-center justify-between gap-3 rounded-lg border px-3 py-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600',
                                                 'border-primary-200 bg-primary-50 text-primary-800 dark:border-primary-800 dark:bg-primary-950/40 dark:text-primary-200' => $isActiveGroup,
                                                 'border-transparent text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800' => !$isActiveGroup,
                                             ])
@@ -199,7 +199,7 @@
             {{-- ======================================================
                  Main preview content
             ======================================================= --}}
-            <main class="min-w-0 flex-1 space-y-6">
+            <div class="min-w-0 flex-1 space-y-6">
 
                 {{-- Page heading and breadcrumbs --}}
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -610,7 +610,7 @@
                     </div>
 
                 @endif
-            </main>
+            </div>
         </div>
     </div>
 </x-filament-panels::page>

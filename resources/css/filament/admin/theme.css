@@ -11,7 +11,7 @@
 |--------------------------------------------------------------------------
 */
 
-:root {
+.qep-preview {
     /* Brand colors */
     --qep-primary: #17324D;
     --qep-secondary: #087F78;
@@ -31,20 +31,15 @@
     --qep-danger: #B91C1C;
 
     /* Typography */
-    --qep-font-sans: system-ui, 'Segoe UI', Tahoma, sans-serif;
+    --qep-font-sans: Tahoma, 'Segoe UI', system-ui, sans-serif;
+    font-family: var(--qep-font-sans);
 }
 
 /*
 |--------------------------------------------------------------------------
-| Global application styling
+| Preview styling only: Filament owns the body, login and dark mode
 |--------------------------------------------------------------------------
 */
-
-body {
-    font-family: var(--qep-font-sans);
-    color: var(--qep-text);
-    background-color: var(--qep-background);
-}
 
 /*
 |--------------------------------------------------------------------------
