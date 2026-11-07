@@ -18,6 +18,7 @@ use Filament\Panel;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\MassAssignmentException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -452,5 +453,32 @@ class ApproachManagementTest extends TestCase
                 $this->assertSame($approach->public_id, $approach->fresh()->public_id);
             }
         }
+    }
+
+    public function test_sqlite_index_failure_rolls_back_the_new_table_and_preserves_preexisting_objects(): void
+    {
+        $this->assertSame('sqlite', DB::getDriverName());
+        $this->assertSame(':memory:', DB::connection()->getDatabaseName());
+        $approaches = require database_path('migrations/2026_11_07_000001_create_approaches_table.php');
+        $revisions = require database_path('migrations/2026_11_07_000002_create_approach_content_revisions_table.php');
+        $revisions->down();
+        $approaches->down();
+        // This test owns a deliberately colliding index in the disposable schema.
+        DB::statement('CREATE INDEX approaches_organization_created_idx ON organizations (name)');
+        try {
+            try {
+                $approaches->up();
+                $this->fail('Index failure must roll back the preceding CREATE TABLE.');
+            } catch (QueryException $error) {
+                $this->assertStringContainsString('already exists', $error->getMessage());
+                $this->assertFalse(Schema::hasTable('approaches'));
+                $this->assertNotNull(collect(Schema::getIndexes('organizations'))->firstWhere('name', 'approaches_organization_created_idx'));
+            }
+        } finally {
+            DB::statement('DROP INDEX approaches_organization_created_idx');
+            $approaches->up();
+            $revisions->up();
+        }
+        $this->assertTrue(Schema::hasTable('approach_content_revisions'));
     }
 }
