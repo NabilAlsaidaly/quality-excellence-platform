@@ -55,3 +55,7 @@ A قابل للتنفيذ تقنيًا داخل الحد الموثوق، وB إ
 AT-A01..15 وAT-B01..12 مع named tests ومصفوفة PASS/FAIL/BLOCKED/NOT RUN. اختبارات إيجابية داخل trusted fixture فقط. فشل بعد UPDATE وقبل/بعد INSERT، null/Unicode/unknown inputs، foreign/malformed IDs، snapshot/current membership، no-op وABA، عرض escaped بلا BIGINT/contacts، قيود/rollback/retry وعمليتان MySQL مستقلتان مع إثبات انتظار InnoDB. حفظ كل assertions السابقة عدا استبدال قصد placeholder المعطل باختبار غياب proof/حدود العملية الجديدة الموثقة، لا إضعاف guard.
 
 مركزة ثم كاملة SQLite/MySQL8.4/Redis، Composer strict/install/platform/audit بلا suppression، Pint، npm ci/build، cache/route/view وHTTP في CI غير المعدل، diff/scope/confidentiality. رندر Blade ثم فحص RTL/labels/375/768/1280 بواسطة HTML fixtures مهملة إن أمكن؛ لا ادعاء browser product activation. Draft PR فقط وCI على report-containing final HEAD، مع إيصال خارجي في PR/private لتجنب إحالة SHA ذاتية. لا merge/deploy أو G2/G3 activation.
+
+## سجل التنفيذ الفعلي
+
+خطة1482359 سبقت الكود؛ جُمعت A وB في implementation29cf968 بدل commitين منفصلين، تنظيم تسليم فقط دون توسعة. correctionfe72452 جعل assertion كامل عبارة تأكيد النقل مقاومًا لـwhitespace تنسيق Blade بعد فشل محلي وCI42418860351. CI42419255903 ناجح علىfe72452: SQLite232/2656، MySQL167/1410، Redis4/19، كل Composer/Pint/npm/cache/HTTP ناجح مع head_sha متحقق. التقرير النهائي سيُثبت ويُعاد CI على HEAD المحتوي له؛ الإيصال خارج commit لتفادي دورية SHA. A منفذ داخليًا وB BLOCKED بلا routes/Policy/grants. لا موافقات أو ملفات جديدة خارج العقد.

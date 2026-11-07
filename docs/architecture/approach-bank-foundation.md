@@ -54,3 +54,5 @@ Append-only في Actions وأحداث Eloquent، **ليس WORM ولا إثبات
 G2: مصادقة مالك موثقة على D002 لكل عملية/موارد/assignment/scope/revocation، ثم reconciliation SRS/decision ledger/ADR وقبول قائد التعديل التقني ومساراته. G3/D013: وحدة review حقيقية وسياسة أهلية التعديل قبل المراجعة؛ لا قبول/نشر ضمن هذه المهمة. Issue13 إذن إنتاج مستقل، وIssue37 تكامل الوحدات اللاحق دون لمس ملفاته. يمكن مراجعة A وحده للدمج بإذن منفصل؛ لا يعني اكتمال B أو جاهزية pilot.
 
 نتائج AC/الأوامر والقيود الفعلية في [تقرير40](../engineering/reports/40.md)، والخطة المسبقة في [خطة07](../engineering/PHASE-07-APPROACH-AUDIT-AND-UI-PLAN.md).
+
+تحقق G2 المستقبلي يجب أن يربط قرار grants/assignments الحالي بحد معاملة التعديل وأقفالها، لا أن يكتفي بقرار Gate سابق يمكن أن يتقادم قبل الكتابة. synthetic revocation tests متتابعة؛ تزامن سحب صلاحية أعمال فعلية ما زال تابعًا لمخطط owner-approved وتكامل تقني مستقل، ولا يُدعى اكتماله في adapters غير المسجلة.
