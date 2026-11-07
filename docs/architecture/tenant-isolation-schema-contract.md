@@ -123,3 +123,22 @@ The single TABLES map and explicit FOREIGN_KEYS/UNIQUE_KEYS/type/range checks en
 The physical migration inventory is21 files (19 pre-existing+2), confirmed separately against the journal in the feature-specific tests. Existing fixture adjustments retain the original rollback/failure target, including removal of dependent approach tables before the units trigger fixture; the isolated identity rollback explicitly selects its original five migrations so first-step refusal still preserves its complete schema/journal. No scenario or security assertion is removed. Populated Approach rollback refuses before dropping either new table; exclusive maintenance writes and reviewed forward recovery remain deployment requirements.
 
 These Actions are internal structural/domain operations only; no end-user permission, Policy, route, role or capability is enabled. Append-only service/model history is not raw-operator immutability. Draft text never implies approved/public content. See approach-bank-foundation.md and report38.md for actual tests and remaining integration gates.
+
+## Issue40 — audited Approach mutation extension (2026-11-08)
+
+The earlier inventories remain historical. There are now **22 physical migration files and 24 base tables**, including the journal. The added direct tenant table is approach_changes; no new global exception.
+
+| Fact | Required contract |
+|---|---|
+| Identity | BIGINT unsigned internal PK and unique CHAR(26) public ULID. |
+| Scope | Non-null unsigned organization_id, root RESTRICT FK and composite (organization_id,approach_id) → approaches(organization_id,id). |
+| Attribution | Non-null actor_id → global users.id RESTRICT; current membership is revalidated by the Action, not a historical membership FK. |
+| Owner history | Nullable unsigned previous_owner_id/new_owner_id, both composite organization/unit RESTRICT FKs; metadata requires both null, owner_changed both non-null and distinct. |
+| Payload | before_state/after_state non-null JSON objects, event VARCHAR(20) enforced CHECK metadata_updated/owner_changed, created_at only. JSON truth and allowed snapshot fields remain an Action contract. |
+| Query index | (organization_id,approach_id,id), bounded descending history reads; internal sort key is never returned. |
+
+The executable TABLES/FKs/unique/type/nullable/check contracts include these facts. Feature MySQL tests remove/alter every new FK/unique/scope fact, exercise raw cross-tenant, malformed JSON/object shape/event/owner constraints and previous-owner restrictive retention. No assertions for the earlier schema are deleted.
+
+Observed count change21→22 requires bounded fixture maintenance: TenantIntegrity full journal22; hierarchy/organization history full22 and selected old-migration removal21; identity's explicit original five-path rollback leaves17 and reapply22; Permission rollback14/16 retains the original targets; Trigger removes the dependent audit first. Approach's old two-table rollback becomes step3 and old revision-only failure step2, preserving original journal targets19/20. The plan names each file and reason; original negative scenarios and exact original targets remain intact.
+
+The new migration has atomic single-statement MySQL DDL and transactional SQLite table/index creation, no trigger or server settings change. A populated rollback refuses before any DROP, including an identity-only Approach bank. Exclusive maintenance and forward recovery remain prerequisites. Ordinary model audit updates/deletion are blocked; raw SQL is not made immutable. No operational Policy/routes/capabilities are enabled. See [architecture](approach-bank-foundation.md) and [Issue40 results](../engineering/reports/40.md).

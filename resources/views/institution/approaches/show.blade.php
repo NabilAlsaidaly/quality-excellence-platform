@@ -1,20 +1,215 @@
-{{-- NOT ACTIVATED: unregistered template; metadata only, never an approved-content claim. --}}
 <!doctype html>
 <html lang="ar" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ $approach['name'] }}</title></head>
-<body style="font-family:Tahoma,sans-serif;line-height:1.8;max-width:70rem;margin:auto;padding:1rem;overflow-wrap:anywhere">
-<main>
-    <h1>{{ $approach['name'] }}</h1>
-    <p role="status">قالب داخلي غير مفعّل — لا يدل حفظ البيانات على اعتماد المنهجية أو نشرها.</p>
-    <dl>
-        <dt>المعرّف</dt><dd><bdi>{{ $approach['public_id'] }}</bdi></dd>
-        <dt>الوصف</dt><dd>{{ $approach['description'] }}</dd>
-        <dt>الغاية</dt><dd>{{ $approach['purpose'] }}</dd>
-        <dt>النطاق</dt><dd>{{ $approach['scope'] }}</dd>
-        <dt>الوحدة المالكة</dt><dd>{{ $approach['owning_unit']['name'] }}</dd>
-        <dt>الأهداف</dt><dd>{{ $approach['objectives'] ?? 'لم تُستكمل بعد' }}</dd>
-        <dt>دورية المراجعة</dt><dd>{{ $approach['review_frequency'] ?? 'لم تُستكمل بعد' }}</dd>
-    </dl>
-</main>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ $approach['name'] }}</title>
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f5f8fa;
+            color: #182f3b;
+            line-height: 1.9;
+            margin: 0;
+            overflow-wrap: anywhere
+        }
+
+        main {
+            max-width: 68rem;
+            margin: auto;
+            padding: clamp(1rem, 3vw, 2.5rem)
+        }
+
+        article,
+        section,
+        form,
+        dl {
+            background: white;
+            border: 1px solid #ccdce3;
+            border-radius: .7rem;
+            padding: 1rem;
+            margin-block: 1rem
+        }
+
+        h1 {
+            line-height: 1.5
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: .8rem
+        }
+
+        input,
+        textarea,
+        select,
+        button {
+            font: inherit;
+            box-sizing: border-box;
+            max-width: 100%
+        }
+
+        input:not([type=checkbox]),
+        textarea,
+        select {
+            width: 100%;
+            border: 1px solid #6f8995;
+            border-radius: .35rem;
+            padding: .5rem
+        }
+
+        textarea {
+            min-height: 7rem
+        }
+
+        button {
+            background: #075e63;
+            color: white;
+            border: 0;
+            border-radius: .35rem;
+            padding: .5rem 1rem;
+            margin-block: .8rem;
+            cursor: pointer
+        }
+
+        a {
+            color: #075e63;
+            text-underline-offset: .2rem
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem
+        }
+
+        dt {
+            font-weight: bold
+        }
+
+        dd {
+            margin: 0 0 .8rem;
+            white-space: pre-wrap
+        }
+
+        pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font: inherit
+        }
+
+        [role=alert] {
+            color: #8d2020;
+            border-inline-start: 4px solid;
+            padding: .7rem
+        }
+
+        [role=status] {
+            background: #e7f2f2;
+            padding: .8rem;
+            border-radius: .4rem
+        }
+
+        :focus-visible {
+            outline: 3px solid #b97400;
+            outline-offset: 3px
+        }
+
+        .hint {
+            color: #425d6b
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>{{ $approach['name'] }}</h1>
+        <p role="status">
+            {{ $operational ?? false ? __('institution_approaches.draft_notice', [], 'ar') : 'قالب داخلي غير مفعّل — ينتظر اعتماد الصلاحيات والتفعيل المستقل.' }}
+        </p>
+        @if (session('status'))
+            <p role="status">{{ session('status') }}</p>
+        @endif
+        @if (isset($errors) && $errors->any())
+            <div role="alert">
+                <p>تعذّر الحفظ. راجع الحقول التالية:</p>
+                <ul>
+                    @foreach ($errors->all() as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if ($operational ?? false)
+            <nav aria-label="عمليات المنهجية">
+                @if ($can['viewAny'])
+                    <a href="{{ route('institution.approaches.index', ['organization' => $organization], false) }}">بنك
+                        المنهجيات</a>
+                @endif
+                @foreach (['updateMetadata' => ['edit', 'تعديل البيانات'], 'changeOwner' => ['owner', 'نقل الملكية'], 'viewDraftHistory' => ['content', 'مسودات المحتوى']] as $ability => $link)
+                    @if ($can[$ability])
+                        <a
+                            href="{{ route('institution.approaches.' . $link[0], ['organization' => $organization, 'approach' => $resource], false) }}">{{ $link[1] }}</a>
+                    @endif
+                @endforeach
+            </nav>
+        @endif
+        <dl>
+            <dt>المعرّف</dt>
+            <dd><bdi>{{ $approach['public_id'] }}</bdi></dd>
+            @foreach (['name', 'description', 'purpose', 'scope', 'objectives', 'review_frequency'] as $field)
+                <dt>{{ __('institution_approaches.fields.' . $field, [], 'ar') }}</dt>
+                <dd>{{ $approach[$field] ?? 'لم تُستكمل بعد' }}</dd>
+            @endforeach
+            <dt>الوحدة المالكة</dt>
+            <dd>{{ $approach['owning_unit']['name'] }}</dd>
+        </dl>
+        @if (($operational ?? false) && $changes !== null)
+            <section id="audit" aria-label="سجل التغييرات">
+                <h2>سجل تغييرات البيانات والملكية</h2>
+                @forelse($changes as $change)
+                    <article>
+                        <h3>{{ __('institution_approaches.events.' . $change['event'], [], 'ar') }}</h3>
+                        <p>وقت التغيير: <bdi>{{ $change['created_at'] }}</bdi></p>
+                        <p>المنفذ: <bdi>{{ $change['actor_public_id'] ?? 'حساب تاريخي' }}</bdi></p>
+                        <dl>
+                            @foreach ($change['before_state'] as $field => $value)
+                                @if ($value !== $change['after_state'][$field])
+                                    <dt>{{ $change['event'] === 'owner_changed' ? ($field === 'name' ? 'اسم الوحدة' : 'معرّف الوحدة') : __('institution_approaches.fields.' . $field, [], 'ar') }}
+                                    </dt>
+                                    <dd>قبل: {{ $value ?? 'غير محدد' }}</dd>
+                                    <dd>بعد: {{ $change['after_state'][$field] ?? 'غير محدد' }}</dd>
+                                @endif
+                            @endforeach
+                        </dl>
+                    </article>
+                @empty<p>لا توجد تغييرات مسجلة.</p>
+                @endforelse
+                <p>الأحداث: {{ $changes->total() }}</p>
+                <nav aria-label="صفحات السجل">
+                    @if ($changes->currentPage() > 1)
+                        <a
+                            href="{{ route('institution.approaches.show', ['organization' => $organization, 'approach' => $resource, 'page' => $changes->currentPage() - 1], false) }}#audit">الأحداث
+                            الأحدث</a>
+                    @endif
+                    @if ($changes->hasMorePages())
+                        <a
+                            href="{{ route('institution.approaches.show', ['organization' => $organization, 'approach' => $resource, 'page' => $changes->currentPage() + 1], false) }}#audit">الأحداث
+                            الأقدم</a>
+                    @endif
+                </nav>
+            </section>
+        @endif
+    </main>
 </body>
+
 </html>
