@@ -108,3 +108,18 @@ This is a migrated-test-schema regression gate, **not** production drift monitor
 No production rollout, data repair, privileged user, lifecycle/status/suspension, role matrix, membership workflow or owner retention policy is delivered. Existing migration crash/trigger privilege prerequisites remain in the setup documents. Issues #4/#6/#12/#13 and the decision ledger remain unchanged. A genuine defect requiring application/schema changes must be reported with reproduction and separately proposed remediation scope, never silently fixed in this test-only PR.
 
 Official metadata references: [MySQL8.4 KEY_COLUMN_USAGE](https://dev.mysql.com/doc/refman/8.4/en/information-schema-key-column-usage-table.html), [STATISTICS](https://dev.mysql.com/doc/refman/8.4/en/information-schema-statistics-table.html), [TABLE_CONSTRAINTS / CHECK enforcement](https://dev.mysql.com/doc/refman/8.4/en/information-schema-table-constraints-table.html). Local Laravel13 schema introspection implementation was also reviewed. See the [permanent engineering report](../engineering/reports/PHASE-04C-TENANT-ISOLATION.md) for actual commands, results and delivery.
+
+## Issue38 — approved bounded extension (2026-11-07)
+
+The engineering lead authorized this schema-register/test-fixture amendment in Issue38. Earlier inventories are historical, not counts of the expanded schema. Two additive migrations create directly tenant-scoped approaches and approach_content_revisions; no global exception is introduced.
+
+| Table | Explicit integrity contract |
+|---|---|
+| approaches | Non-null unsigned BIGINT organization_id/owning_unit_id/created_by. Root RESTRICT FK, composite (organization_id,owning_unit_id) to existing unique units(organization_id,id), restrictive global creator FK. Unique id/public_id/(organization_id,id); names intentionally not unique. |
+| approach_content_revisions | Non-null unsigned BIGINT organization_id/approach_id/actor_id. Root RESTRICT FK, composite (organization_id,approach_id) to approaches(organization_id,id), restrictive global author FK. Unique public_id and (approach_id,version_number), enforced positive unsigned version range. All historical FKs restrictive. |
+
+The single TABLES map and explicit FOREIGN_KEYS/UNIQUE_KEYS/type/range checks enforce these facts. Existing negative schema mutation tests remain unchanged. Feature-specific MySQL tests additionally remove/alter each new relationship/key/type fact in a metadata fixture and require rejection; raw cross-tenant insert/update, null owner, duplicate version and actual deletion restrictions are tested separately. No expected FK is inferred from the same actual metadata under test.
+
+The physical migration inventory is21 files (19 pre-existing+2), confirmed separately against the journal in the feature-specific tests. Existing fixture adjustments retain the original rollback/failure target, including removal of dependent approach tables before the units trigger fixture; the isolated identity rollback explicitly selects its original five migrations so first-step refusal still preserves its complete schema/journal. No scenario or security assertion is removed. Populated Approach rollback refuses before dropping either new table; exclusive maintenance writes and reviewed forward recovery remain deployment requirements.
+
+These Actions are internal structural/domain operations only; no end-user permission, Policy, route, role or capability is enabled. Append-only service/model history is not raw-operator immutability. Draft text never implies approved/public content. See approach-bank-foundation.md and report38.md for actual tests and remaining integration gates.
