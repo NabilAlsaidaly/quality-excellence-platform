@@ -11,6 +11,7 @@ final class TenantIsolationSchemaContract
     // The single executable classification source. Never infer scope from a name.
     public const TABLES = [
         'approaches' => 'direct',
+        'approach_changes' => 'direct',
         'approach_content_revisions' => 'direct',
         'authorization_changes' => 'direct',
         'cache' => 'global',
@@ -38,6 +39,13 @@ final class TenantIsolationSchemaContract
     // Ordered local columns => [target table, ordered target columns]. All are
     // same-schema RESTRICT/RESTRICT. Global actors are NOT membership references.
     private const FOREIGN_KEYS = [
+        'approach_changes' => [
+            'organization_id' => ['organizations', 'id'],
+            'organization_id,approach_id' => ['approaches', 'organization_id,id'],
+            'actor_id' => ['users', 'id'],
+            'organization_id,previous_owner_id' => ['organizational_units', 'organization_id,id'],
+            'organization_id,new_owner_id' => ['organizational_units', 'organization_id,id'],
+        ],
         'approaches' => [
             'organization_id' => ['organizations', 'id'],
             'organization_id,owning_unit_id' => ['organizational_units', 'organization_id,id'],
@@ -85,6 +93,7 @@ final class TenantIsolationSchemaContract
     ];
 
     private const UNIQUE_KEYS = [
+        'approach_changes' => ['id', 'public_id'],
         'approaches' => ['id', 'public_id', 'organization_id,id'],
         'approach_content_revisions' => ['id', 'public_id', 'approach_id,version_number'],
         'users' => ['id', 'public_id', 'id,organization_id', 'identity_namespace,email'],
@@ -103,12 +112,14 @@ final class TenantIsolationSchemaContract
     ];
 
     private const NULLABLE_REFERENCES = [
+        'approach_changes' => ['previous_owner_id', 'new_owner_id'],
         'organizational_units' => ['parent_id'],
         'authorization_changes' => ['subject_user_id'],
         'organizational_unit_changes' => ['previous_parent_id', 'new_parent_id'],
     ];
 
     private const CHECKS = [
+        'approach_changes' => ['approach_changes_event_check', "(eventin('metadata_updated','owner_changed'))"],
         'organizational_unit_changes' => ['unit_changes_event_check', "(eventin('created','renamed','reparented'))"],
         'organization_changes' => ['organization_changes_event_check', "(eventin('created','renamed'))"],
     ];
@@ -251,7 +262,23 @@ SQL);
                     $errors[] = "$table: positive unsigned version range must retain its enforced CHECK.";
                 }
             }
-            if (in_array($table, ['authorization_changes', 'organizational_unit_changes', 'organization_changes', 'approach_content_revisions'], true)) {
+            if ($table === 'approach_changes') {
+                foreach (['before_state', 'after_state'] as $column) {
+                    if (($actual['columns'][$column] ?? null) !== ['type' => 'json', 'nullable' => false]) {
+                        $errors[] = "$table: $column must remain non-null JSON.";
+                    }
+                }
+                foreach (['approach_changes_state_check', 'approach_changes_owner_check'] as $name) {
+                    $expected = $name === 'approach_changes_state_check'
+                        ? "json_typebefore_state='object'andjson_typeafter_state='object'"
+                        : "event='metadata_updated'andprevious_owner_idisnullandnew_owner_idisnullorevent='owner_changed'andprevious_owner_idisnotnullandnew_owner_idisnotnullandprevious_owner_id<>new_owner_id";
+                    $expression = strtolower(str_replace(['`', '(', ')'], '', $actual['checks'][$name]['clause'] ?? ''));
+                    if (($actual['checks'][$name]['enforced'] ?? false) !== true || $expression !== $expected) {
+                        $errors[] = "$table: required enforced CHECK $name is missing or changed.";
+                    }
+                }
+            }
+            if (in_array($table, ['authorization_changes', 'organizational_unit_changes', 'organization_changes', 'approach_content_revisions', 'approach_changes'], true)) {
                 foreach ($actual['foreign_keys'] as $key) {
                     if ($key['delete'] !== 'RESTRICT' || $key['update'] !== 'RESTRICT') {
                         $errors[] = "$table: every historical foreign key must remain RESTRICT on delete and update.";

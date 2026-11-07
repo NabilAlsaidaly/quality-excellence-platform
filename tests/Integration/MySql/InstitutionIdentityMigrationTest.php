@@ -72,10 +72,10 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
         $memberships = DB::table('organization_memberships')->orderBy('id')->get()->toArray();
         $this->artisan('migrate:rollback', ['--path' => array_map(fn ($path) => 'database/migrations/'.basename($path), glob(database_path('migrations/2026_11_05_*.php'))),
             '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
-        $this->assertSame(16, DB::table('migrations')->count());
+        $this->assertSame(17, DB::table('migrations')->count());
         $this->assertFalse(Schema::hasColumn('users', 'principal_type'));
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
-        $this->assertSame(21, DB::table('migrations')->count());
+        $this->assertSame(22, DB::table('migrations')->count());
         $this->assertEquals($old, DB::table('users')->orderBy('id')->get(['id', 'name', 'email', 'password', 'remember_token', 'email_verified_at'])->toArray());
         $this->assertEquals($history, DB::table('organization_changes')->get()->toArray());
         $this->assertEquals($memberships, DB::table('organization_memberships')->orderBy('id')->get()->toArray());
@@ -107,12 +107,12 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
             $this->assertFalse(Schema::hasColumn('users', 'principal_type'));
             $this->assertFalse(Schema::hasColumn('users', 'organization_id'));
             $this->assertTrue(collect(Schema::getIndexes('users'))->firstWhere('name', 'users_email_unique')['unique']);
-            $this->assertSame(16, DB::table('migrations')->count());
+            $this->assertSame(17, DB::table('migrations')->count());
         } finally {
             DB::statement('RENAME TABLE identity_root_fixture TO organizations');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
-        $this->assertSame(21, DB::table('migrations')->count());
+        $this->assertSame(22, DB::table('migrations')->count());
     }
 
     public function test_existing_unjournaled_shape_is_not_adopted_and_semantic_rollback_does_not_erase_accounts_or_tokens(): void
@@ -129,7 +129,7 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
         } catch (RuntimeException $error) {
             $this->assertNotEmpty($error->getMessage());
         }
-        $this->assertSame(21, DB::table('migrations')->count());
+        $this->assertSame(22, DB::table('migrations')->count());
         foreach (glob(database_path('migrations/2026_11_05_*.php')) as $path) {
             try {
                 (require $path)->down();

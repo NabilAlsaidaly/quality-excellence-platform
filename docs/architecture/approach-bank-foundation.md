@@ -1,85 +1,56 @@
-# نواة بنك المنهجيات — Issue38 / Phase06B
+# بنك المنهجيات — النواة وسجل التغييرات / Issue40
 
-## نطاق التنفيذ والاعتماد
+## السلطة والحالة
 
-نواة داخلية قابلة للاختبار، لا CRUD لمستخدم نهائي. BR-001..006 وFR-APP-001..008/010 ومعايير AC المقابلة تحدد حدود الشريحة. لا تعني البنية المعتمدة وجود مصفوفة D002 تشغيلية. ADR001/003 وحدود المنع في ADR002 محفوظة؛ ADR004 يبقى PROPOSED، ولا يُستنتج اعتماد بديل أو نشر من هذه المهمة. تفاصيل التوفيق مع المصادر الخاصة محفوظة خارج Git.
+BR001..006 وFR-APP001..008/010 ومعايير AC هي حدود التتبع. راجع تنفيذ38 أساس هذه الإضافة، ADR001/002/003، ADR004 المقترح، سجل القرارات وIssue12/13/37/40. المصدر الخاص وSRS لا يُنسخان إلى المستودع العام؛ مصفوفة D002 التفصيلية لم تُصادق. الإذن التقني بسجل التاريخ ليس إذنًا بمنح صلاحيات.
 
-تعمل: إنشاء هوية منهجية وبياناتها ومالك واحد، قراءة/قائمة/بحث/فرز مقيد بالمؤسسة، وحفظ نصوص مسودة بإصدارات متتابعة. تعديل البيانات ونقل الملكية **مرفوضان** إلى حين اعتماد أثر تاريخي منفصل. لا وثائق أو أدلة أو مراجعات أو اعتماد أو نشر أو درجة نضج أو إشعارات أو Mapping.
+**A منفذ داخليًا:** إنشاء المنهجية ومالك رئيسي واحد، قراءة وبحث مقيدان، تعديل البيانات ونقل المالك بسجل مستقل ومعاملة، وإصدارات نص المسودة كما كانت. **B محجوب تشغيليًا:** Controllers/FormRequests وستة قوالب عربية جاهزة للاختبار، لكن لا ApproachPolicy ولا routes ولا capabilities ولا roles/grants جديدة. المسارات وPolicy الاصطناعية موجودة فقط داخل PHPUnit. لا وصول مركزي افتراضي ولا محتوى منشور أو اعتماد أو مراجعة أو نضج أو Mapping أو إشعارات.
 
-## المخطط الفعلي
+## مخطط البيانات
 
-| الجدول/العمود | النوع/الضمان |
+| الجدول | العقد |
 |---|---|
-| approaches.id | BIGINT UNSIGNED داخلي في MySQL؛ INTEGER PRIMARY KEY AUTOINCREMENT في SQLite |
-| public_id | CHAR(26)، UNIQUE، HasPublicUlid؛ هوية عامة مستقرة في المسار المعتمد |
-| organization_id | إلزامي، FK RESTRICT إلى organizations.id |
-| owning_unit_id | إلزامي؛ FK مركب (organization_id,owning_unit_id) إلى المفتاح الفريد الموجود organizational_units(organization_id,id) |
-| created_by | FK RESTRICT إلى users.id؛ إسناد الفاعل وقت الإنشاء وليس صلاحية دائمة |
-| name | VARCHAR(255)؛ لا تفرد للاسم داخل المؤسسة أو خارجها |
-| description/purpose/scope | LONGTEXT إلزامية؛ لا قالب تفصيلي ثابت |
-| objectives/review_frequency | LONGTEXT nullable؛ لا تُفرضان عند الإنشاء ولا يدعي هذا التنفيذ اكتمالهما قبل اعتماد مستقبلي |
-| created_at/updated_at | TIMESTAMP إلزامية؛ بيانات الهوية لا تُعدل في هذه الشريحة |
-| approaches(organization_id,id) | مفتاح UNIQUE حقيقي يدعم علاقات التاريخ المركبة |
-| approach_content_revisions.id/public_id | BIGINT داخلي وULID فريد مستقل للإصدار |
-| organization_id/approach_id | FK مركب RESTRICT إلى approaches(organization_id,id)، وFK مباشر للمؤسسة |
-| actor_id | FK RESTRICT إلى users.id يحفظ المؤلف حتى بعد سحب عضويته |
-| version_number | INTEGER UNSIGNED، CHECK بين1 و4294967295، UNIQUE(approach_id,version_number) |
-| body | LONGTEXT إلزامي، نص UTF-8 عادي محفوظ دون إعادة كتابة/تنظيف للنسخ السابقة |
-| created_at | TIMESTAMP إلزامي؛ لا updated_at ولا حالة Approved/Published/Score |
+| approaches | BIGINT داخلي، public ULID فريد، organization_id إلزامي وFK جذر RESTRICT، مالك واحد عبر FK مركب organization/owning_unit إلى units(organization_id,id)، created_by عالمي RESTRICT، UNIQUE(organization_id,id). |
+| البيانات الوصفية | name حتى255، description/purpose/scope إلزامية، objectives/review_frequency nullable؛ النصوص حتى65535 محرفًا. الأسماء غير فريدة؛ لا قالب أعمال مفروض. |
+| approach_content_revisions | unchanged: ULID مستقل، organization/approach FK مركب، author FK عالمي RESTRICT، version_number unsigned/check1..4294967295 وUNIQUE(approach_id,version_number)، body plain UTF-8 حتى1000000 محرف، created_at فقط. |
+| approach_changes | ULID مستقل فريد، organization/approach مركب وroot/actor FKs، JSON object قبل/بعد، event محصور metadata_updated/owner_changed، created_at فقط. |
+| previous_owner_id/new_owner_id | nullable للبيانات، إلزاميان ومختلفان لنقل الملكية؛ FKs مركبة إلى وحدتي المؤسسة نفسها، RESTRICT/RESTRICT. |
+| الفهارس | السابقان organization/created_at/id وorganization/name/id؛ سجل التاريخ organization/approach/id لترتيب ثابت. |
 
-ليس FK المؤلف مركبًا إلى users(id,organization_id)، لأن مخطط الهوية الحالي يسمح بفاعل legacy ذي عضوية، ولأن سحب عضوية لاحق لا يجب أن يمسح المؤلف التاريخي. Action يتحقق من الحساب والعضوية الحاليين عند الكتابة؛ DB يثبت وجود المؤلف. لا يسمح هذا بالوصول المركزي للمحتوى.
+سجل metadata يحفظ الحقول الستة كاملة قبل/بعد. سجل owner يحفظ ULID واسم كل وحدة وقت الحدث، إضافة إلى FK داخلي لكل منهما. لا إعادة تسمية لاحقة للوحدة تغير snapshot التاريخية. actor عالمي حتى تبقى نسبته التاريخية بعد سحب العضوية؛ Action يتحقق من الربط والعضوية الحاضرين، وFK لا يدعي صلاحية أعمال. أسماء/تفاصيل الاتصال للفاعل لا تخرج في read contract.
 
-اختير نص عادي ذو إصدارات بدل JSON للأقسام: يفي بالمرونة دون اختراع مخطط أعمال أو محرك نماذج. ترقية التنسيق مستقبلًا تحتاج إصدارًا صريحًا مع إبقاء bytes القديمة وقواعد عرض آمنة. لا يُفسر HTML داخل body؛ Blade يهربه.
+## المعاملة والتعديل المتقادم
 
-## حدود Actions
+CreateApproach::withinContext يعاد استخدامه دون تعديل: سياق مطابق، ثم current locking reads للمؤسسة → الحساب → العضوية. UpdateApproach/ChangeApproachOwner يقفلان المنهجية والمالك ضمن المؤسسة، ثم يفحصان edit_token تحت القفل. ordinary Approach save/update/delete تبقى مرفوضة؛ UPDATE الوحيد في Action مؤهل بـid وorganization_id داخل المعاملة، ثم reload للصف المحفوظ وINSERT الحدث. استثناء قبل INSERT أو بعده يلغي التغيير والحدث. لا retry صامت ولا أثر خارج DB.
 
-`CreateApproach::execute(actor,data)` يقبل فقط name/description/purpose/scope/objectives/review_frequency/owning_unit_public_id. يرفض مفاتيح organization/actor/owner الداخلية والهوية والحالات والحقول غير المعروفة. tenant من TenantContext فقط، والمالك يُبحث عنه بULID في المؤسسة نفسها. المعرفات الأجنبية والمفقودة والمشوهة للمورد تنتج نفس ModelNotFoundException دون عرض الاسم أو المعرف الأجنبي.
+edit_token بصمة SHA256 لحقول الحالة المحفوظة/هوية المنهجية والمؤسسة/مالك ULID/أحدث audit ULID بقراءة حالية. ليس توقيع صلاحية ولا سرًا. إدخال مفقود/مشوه422؛ نسخة صحيحة الشكل قديمة409 دون overwrite. لا يعتمد على دقة timestamp أو نموذج المستدعي. أحدث event يمنع ABA ولو عادت القيم إلى البداية. حفظ مطابق مع proof حاضر لا يكتب حدثًا ولا updated_at. تعديل حقيقي يحدّث updated_at، وقد تتساوى قيمته داخل الثانية؛ proof لا يعتمد عليه.
 
-`CreateApproach::withinContext` حد معاملات خاص بهذه الشريحة، يعاد استخدامه من Actions القراءة والحفظ لتجنب نسخ منطق أمني أو إدخال helper خارج النطاق. يتحقق من تطابق actorId مع السياق، ثم يعيد قراءة المؤسسة والحساب والعضوية بقفل حالي، ويرفض platform وربط institution الأجنبي حتى لو تغير نموذج المستدعي في الذاكرة. هذا حد داخلي موثوق مثل الخدمات الموجودة، **وليس Policy أو قدرة مستخدم**. لا يؤخذ actor من payload. لا يوجد مسار HTTP يصل إليه.
+البيانات تقبل فقط name/description/purpose/scope/objectives/review_frequency؛ scope هنا وصف نصي، لا نطاق تخويل. مالك جديد يمر في Action مستقل بULID؛ لا tenant/actor/internal-ID/status/approval/body ضمن metadata. المحتوى والنسخ وcreator وهوية المنهجية لا تتغير بنقل المالك. SaveApproachContentRevision نفسه لم يتغير: آخر نص مطابق no-op، مختلف ينشئ n+1 immutable revision.
 
-`ListApproaches::execute` يرجع LengthAwarePaginator من arrays محدودة، بترتيب name أو created_at ثم id كفاصل داخلي. page1..1000000 وperPage1..100 وsearch حتى255 محرفًا قيود تقنية قابلة للمراجعة. WHERE organization_id إلزامي، البحث LIKE بمعاملات وescape صريح للمحارف !/%/_. لا تُنسخ query/URL من طلب عميل إلى روابط pagination. تحميل المالك eager ومقيد بالمؤسسة؛ لا N+1. `show` يعيد تحميل ULID داخل المؤسسة بدل قبول نموذج mutable. لا يتضمن الناتج BIGINT أو محتوى مسودات أو درجة/اعتمادًا. الـid الداخلي في ترتيب SQL لا يظهر في عقد العرض.
+قفل المؤسسة يسلسل الأعمال المتعاونة داخلها ويشارك خدمات الوحدات؛ هذا تبسيط اتساق له كلفة أداء، وليس ادعاء deadlock-free أمام SQL مستقل. اختبارات MySQL المستقلة ترصد انتظار InnoDB فعليًا ثم409 للكاتب الثاني بنفس proof، لكل من metadata وowner. SQLite لا يثبت هذا السلوك. القائمة MVCC عادية بعد تحقق عضوية حالي، وقد ترى snapshot سابقة في transaction خارجية قديمة؛ find/token والقرار الأمني يستخدمون current reads.
 
-`SaveApproachContentRevision::execute` يقبل ULID المنهجية ونصًا فقط؛ يعيد تحميل المنهجية ضمن السياق ويقفلها، ثم أحدث إصدار بقراءة حالية. يخصص n+1، ويسند actor/organization/time داخليًا. النص المطابق تمامًا لآخر إصدار no-op يعيد الإصدار نفسه؛ لا يغير مؤلفه/وقته ولا يسجل حدثًا مضللًا. النص المختلف ولو عاد إلى محتوى إصدار أقدم يُنشئ إصدارًا جديدًا. قراءة التاريخ متاحة للعقد الداخلي من علاقة revisions المقيدة بالمنهجية والمؤسسة؛ لا يوجد endpoint قراءة مسودة أو افتراض وصول للقارئ العام.
+## القراءة وحدود العرض
 
-`UpdateApproach` و`ChangeApproachOwner` يرفضان صراحة حتى ضمن سياق صالح. لا نستعمل سجل المؤسسة أو سجل الصلاحيات لأحداث المنهجية. طلب التكامل المحدد: `app/Models/ApproachChange.php` وترحيل ثالث مستقل للأحداث السابقة/اللاحقة، actor/time، FK تاريخية وtransaction/no-op/rollback، ثم تفعيل Actions الموجودة بعد اعتماد النطاق. يلزم قرار لاحق لعقد البيانات المتغيرة قبل الاعتماد؛ لا يفتح اعتماد الملفات الثمانية هذه البوابة.
+ListApproaches يعيد arrays محصورة وpaginators بترتيب ثابت، لا Eloquent graph ولا BIGINT/contact/draft في metadata. search≤255 وpage1..1000000، list perPage≤100 وhistory≤20 حدود تقنية. البحث يهرب !/%/_ بمعاملات SQL، والمالك eager scoped بلا N+1. show يضيف edit_token؛ list لا يقرأ proof لكل صف. changeHistory يتأكد من المورد ضمن المؤسسة، whitelist للحدث والحقول والقيم ولا يطبع raw JSON مجهولًا. ownerOptions scoped بصفحات100.
 
-الاسم حتى255 والنصوص الوصفية حتى65535 والمحتوى حتى1000000 محرف، مع رفض الفراغ/UTF-8 غير الصحيح. هذه حدود تنفيذ تقنية وليست سياسة مالك. لا قص أو تطبيع أو تفرد أو تصنيف مخترع. الحقول الصحيحة تحفظ كما وردت. ضوابط النموذج تمنع mass assignment لحقول الربط والتاريخ؛ forceFill مخصص للـAction بعد التحقق أو fixture داخلية.
+HTTP adapters غير مسجلة: تتطلب web + InstitutionSession، institution guard الحقيقي وTenantContext الحالي، وGate/Policy لكل عملية ومورد ULID. الأعمال: viewAny/view/create/updateMetadata/changeOwner/editDraft/viewDraftHistory/viewAuditHistory؛ هذه أسماء لعقد Policy مقترح، **ليست registry entries أو grants أو مصفوفة معتمدة**. غياب Policy يرفض403. readDraft/writeDraft/audit منفصلة. controller يمرر نتائج Gate للروابط؛ إخفاؤها ليس الحاجز الأمني.
 
-## المعاملات والتنافس
+FormRequests تتحقق من المفاتيح والصيغة وproof وتأكيد النقل، وActions تعيد تحقق الحقيقة داخل المعاملة. CSRF من middleware الموجود؛ لا إعفاءات. validation redirect ثابت نسبي داخل المسار الموثق، لا Referer/return URL. conflict409 صريح. المعرّفات الأجنبية/المفقودة لا تظهر بياناتها؛ scoped lookup404 عند السماح الاصطناعي بالعملية و403 عند رفض Policy. ناتج قوالب Blade escaped وRTL، labels/حالات فارغة/رسائل عربية، بلا HTML خام للمحتوى. الافتراضي operational=false بلا forms أو روابط لعمليات غائبة؛ render في اختبارات الوحدة فقط يمكنه استعمال المسارات المؤقتة.
 
-بداية الأقفال مطابقة للبروتوكول الحالي: organization ثم actor ثم membership، جميعها FOR UPDATE. بعد ذلك Create يقفل الوحدة، وSave يقفل المنهجية ثم آخر إصدار. لا تُقفل وحدة/منهجية قبل المؤسسة. لا عمل عبر مؤسستين داخل transaction ولا I/O خارجي ولا retry صامت. الخطأ أو rollback الخارجي يلغي الكتابات التابعة. الـUNIQUE دفاع DB إضافي وليس بديلًا للقفل.
+لا يُفرض دور جودة أو محرر/داعم أو unit assignment غير معتمد. synthetic Policy في ملف الاختبار فقط لإثبات تقييد العملية/المورد والرفض بعد السحب، وليس منطقًا سيُرحل إلى الإنتاج.
 
-قفل المؤسسة واسع وقد يسلسل قراءات/كتابات المؤسسة، بل يتشارك مع خدمات الوحدات. هذا تبسيط اتساق قابل للمراجعة، لا ادعاء أداء أو deadlock-free لكتّاب غير متعاونين. القوائم تستخدم قراءة MVCC عادية بعد التحقق الحالي، وقد ترى snapshot أقدم إذا استدعاها caller داخل transaction قديمة؛ لا تدعي newest-state read لمحتوى القائمة. قرارات الفاعل والنسخة تستخدم current reads، فتمنع snapshot قديمة من تجديد عضوية مسحوبة أو تخصيص رقم قديم.
+## الترحيل والنشر والاسترجاع
 
-اختبار MySQL ذو عمليتين مستقلتين يؤسس snapshot قديمة للإصدارات، ويرصد انتظار InnoDB على صف المؤسسة في performance_schema ثم يحرر القفل ويطلب رقمًا جديدًا. لا تُستنتج سلامة التنافس من SQLite. نتائج التنفيذ الفعلية، ومنها أي إخفاق، في report38.md.
+22 ملف migration فعليًا، منها الثالث الإضافي approach_changes. لا تعديل لترحيلات38 أو أقدم. MySQL ينشئ audit في CREATE واحد بكل FKs/checks/index؛ SQLite table+index داخل transaction. لا trigger جديد ولا SET GLOBAL أو FK disabling. فشل FK لا يترك جدولًا جزئيًا؛ وجود جدول سابق يسبب رفضًا دون تبنيه أو حذفه.
 
-## ما يفرضه كل حد
+down الجديد يرفض قبل FIRST DROP إن وجد أي Approach أو Revision أو Audit، حتى بنك به هوية فقط. empty rollback/reapply آمن ومختبر، أما populated فخطة forward recovery مستقلة مع backup ومراجعة. يلزم maintenance حصرية توقف جميع الكتابات قبل rollback؛ existence check ثم DROP ليس قفلًا لحركة مستخدمين حية. تبقى نافذة crash بعد DDL وقبل journal: يفحص المشغل الجدول والـjournal وخطة استرجاع، ولا يحذف أو يعتمد الجدول آليًا.
 
-| الحد | الضمان/القيد |
-|---|---|
-| DB MySQL | InnoDB، tenant FKs مركبة بمفاتيح فريدة قياسية، RESTRICT، ULID/version uniqueness وCHECK رقم النسخة |
-| SQLite | FKs/UNIQUE/CHECK الأساسية للاختبارات؛ لا يحاكي صفوف FOR UPDATE أو InnoDB أو صلاحيات المشغل |
-| Actions | سياق وعضوية حاليان، بحث مقيد، فاعل حقيقي، payload محصور، معاملات، تخصيص نسخ/no-op |
-| أحداث Eloquent | تمنع تعديل/حذف Approach وRevision في ordinary model operations؛ HasPublicUlid يحفظ الهوية |
-| raw SQL/bulk/quiet event bypass | ليس تخزينًا محصنًا؛ مشغل DML قادر على تغيير قيم متوافقة أو حذف leaf revisions. لا تُمنح هذه مسارات تطبيق معتمدة. حماية تشفير/امتيازات/تخزين أقوى تحتاج مهمة مستقلة |
-| الواجهة | ثلاثة قوالب عربية RTL index/show/content غير مسجلة، escaped، بلا forms أو عمليات أو بيانات وهمية |
+المتطلبات: MySQL8.4/InnoDB وJSON/CHECK enforced، CREATE/REFERENCES/INDEX وإذن migration operator المناسب للترحيلات السابقة ذات triggers/binlog (ومنها احتمال1419). يُفصل المشغل عن حساب runtime المحدود؛ لا تغيير global config لمعالجة ذلك. وصول performance_schema للاختبار فقط لرصد الانتظار؛ ليس حاجة HTTP. لا migrate على dev/prod ضمن التنفيذ الحالي.
 
-النماذج الداخلية وعلاقاتها ليست serializing API عامة؛ العرض يستخدم arrays المصرح بها فقط. لا تمرر User/Eloquent relations كاملة إلى HTTP مستقبلًا. قائمة metadata لا تكشف draft body، ولا يمثل وجود UI template تخويلًا. لا Controller/FormRequest/Policy/Route/Filament Resource/Panel جديد، ولا registry entries/permissions/grants.
+Append-only في Actions وأحداث Eloquent، **ليس WORM ولا إثباتًا تشفيريًا**: raw SQL/bulk/quiet قادر على تغيير أو حذف سجلات متوافقة إذا سمحت امتيازاته. FK/CHECK يحمي البنية والعزل ولا يتحقق من صدق JSON أو عضوية تاريخية. بيانات سجل metadata خاصة بالمؤسسة؛ حسابه readAudit مستقل ولا استثناء منصة.
 
-## الترحيل والتراجع والنشر
+## بوابات التكامل اللاحقة
 
-ترحيلان إضافيان فقط. MySQL ينفذ CREATE واحدًا inline لكل جدول مع فهارس (organization_id,created_at,id) و(organization_id,name,id) للقائمة وفرزها. SQLite ينفذ CREATE وفهارسه داخل transaction DDL واحدة. البحث المحتوي على wildcard بادئ ليس ادعاءً لاستعمال فهرس نصي أو benchmark. لا TRIGGER جديد ولا SET GLOBAL أو تعطيل FK؛ تبقى متطلبات الترحيلات التاريخية للـtrigger/binlog منفصلة. CREATE يفشل ذريًا عند FK غير صالح؛ الجدول السابق الوجود لا يُتبنى ولا يُحذف. الانقطاع بعد DDL ناجح وقبل journal يظل نافذة تحتاج فحص مشغل، لا retry يمسح بيانات.
+G2: مصادقة مالك موثقة على D002 لكل عملية/موارد/assignment/scope/revocation، ثم reconciliation SRS/decision ledger/ADR وقبول قائد التعديل التقني ومساراته. G3/D013: وحدة review حقيقية وسياسة أهلية التعديل قبل المراجعة؛ لا قبول/نشر ضمن هذه المهمة. Issue13 إذن إنتاج مستقل، وIssue37 تكامل الوحدات اللاحق دون لمس ملفاته. يمكن مراجعة A وحده للدمج بإذن منفصل؛ لا يعني اكتمال B أو جاهزية pilot.
 
-down للترحيل الأحدث يفحص وجود أي Approach أو Revision قبل إسقاطه؛ القديم يحمي صفوف الهوية. rollback الفارغ يُختبر، والممتلئ يرفض حتى لو لم يوجد محتوى. يجب توقف جميع الكتابات ضمن نافذة صيانة حصرية قبل DDL؛ الفحص ثم DROP ليس بروتوكولًا لتزامن تراجع أثناء حركة المستخدمين. لا حذف لفرض نجاح rollback، ولا عودة لبرنامج قديم يمحو تاريخًا؛ تصحيح forward مع نسخة احتياطية وخطة مراجعة هو المسار اللاحق.
-
-## تكامل لاحق
-
-الصلاحيات والتفعيل تحتاج قرارًا مستقلًا لملفات CapabilityRegistry/config/Policies/Provider/routes ومصفوفة actor/action/org/resource/assignment/state. لا ينتقل حق التحرير/الاعتماد مع membership أو اسم Role أو دعم وحدة. الواجهات الخاصة بالمستخدم يجب أن تبني actor/context من الحارس المؤسسي الموثوق لكل طلب، مع إعادة فحص سحب الوصول. لا صلاحية platform ضمنية.
-
-الوثائق والشواهد والمراجعات والنضج والربط ستحتاج مرجع Approach ULID وRevision ULID مع tenant FK، وحفظ دليل/قرار/تنسيق النسخة، وعقد draft-vs-published منفصلًا. أهداف ما قبل الاعتماد وتعديل البيانات والملكية تحتاج أولًا أثر تغييرات معتمدًا؛ لا تربط ما ورد هنا تلقائيًا بمحرك إشعارات أو اعتماد.
-
-ملفات Issue37، auth/guards، الترحيلات السابقة، CI والحزم لم تتغير. أُجيزت فقط توسعة الاختبارات/عقد المخطط ذات الملفات الثمانية في خطة Issue38 وسجله، مع بقاء جميع سيناريوهات regression وضماناتها.
-
-مراجع تقنية فقط: [MySQL8.4 FK](https://dev.mysql.com/doc/refman/8.4/en/create-table-foreign-keys.html)، [locking reads](https://dev.mysql.com/doc/refman/8.4/en/innodb-locking-reads.html)، [Laravel13 transactions](https://laravel.com/docs/13.x/database)، [migrations](https://laravel.com/docs/13.x/migrations). ليست هذه المراجع سلطة لتحديد الصلاحيات أو الأعمال.
-
-قراءة التاريخ: ListApproaches::draftHistory حد داخلي صريح منفصل عن show، يعيد صفحات حتى20 إصدارًا من arrays بلا BIGINT وبتحميل مؤلف eager. author_public_id قد يكون NULL لحساب legacy الذي لا يملك ULID؛ يبقى actor_id الحقيقي محفوظًا داخليًا ولا يولد هذا العمل هوية للمستخدم. لا يُسلّم هذا العقد إلى قارئ عام أو HTTP قبل اعتماد صلاحية قراءة المسودة.
+نتائج AC/الأوامر والقيود الفعلية في [تقرير40](../engineering/reports/40.md)، والخطة المسبقة في [خطة07](../engineering/PHASE-07-APPROACH-AUDIT-AND-UI-PLAN.md).
