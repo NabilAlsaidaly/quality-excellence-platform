@@ -141,7 +141,8 @@ class ApproachHttpAuthorizationTest extends TestCase
         $edit = $this->get($this->url($member, '/'.$approach->public_id.'/edit'))->assertOk()->assertSee('edit_token', false);
         $this->patch($this->url($member, '/'.$approach->public_id), ['name' => 'اسم معدّل', 'edit_token' => $this->token($member, $approach)])
             ->assertRedirect($this->url($member, '/'.$approach->public_id));
-        $owner = $this->get($this->url($member, '/'.$approach->public_id.'/owner'))->assertOk()->assertSee('أؤكد اختيار');
+        $owner = $this->get($this->url($member, '/'.$approach->public_id.'/owner'))->assertOk();
+        $this->assertMatchesRegularExpression('/أؤكد\s+اختيار\s+الوحدة\s+ونقل\s+الملكية\s+الرئيسية\s+إليها/u', strip_tags($owner->getContent()));
         $this->post($this->url($member, '/'.$approach->public_id.'/owner'), ['owning_unit_public_id' => $other->public_id,
             'edit_token' => $this->token($member, $approach), 'confirm' => '1'])->assertRedirect($this->url($member, '/'.$approach->public_id));
         $audit = $this->get($this->url($member, '/'.$approach->public_id))->assertOk()->assertSee('نقل الوحدة المالكة')->assertSee('اسم معدّل');
