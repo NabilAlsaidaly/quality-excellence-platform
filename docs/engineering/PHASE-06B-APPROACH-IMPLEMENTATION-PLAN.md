@@ -51,3 +51,8 @@ flowchart LR
 ## التحقق والتسليم
 
 اختبارات مركزة مبكرًا ثم كامل SQLite، MySQL8.4 وRedis الحقيقيان في CI الحالي، Composer strict/install/audit، Pint، npm ci/build، route/config/view cache وHTTP. لا تشغيل migrate على DB التطوير ولا تعطيل FK/SET GLOBAL. Draft PR فقط على الفرع الموجود. التقرير committed ثم CI للـHEAD نفسه؛ إيصال SHA/CI النهائي في PR والتقارير الخاصة لتجنب الإسناد الدائري. READY لا يُدعى عند أي FAIL أو اعتماد غير مدمج. تاريخ331/3146 baseline فقط.
+
+## توسعة معتمدة محددة — 2026-11-07
+اعتمد القائد الهندسي صراحة الملفات الثمانية فقط: tests/Support/TenantIsolationSchemaContract.php وdocs/architecture/tenant-isolation-schema-contract.md، وTenantIntegrityTest/TriggerMigrationSafetyTest/InstitutionIdentityMigrationTest/HierarchyHistoryIntegrityTest/OrganizationHistoryIntegrityTest/PermissionIntegrityTest في tests/Integration/MySql. أُثبت الاعتماد في Issue38. تصنيف مباشر وقيود فعلية للجدولين، حفظ جميع السيناريوهات، وتحديث العد والمسارات دون تغيير CI أو الصلاحيات أو ملفات Issue37. الجرد الفعلي الآن21 ملف ترحيل (19+2)؛ يُراجع عدد journal الفعلي بعد التشغيل. لا تُشتق حقائق FK المتوقعة آليًا من المخطط المرصود. تراجع identity يستهدف ملفاتها الخمسة تحديدًا حتى لا يحذف ترحيلين مستقلين قبل اختبار رفض فقدان حساباتها. تبقى موافقة جدول audit ثالث وتفعيل HTTP خارج هذه التوسعة.
+
+تنقيح التنفيذ التقني قبل التحقق الكامل: فهارس الفرز المقيّد بالمؤسسة تُدرج inline في CREATE MySQL الذري؛ SQLite ينشئ الجدول والفهارس في transaction DDL واحدة. لا نافذة جدول بلا قيوده ولا تغيير لترحيل سابق.

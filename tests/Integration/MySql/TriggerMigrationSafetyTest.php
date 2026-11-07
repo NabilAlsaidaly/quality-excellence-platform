@@ -199,6 +199,8 @@ class TriggerMigrationSafetyTest extends MySqlTestCase
         // successful Artisan rollback assertion and every safety assertion.
         $this->artisan('migrate:rollback', [
             '--path' => [
+                'database/migrations/2026_11_07_000002_create_approach_content_revisions_table.php',
+                'database/migrations/2026_11_07_000001_create_approaches_table.php',
                 'database/migrations/'.self::MIGRATION.'.php',
                 'database/migrations/2026_11_03_000007_create_organizational_unit_changes_table.php',
             ],

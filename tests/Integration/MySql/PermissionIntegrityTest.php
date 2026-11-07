@@ -101,7 +101,7 @@ class PermissionIntegrityTest extends MySqlTestCase
     public function test_inline_fk_failure_creates_no_partial_table_and_retry_succeeds(): void
     {
         // Include the later unit/organization history before the original four.
-        $this->artisan('migrate:rollback', ['--step' => 11, '--force' => true])->assertExitCode(0);
+        $this->artisan('migrate:rollback', ['--step' => 13, '--force' => true])->assertExitCode(0);
         $this->assertFalse(Schema::hasTable('role_has_permissions'));
         $this->assertTrue(Schema::hasTable('roles'));
         DB::statement('RENAME TABLE roles TO permission_roles_fixture');
@@ -115,7 +115,7 @@ class PermissionIntegrityTest extends MySqlTestCase
         }
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         $this->assertTrue(Schema::hasTable('role_has_permissions'));
-        $this->assertSame(19, DB::table('migrations')->count());
+        $this->assertSame(21, DB::table('migrations')->count());
         $this->assertSame(2, (int) DB::selectOne("SELECT COUNT(*) AS total FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE = 'organizational_units'")->total);
     }
 
@@ -157,7 +157,7 @@ class PermissionIntegrityTest extends MySqlTestCase
     {
         $unit = OrganizationalUnit::factory()->create();
         $settings = DB::selectOne('SELECT @@GLOBAL.log_bin AS binlog, @@GLOBAL.log_bin_trust_function_creators AS trusted');
-        $this->artisan('migrate:rollback', ['--step' => 13, '--force' => true])->assertExitCode(0);
+        $this->artisan('migrate:rollback', ['--step' => 15, '--force' => true])->assertExitCode(0);
         foreach (['permissions', 'roles', 'role_has_permissions', 'model_has_roles', 'model_has_permissions', 'authorization_changes'] as $table) {
             $this->assertFalse(Schema::hasTable($table));
         }

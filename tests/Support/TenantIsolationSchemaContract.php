@@ -10,6 +10,8 @@ final class TenantIsolationSchemaContract
 {
     // The single executable classification source. Never infer scope from a name.
     public const TABLES = [
+        'approaches' => 'direct',
+        'approach_content_revisions' => 'direct',
         'authorization_changes' => 'direct',
         'cache' => 'global',
         'cache_locks' => 'global',
@@ -36,6 +38,16 @@ final class TenantIsolationSchemaContract
     // Ordered local columns => [target table, ordered target columns]. All are
     // same-schema RESTRICT/RESTRICT. Global actors are NOT membership references.
     private const FOREIGN_KEYS = [
+        'approaches' => [
+            'organization_id' => ['organizations', 'id'],
+            'organization_id,owning_unit_id' => ['organizational_units', 'organization_id,id'],
+            'created_by' => ['users', 'id'],
+        ],
+        'approach_content_revisions' => [
+            'organization_id' => ['organizations', 'id'],
+            'organization_id,approach_id' => ['approaches', 'organization_id,id'],
+            'actor_id' => ['users', 'id'],
+        ],
         'users' => ['organization_id' => ['organizations', 'id']],
         'institution_password_reset_tokens' => ['account_id,organization_id' => ['users', 'id,organization_id']],
         'organization_memberships' => [
@@ -73,6 +85,8 @@ final class TenantIsolationSchemaContract
     ];
 
     private const UNIQUE_KEYS = [
+        'approaches' => ['id', 'public_id', 'organization_id,id'],
+        'approach_content_revisions' => ['id', 'public_id', 'approach_id,version_number'],
         'users' => ['id', 'public_id', 'id,organization_id', 'identity_namespace,email'],
         'institution_password_reset_tokens' => ['account_id'],
         'organizations' => ['id', 'public_id'],
@@ -228,7 +242,16 @@ SQL);
                 }
             }
             // An added cascade must not erase history through a new reference.
-            if (in_array($table, ['authorization_changes', 'organizational_unit_changes', 'organization_changes'], true)) {
+            if ($table === 'approach_content_revisions') {
+                $versionCheck = $actual['checks']['approach_revisions_version_check'] ?? [];
+                $expression = str_replace(['`', '(', ')'], '', $versionCheck['clause'] ?? '');
+                if (($actual['columns']['version_number'] ?? null) !== ['type' => 'int unsigned', 'nullable' => false]
+                    || ($versionCheck['enforced'] ?? false) !== true
+                    || $expression !== 'version_number>=1andversion_number<=4294967295') {
+                    $errors[] = "$table: positive unsigned version range must retain its enforced CHECK.";
+                }
+            }
+            if (in_array($table, ['authorization_changes', 'organizational_unit_changes', 'organization_changes', 'approach_content_revisions'], true)) {
                 foreach ($actual['foreign_keys'] as $key) {
                     if ($key['delete'] !== 'RESTRICT' || $key['update'] !== 'RESTRICT') {
                         $errors[] = "$table: every historical foreign key must remain RESTRICT on delete and update.";

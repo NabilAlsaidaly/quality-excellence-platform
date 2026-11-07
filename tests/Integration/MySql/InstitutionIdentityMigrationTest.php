@@ -70,11 +70,12 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
         $old = DB::table('users')->orderBy('id')->get(['id', 'name', 'email', 'password', 'remember_token', 'email_verified_at'])->toArray();
         $history = DB::table('organization_changes')->get()->toArray();
         $memberships = DB::table('organization_memberships')->orderBy('id')->get()->toArray();
-        $this->artisan('migrate:rollback', ['--step' => 5, '--force' => true])->assertExitCode(0);
-        $this->assertSame(14, DB::table('migrations')->count());
+        $this->artisan('migrate:rollback', ['--path' => array_map(fn ($path) => 'database/migrations/'.basename($path), glob(database_path('migrations/2026_11_05_*.php'))),
+            '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
+        $this->assertSame(16, DB::table('migrations')->count());
         $this->assertFalse(Schema::hasColumn('users', 'principal_type'));
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
-        $this->assertSame(19, DB::table('migrations')->count());
+        $this->assertSame(21, DB::table('migrations')->count());
         $this->assertEquals($old, DB::table('users')->orderBy('id')->get(['id', 'name', 'email', 'password', 'remember_token', 'email_verified_at'])->toArray());
         $this->assertEquals($history, DB::table('organization_changes')->get()->toArray());
         $this->assertEquals($memberships, DB::table('organization_memberships')->orderBy('id')->get()->toArray());
@@ -93,7 +94,8 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
 
     public function test_missing_fk_target_fails_atomic_alter_without_partial_columns_and_ordinary_migrate_retries(): void
     {
-        $this->artisan('migrate:rollback', ['--step' => 5, '--force' => true])->assertExitCode(0);
+        $this->artisan('migrate:rollback', ['--path' => array_map(fn ($path) => 'database/migrations/'.basename($path), glob(database_path('migrations/2026_11_05_*.php'))),
+            '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
         DB::statement('RENAME TABLE organizations TO identity_root_fixture');
         try {
             try {
@@ -105,12 +107,12 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
             $this->assertFalse(Schema::hasColumn('users', 'principal_type'));
             $this->assertFalse(Schema::hasColumn('users', 'organization_id'));
             $this->assertTrue(collect(Schema::getIndexes('users'))->firstWhere('name', 'users_email_unique')['unique']);
-            $this->assertSame(14, DB::table('migrations')->count());
+            $this->assertSame(16, DB::table('migrations')->count());
         } finally {
             DB::statement('RENAME TABLE identity_root_fixture TO organizations');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
-        $this->assertSame(19, DB::table('migrations')->count());
+        $this->assertSame(21, DB::table('migrations')->count());
     }
 
     public function test_existing_unjournaled_shape_is_not_adopted_and_semantic_rollback_does_not_erase_accounts_or_tokens(): void
@@ -121,12 +123,13 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
         // Even with no live tokens, the FIRST reverse migration must refuse
         // before dropping a table or any integrity trigger for existing accounts.
         try {
-            Artisan::call('migrate:rollback', ['--step' => 5, '--force' => true]);
+            Artisan::call('migrate:rollback', ['--path' => array_map(fn ($path) => 'database/migrations/'.basename($path), glob(database_path('migrations/2026_11_05_*.php'))),
+                '--step' => DB::table('migrations')->count(), '--force' => true]);
             $this->fail('Ordinary rollback must refuse before its first DROP.');
         } catch (RuntimeException $error) {
             $this->assertNotEmpty($error->getMessage());
         }
-        $this->assertSame(19, DB::table('migrations')->count());
+        $this->assertSame(21, DB::table('migrations')->count());
         foreach (glob(database_path('migrations/2026_11_05_*.php')) as $path) {
             try {
                 (require $path)->down();
