@@ -61,7 +61,7 @@ B:
 - resources/views/filament/documents/document-shell.blade.php وupload-disabled.blade.php: shellunregisteredلnativecomponents، qep-preview/tokens وRTL، truthfuldisabled/forbidden/error/empty، لاواجهةHTMLبديلة.
 - lang/ar/institution_documents.php: Arabiclabels/messages.
 - tests/Feature/Filament/DocumentFilamentPresentationTest.php: in-fileLivewireharness/test-onlyfixtures، nativeAPI/render/serialization/rejectmutations/routeproviderimmutability/375..1280visual.
-لاCSSجديدلعدموجودمسارCSSمسموح؛ existingqep/nativeclassesكافية. Theme/provider/previews/Resources/Pages/routesreadonly. Filamentالمثبت5.9.xحسبlock يتمتأكيدexactversionبالاختبارات، لاافتراضAPIv3/4.
+لاCSSجديدلعدموجودمسارCSSمسموح؛ existingqep/nativeclassesكافية. Theme/provider/previews/Resources/Pages/routesreadonly. Filamentالمثبت5.11.0 وLivewire4.4.8 وLaravel13.39.0 حسبlock؛ exactAPI يثبت بالاختبارات، لاافتراضAPIv3/4.
 
 Docs:
 - docs/architecture/document-version-foundation.md: exactcontracts/tradeoffs/blockedgates.
