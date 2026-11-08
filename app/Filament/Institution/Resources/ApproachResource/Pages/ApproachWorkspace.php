@@ -15,6 +15,7 @@ use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
+use Filament\Support\Components\Attributes\Exposed;
 use Filament\Support\Components\Attributes\Unexposed;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
@@ -64,9 +65,9 @@ class ApproachWorkspace extends Page implements HasTable
         $entries[] = TextEntry::make('owner')->label(__('approach_workspace.owner'))->state($metadata['owning_unit']['name']);
 
         return $schema->components([
-            Text::make(__('approach_workspace.gated')),
-            Section::make(__('approach_workspace.workspace'))->schema($entries)->columns(['default' => 1, 'md' => 2]),
-            Section::make('النسخة المنشورة')->schema([Text::make(__('approach_workspace.publication_unavailable'))]),
+            Text::make(__('approach_workspace.local_scope')),
+            Section::make('المعلومات العامة')->schema($entries)->columns(['default' => 1, 'md' => 2]),
+            Section::make('المحتوى والمسودة')->schema([Text::make(__('approach_workspace.publication_unavailable'))]),
             Select::make('historyType')->label('نوع السجل')->options(['draft' => __('approach_workspace.drafts'), 'audit' => __('approach_workspace.audit')])->live(),
             EmbeddedTable::make(),
         ]);
@@ -130,7 +131,9 @@ class ApproachWorkspace extends Page implements HasTable
                 ->visible(fn () => app(ApproachAccess::class)->can('changeOwner', $this->approach))
                 ->fillForm(fn () => ['edit_token' => app(ApproachAccess::class)->show($this->approach)['edit_token']])
                 ->schema([Select::make('owning_unit_public_id')->label(__('approach_workspace.owner'))->required()->searchable()
-                    ->options(fn () => app(ApproachAccess::class)->ownerOptions('changeOwner', $this->approach)), Hidden::make('edit_token')->required()])
+                    ->options(fn () => app(ApproachAccess::class)->searchOwners('changeOwner', $this->approach))
+                    ->getSearchResultsUsing(fn (string $search) => app(ApproachAccess::class)->searchOwners('changeOwner', $this->approach, $search))
+                    ->getOptionLabelUsing(fn ($value) => is_string($value) ? (app(ApproachAccess::class)->searchOwners('changeOwner', $this->approach, selected: $value)[$value] ?? null) : null), Hidden::make('edit_token')->required()])
                 ->action(function (array $data): void {
                     app(ApproachAccess::class)->changeOwner($this->approach, $data['owning_unit_public_id'], $data['edit_token']);
                     $this->saved();
@@ -138,7 +141,7 @@ class ApproachWorkspace extends Page implements HasTable
             Action::make('draft')->label(__('approach_workspace.save_draft'))
                 ->modalSubmitActionLabel(__('approach_workspace.save_draft'))
                 ->visible(fn () => app(ApproachAccess::class)->can('editDraft', $this->approach))
-                ->fillForm(fn () => ['draft_token' => app(ApproachAccess::class)->draftToken($this->approach)])
+                ->fillForm(fn () => app(ApproachAccess::class)->draftForm($this->approach))
                 ->schema([Textarea::make('body')->label(__('approach_workspace.body'))->required()->maxLength(1000000)->rows(10), Hidden::make('draft_token')->required()])
                 ->action(function (array $data): void {
                     app(ApproachAccess::class)->saveDraft($this->approach, $data['body'], $data['draft_token']);
@@ -149,8 +152,22 @@ class ApproachWorkspace extends Page implements HasTable
 
     private function saved(): void
     {
+        // Native schemas cache concrete read states during an action request.
+        // Rebuild after persistence so metadata/owner changes render immediately.
+        $this->cacheSchema('content');
         Notification::make()->title(__('approach_workspace.saved'))->success()->send();
         $this->resetTable();
+    }
+
+    #[Exposed]
+    public function callMountedAction(array $arguments = []): mixed
+    {
+        $operation = match ($this->getMountedAction()?->getName()) {
+            'edit' => 'updateMetadata', 'transfer' => 'changeOwner', 'draft' => 'editDraft', default => null,
+        };
+        abort_unless($operation !== null && app(ApproachAccess::class)->can($operation, $this->approach), 403);
+
+        return parent::callMountedAction($arguments);
     }
 
     public function _startUpload($name, $fileInfo, $isMultiple): void

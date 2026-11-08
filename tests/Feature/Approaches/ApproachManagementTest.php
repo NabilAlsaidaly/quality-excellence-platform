@@ -8,6 +8,9 @@ use App\Actions\Approaches\ListApproaches;
 use App\Actions\Approaches\SaveApproachContentRevision;
 use App\Actions\Approaches\UpdateApproach;
 use App\Authorization\TenantContext;
+use App\Filament\Institution\InstitutionAuthenticate;
+use App\Filament\Institution\InstitutionPanelEnvironment;
+use App\Filament\Institution\InstitutionPanelSession;
 use App\Models\Approach;
 use App\Models\ApproachChange;
 use App\Models\ApproachContentRevision;
@@ -385,6 +388,18 @@ class ApproachManagementTest extends TestCase
     {
         [$member] = $this->fixture();
         foreach (Route::getRoutes() as $route) {
+            $native = [
+                'filament.institution.resources.approaches.index' => 'institution/workspace/approaches',
+                'filament.institution.resources.approaches.workspace' => 'institution/workspace/approaches/{approach}',
+            ];
+            if (array_key_exists($route->getName() ?? '', $native)) {
+                $this->assertSame($native[$route->getName()], $route->uri());
+                foreach ([InstitutionPanelEnvironment::class, InstitutionPanelSession::class, InstitutionAuthenticate::class] as $middleware) {
+                    $this->assertContains($middleware, $route->gatherMiddleware());
+                }
+
+                continue;
+            }
             $this->assertStringNotContainsString('approaches', $route->uri());
         }
         $this->trusted($member, function () use ($member): void {

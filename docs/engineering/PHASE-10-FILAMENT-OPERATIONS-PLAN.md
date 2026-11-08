@@ -25,6 +25,7 @@ Other named sensitive candidates (AdminPanelProvider, BrowserAccountSession, con
 | `app/Filament/Institution/InstitutionPanel.php` | Explicit resources/dashboard, native navigation, persistent security middleware; no login duplication |
 | `app/Filament/Institution/InstitutionPanelEnvironment.php` | Earliest runtime local/testing gate, independent of APP_DEBUG/cache |
 | `app/Filament/Institution/InstitutionPanelSession.php` | Per HTTP/Livewire proof, host/private headers, finally cleanup; route-specific native logout delegates existing InstitutionEntry AFTER CSRF |
+| `app/Filament/Institution/InstitutionAuthenticate.php` | Narrow native Authenticate subclass: existing login redirect and CSRF-protected native logout delegates existing Action before role checks; required by actual Laravel middleware priority |
 | `app/Filament/Institution/Pages/InstitutionDashboard.php` | Actual native dashboard with authorized bank entry and honest unavailable publication/features |
 | `app/Filament/Institution/Approaches/ApproachAccess.php` | Existing Action adapter; public panel predicate, bounded scoped unit search/labels, batched view-link hints |
 | `app/Policies/ApproachPolicy.php` | Keep default DENY; reuse structural prerequisites for bounded batch view hints, never a durable grant |
@@ -36,6 +37,7 @@ Other named sensitive candidates (AdminPanelProvider, BrowserAccountSession, con
 | `tests/Feature/Filament/InstitutionPanelRoutesTest.php` | Cached/uncached four-environment routes, persistent middleware/CSRF and direct denials |
 | `tests/Feature/Filament/InstitutionPanelPerformanceTest.php` | More than100 units, bounded picker/constant-query listing/moderate fixture timings |
 | `tests/Feature/Filament/PanelSeparationTest.php` | Adapt historical unregistered-institution expectation to this authorized registration; retain platform absence, no real-user entry, legacy/production denials |
+| `tests/Feature/Filament/ApproachFilamentIntegrationTest.php` | Preserve all old scenarios; strengthen revoked native action expectation from silent no-op to403; use a fresh denied request after HTTP rejection because test transport discards its snapshot on403 |
 | `tests/Integration/MySql/InstitutionPanelJourneyTest.php` | Disposable MySQL HTTP/Livewire persistence, revocation and historical/conflict regression |
 | `docs/engineering/PHASE-10-FILAMENT-OPERATIONS-PLAN.md` | This prior plan and approved amendments |
 | `docs/engineering/PHASE-10-AUTHORITY-PROPOSAL.md` | Public-safe issuer/action/resource/scope/expiry/revocation/audit proposal; no grants |
@@ -62,3 +64,11 @@ Commit this plan before runtime code. Baseline identity/panel tests; implement b
 Run SQLite, guarded disposable MySQL8.4, real namespaced Redis, Pint, Composer strict/platform/audit, npmci/audit/build; four-environment cached/uncached routes; actual375/768/1280 browser layout/keyboard checks. No quality_platform migration/fresh/wipe/rollback. No CI/package/theme/coworker edits. Final report committed, exactly one Draft PR, inspect exact report-containing HEAD CI/logs and record final receipt in PR/private handover without circular self-hash commits. Stop for lead; no merge/deploy.
 
 Authority status labels: RECEIVED BUSINESS RULE, ENGINEERING CANDIDATE, RATIFIED GRANT (none), OPERATIONAL LOCAL (only proven synthetic path), PRODUCTION GATED. Detailed first-quality-administrator appointment/revoker question remains OWNER-REQUIRED; no first-admin privilege is inferred.
+
+## Lead amendment received
+
+Before editing the account view, the engineering lead explicitly approved **only** `resources/views/institution/account.blade.php` to add one Arabic workspace link gated by the same backend panel-entry predicate. Preserve account/login/logout/recovery; no production/staging link/access, no independent Blade permission rules. Test authorized/denied/foreign/revoked/expired sessions. No wider path authority inferred.
+
+## Lead amendment: exact historical route-test compatibility
+
+The engineering lead approved only `tests/Feature/Approaches/ApproachManagementTest.php` and `tests/Feature/InstitutionApproaches/ApproachHttpAuthorizationTest.php` in addition to the existing scope. Their blanket absence-of-any-Approach-route assertion predates the authorized panel registration. Exempt only the exact native list/workspace route name and URI pairs, after asserting environment, session proof and authentication middleware; preserve the original absence assertion for every other route, all legacy/admin 404 checks, and all prior security scenarios. New journey/cache tests prove default-denied membership, invalid sessions, revocation, foreign institutions and staging/production denial. No database/CI/permission changes are authorized by this amendment.

@@ -5,6 +5,9 @@ namespace Tests\Feature\InstitutionApproaches;
 use App\Actions\Approaches\CreateApproach;
 use App\Actions\Approaches\ListApproaches;
 use App\Authorization\TenantContext;
+use App\Filament\Institution\InstitutionAuthenticate;
+use App\Filament\Institution\InstitutionPanelEnvironment;
+use App\Filament\Institution\InstitutionPanelSession;
 use App\Http\Controllers\Institution\ApproachContentController;
 use App\Http\Controllers\Institution\ApproachController;
 use App\Http\Middleware\InstitutionSession;
@@ -29,6 +32,18 @@ class ApproachHttpAuthorizationTest extends TestCase
         parent::setUp();
         SyntheticApproachPolicy::$grants = [];
         foreach (Route::getRoutes() as $route) {
+            $native = [
+                'filament.institution.resources.approaches.index' => 'institution/workspace/approaches',
+                'filament.institution.resources.approaches.workspace' => 'institution/workspace/approaches/{approach}',
+            ];
+            if (array_key_exists($route->getName() ?? '', $native)) {
+                $this->assertSame($native[$route->getName()], $route->uri());
+                foreach ([InstitutionPanelEnvironment::class, InstitutionPanelSession::class, InstitutionAuthenticate::class] as $middleware) {
+                    $this->assertContains($middleware, $route->gatherMiddleware());
+                }
+
+                continue;
+            }
             $this->assertStringNotContainsString('approaches', $route->uri(), 'Operational routes must remain absent.');
         }
         Route::middleware(['web', InstitutionSession::class])->prefix('institution/{organization}/approaches')
