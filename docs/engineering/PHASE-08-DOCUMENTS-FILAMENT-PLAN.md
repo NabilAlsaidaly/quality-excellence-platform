@@ -81,3 +81,11 @@ Docs:
 معايير01..46 matrixلكلnamedtest وPASS/BLOCKED/NOTRUNحقيقي. FocusedثمfullSQLite/MySQL8.4/Redis، Composerstrict/install/platform/audit، Pinttest، npmci/build، migrationstatus/emptyrollback/reapply، cachesوHTTP، actualfinalHEADCI. Snapshot قبلالتعديلroute/schema/contracts، readonlydiff وallowlist وprivateignoreverified. لا baselinetestskip/إضعافلضماناته؛ failuresdocumentfix.
 
 DraftPRواحدعلىالفرعنفسه، finalpublicreportcommitثمCIعلىHEADالمحتويله وAPIhead_sha/decodedlogsverified. immutablefinalreceiptفيPR/privateلتجنبselfhashloop. No merge/deploy/selfapprove/privilegeactivation.
+
+
+## اعتماد توسعة القائد — قبل تعديل المسار التاسع
+
+2026-11-08: وصل اعتماد صريح من القائد لإضافة tests/Integration/MySql/ApproachSchemaIsolationTest.php وحده، للأعداد المثبتة وتحديد مسارات ترحيلات Approach الأصلية بدل الاعتماد على أحدث migration. الشروط: بقاء كلسيناريو/Assertion وضمانFK/UNIQUE/CHECK/history/atomicrollback، لاCI/auth/permission/ملفات37 أوتوسعةأخرى.
+الدليل قبلالتعديل: MySQL originaltest failure actual24 مقابلexpected22. اختبارDocumentSchemaIsolationTest أثبت physical24/journal24/26base tables وقيودالعزل؛6tests96assertions PASS.
+التصحيح المحدد: helperrollback pathsللثلاثةApproachmigrations الأصلية معاختيارآخر1/2/3مقصودة وعددjournalphysicaladjusted؛ populatedrollback يستهدفaudit مباشرةليرفضقبلأيDROP، دون إسقاطترحيلاتDocuments أوضعفأيassertion. بعدهfocusedApproach ثمfullregression.
+TriggerMigrationSafetyTest لا يتطلب تعديلًا إذاثبتعدموجودFKمنDocumentsإلىunits؛ لايعدلملفلمجردوجودهفيallowlist. Permissionrelativeoffsetsستزيد2لنفسالأهداف، identity/historyselectedpathsتبقىنفسهاوتحسبremainingمنinventoryالمثبت.
