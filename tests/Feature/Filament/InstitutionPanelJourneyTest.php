@@ -16,6 +16,7 @@ use DOMDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -136,10 +137,14 @@ trait InstitutionJourneyScenarios
     public function test_real_livewire_stale_and_revoked_assignment_do_not_write_history(): void
     {
         $this->prepare46();
+        config(['app.debug' => true]);
         [$actor, $organization, , $approach] = $this->fixture44();
         $this->signIn46($actor, $organization);
         $url = '/institution/workspace/approaches/'.$approach->public_id;
         $snapshot = $this->snapshot46($this->get($url)->assertOk(), ApproachWorkspace::class);
+        $this->transport46($snapshot, '$refresh', [], ['approach' => (string) Str::ulid()], 403)
+            ->assertExactJson(['message' => 'الوصول غير مسموح.']);
+        $this->assertDatabaseCount('approach_changes', 0);
         $this->transport46($snapshot, 'mountAction', ['edit']);
         $access = app(ApproachAccess::class);
         $access->update($approach->public_id, ['name' => 'التعديل الفائز'], $access->show($approach->public_id)['edit_token']);
@@ -148,7 +153,8 @@ trait InstitutionJourneyScenarios
         $snapshot = $this->snapshot46($this->get($url)->assertOk(), ApproachWorkspace::class);
         $this->transport46($snapshot, 'mountAction', ['draft']);
         SyntheticApproachPolicy::$grants[$actor->id]['editDraft'] = [];
-        $this->transport46($snapshot, 'callMountedAction', [], ['mountedActions.0.data.body' => 'مرفوض'], 403);
+        $denied = $this->transport46($snapshot, 'callMountedAction', [], ['mountedActions.0.data.body' => 'مرفوض'], 403);
+        $denied->assertExactJson(['message' => 'الوصول غير مسموح.']);
         $this->assertDatabaseCount('approach_content_revisions', 0);
     }
 
