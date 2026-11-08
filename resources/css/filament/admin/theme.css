@@ -4,6 +4,10 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 @source '../../../../resources/views/components/quality-ui/**/*.blade.php';
+@source '../../../../resources/views/institution/entry.blade.php';
+@source '../../../../resources/views/institution/reset.blade.php';
+@source '../../../../resources/views/institution/account.blade.php';
+@source '../../../../resources/views/components/institution/identity-layout.blade.php';
 
 /*
 |--------------------------------------------------------------------------

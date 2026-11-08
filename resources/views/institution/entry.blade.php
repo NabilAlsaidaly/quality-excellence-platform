@@ -1,27 +1,47 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>دخول الحساب المؤسسي</title></head>
-<body style="font-family:Tahoma,Arial,sans-serif;max-width:40rem;margin:2rem auto;padding:1rem;line-height:1.8">
-    <main>
-        <h1>دخول الحساب المؤسسي</h1>
-        <p>أدخل معرّف المؤسسة الذي استلمته من الجهة المخولة. لا تتوفر قائمة عامة بالمؤسسات.</p>
-        <p>بيئة اختبار: الدخول لا يمنح صلاحيات إدارة أو وصولًا إلى وثائق المؤسسة.</p>
-        @if(session('status')) <p role="status">{{ session('status') }}</p> @endif
-        @if($errors->any()) <div role="alert">{{ $errors->first() }}</div> @endif
-        <form method="post" action="{{ route('institution.login', [], false) }}">
+<x-institution.identity-layout title="دخول الحساب المؤسسي" :show-errors="true" :validation-errors="$errors" :show-status="true">
+    <p class="text-sm leading-7 text-gray-600 dark:text-gray-400">بيئة اختبار: الدخول لا يمنح صلاحيات إدارة أو وصولًا إلى وثائق المؤسسة.</p>
+    <x-filament::fieldset label="تسجيل الدخول" class="bg-white dark:bg-gray-900">
+        <p id="login-description" class="mb-6 text-sm leading-7 text-gray-600 dark:text-gray-400">أدخل معرّف المؤسسة الذي استلمته من الجهة المخولة. لا تتوفر قائمة عامة بالمؤسسات.</p>
+        <form method="post" action="{{ route('institution.login', [], false) }}" aria-describedby="login-description" class="space-y-5">
             @csrf
-            <p><label for="organization">معرّف المؤسسة</label><br><input id="organization" name="organization" value="{{ old('organization') }}" required maxlength="128" dir="ltr" autocomplete="organization" style="width:100%;min-height:44px;box-sizing:border-box"></p>
-            <p><label for="email">البريد المسجل</label><br><input id="email" name="email" type="email" value="{{ old('email') }}" required maxlength="254" dir="ltr" autocomplete="username" style="width:100%;min-height:44px;box-sizing:border-box"></p>
-            <p><label for="password">كلمة المرور</label><br><input id="password" name="password" type="password" required autocomplete="current-password" style="width:100%;min-height:44px;box-sizing:border-box"></p>
-            <button type="submit" style="min-height:44px">تسجيل الدخول</button>
+            <div class="space-y-2">
+                <label for="organization" class="text-sm font-medium">معرّف المؤسسة</label>
+                <x-filament::input.wrapper>
+                    <x-filament::input id="organization" name="organization" :value="old('organization')" required maxlength="128" dir="ltr" autocomplete="organization" class="min-h-11" />
+                </x-filament::input.wrapper>
+            </div>
+            <div class="space-y-2">
+                <label for="email" class="text-sm font-medium">البريد المسجل</label>
+                <x-filament::input.wrapper>
+                    <x-filament::input id="email" name="email" type="email" :value="old('email')" required maxlength="254" dir="ltr" autocomplete="username" class="min-h-11" />
+                </x-filament::input.wrapper>
+            </div>
+            <div class="space-y-2">
+                <label for="password" class="text-sm font-medium">كلمة المرور</label>
+                <x-filament::input.wrapper>
+                    <x-filament::input id="password" name="password" type="password" required autocomplete="current-password" class="min-h-11" />
+                </x-filament::input.wrapper>
+            </div>
+            <x-filament::button :color="\Filament\Facades\Filament::getPanel('institution')->getColors()['primary']" type="submit" class="min-h-11 w-full dark:bg-primary-700 dark:hover:bg-primary-800">تسجيل الدخول</x-filament::button>
         </form>
-        <h2>استعادة الوصول</h2>
-        <p>حدد المؤسسة والبريد للحساب الذي تريد استعادته.</p>
-        <form method="post" action="{{ route('institution.recovery', [], false) }}">
+    </x-filament::fieldset>
+    <x-filament::fieldset label="استعادة الوصول" class="bg-white dark:bg-gray-900">
+        <p id="recovery-description" class="mb-6 text-sm leading-7 text-gray-600 dark:text-gray-400">حدد المؤسسة والبريد للحساب الذي تريد استعادته.</p>
+        <form method="post" action="{{ route('institution.recovery', [], false) }}" aria-describedby="recovery-description" class="space-y-5">
             @csrf
-            <p><label for="recovery-organization">معرّف المؤسسة</label><br><input id="recovery-organization" name="organization" required maxlength="128" dir="ltr" style="width:100%;min-height:44px;box-sizing:border-box"></p>
-            <p><label for="recovery-email">البريد المسجل</label><br><input id="recovery-email" name="email" type="email" required maxlength="254" dir="ltr" autocomplete="email" style="width:100%;min-height:44px;box-sizing:border-box"></p>
-            <button type="submit" style="min-height:44px">طلب تعليمات الاستعادة</button>
+            <div class="space-y-2">
+                <label for="recovery-organization" class="text-sm font-medium">معرّف المؤسسة</label>
+                <x-filament::input.wrapper>
+                    <x-filament::input id="recovery-organization" name="organization" required maxlength="128" dir="ltr" class="min-h-11" />
+                </x-filament::input.wrapper>
+            </div>
+            <div class="space-y-2">
+                <label for="recovery-email" class="text-sm font-medium">البريد المسجل</label>
+                <x-filament::input.wrapper>
+                    <x-filament::input id="recovery-email" name="email" type="email" required maxlength="254" dir="ltr" autocomplete="email" class="min-h-11" />
+                </x-filament::input.wrapper>
+            </div>
+            <x-filament::button type="submit" color="gray" outlined class="min-h-11 w-full">طلب تعليمات الاستعادة</x-filament::button>
         </form>
-    </main>
-</body></html>
+    </x-filament::fieldset>
+</x-institution.identity-layout>

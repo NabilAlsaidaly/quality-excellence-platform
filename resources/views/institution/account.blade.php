@@ -1,17 +1,15 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>الحساب المؤسسي</title></head>
-<body style="font-family:Tahoma,Arial,sans-serif;max-width:40rem;margin:2rem auto;padding:1rem;line-height:1.8">
-<main>
-    <h1>الحساب المؤسسي</h1>
-    <p>أهلًا {{ $account->name }}. تم التحقق من حسابك وسياق المؤسسة.</p>
-    <p>هذه صفحة الحساب فقط. لا تمنح الوصول إلى محتوى المؤسسة أو صلاحيات إدارتها.</p>
-    @if ($account->canAccessPanel(\Filament\Facades\Filament::getPanel('institution')))
-        <p><a href="{{ route('filament.institution.pages.institution-dashboard', [], false) }}">فتح مساحة المؤسسة</a></p>
-    @endif
-    <form method="post" action="{{ route('institution.logout', ['organization' => request()->route('organization')], false) }}">
-        @csrf
-        <button type="submit" style="min-height:44px">تسجيل الخروج</button>
-    </form>
-</main>
-</body></html>
+<x-institution.identity-layout title="الحساب المؤسسي">
+    <x-filament::fieldset label="حسابك" class="bg-white dark:bg-gray-900">
+        <div class="space-y-6">
+            <p class="break-words text-lg font-medium">أهلًا {{ $account->name }}. تم التحقق من حسابك وسياق المؤسسة.</p>
+            <p class="text-sm leading-7 text-gray-600 dark:text-gray-400">هذه صفحة الحساب فقط. لا تمنح الوصول إلى محتوى المؤسسة أو صلاحيات إدارتها.</p>
+            @if ($account->canAccessPanel(\Filament\Facades\Filament::getPanel('institution')))
+                <x-filament::button :color="\Filament\Facades\Filament::getPanel('institution')->getColors()['primary']" tag="a" :href="route('filament.institution.pages.institution-dashboard', [], false)" class="min-h-11 w-full dark:bg-primary-700 dark:hover:bg-primary-800">فتح مساحة المؤسسة</x-filament::button>
+            @endif
+            <form method="post" action="{{ route('institution.logout', ['organization' => request()->route('organization')], false) }}">
+                @csrf
+                <x-filament::button type="submit" color="gray" outlined class="min-h-11 w-full">تسجيل الخروج</x-filament::button>
+            </form>
+        </div>
+    </x-filament::fieldset>
+</x-institution.identity-layout>

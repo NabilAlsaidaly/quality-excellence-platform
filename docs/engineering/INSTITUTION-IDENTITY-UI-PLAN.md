@@ -39,3 +39,9 @@ Sign-in remains first and visually primary; recovery stays visible in the same p
 ## Boundaries
 
 No edits to Actions/controllers/routes/middleware/guards/Policies/providers/User/database/old tests/CI/manifests/vite.config/preview/coworker37. Existing no-store/private, no-referrer, nosniff and stage/production denial stay intact. Extra scope requires separate narrow approval; this approval does not ratify D002 or ADR004 and grants no real access.
+
+## Verified presentation refinements
+
+Standalone styles supply native defaults while the shell scopes the institution's existing primary CSS variables/font to its own document. Primary buttons also receive the existing palette directly through Filament's supported array-color API so contrast-slot selection uses that palette; this does not mutate FilamentColor. Actual browser measurement found the native dark600 background below4.5:1 with white text in this version; only these primary buttons use existing dark700/hover800 utilities. Final sampled contrast6.63:1 light /5.64:1 dark. Shared theme remains exactly four added source directives.
+
+Validation feedback is passed explicitly from the original view error bag to the shell; no named error bags or backend attribution added. Actual ordinary POST→GET behavior is tested; avoid starting the JSON-serialized test session again through an intermediate session assertion before the following render. Existing old tests are untouched. Local assets and all three surfaces are verified in both modes at375/768/1280; ordinary browser same-origin origin verification is distinguished from the untrusted/no-token419 test in Laravel13.
