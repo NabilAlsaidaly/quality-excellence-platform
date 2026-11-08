@@ -142,3 +142,17 @@ The executable TABLES/FKs/unique/type/nullable/check contracts include these fac
 Observed count change21→22 requires bounded fixture maintenance: TenantIntegrity full journal22; hierarchy/organization history full22 and selected old-migration removal21; identity's explicit original five-path rollback leaves17 and reapply22; Permission rollback14/16 retains the original targets; Trigger removes the dependent audit first. Approach's old two-table rollback becomes step3 and old revision-only failure step2, preserving original journal targets19/20. The plan names each file and reason; original negative scenarios and exact original targets remain intact.
 
 The new migration has atomic single-statement MySQL DDL and transactional SQLite table/index creation, no trigger or server settings change. A populated rollback refuses before any DROP, including an identity-only Approach bank. Exclusive maintenance and forward recovery remain prerequisites. Ordinary model audit updates/deletion are blocked; raw SQL is not made immutable. No operational Policy/routes/capabilities are enabled. See [architecture](approach-bank-foundation.md) and [Issue40 results](../engineering/reports/40.md).
+
+
+## Issue42 — Document/version extension (2026-11-08)
+
+Actual disposable MySQL inventory:24 migration files/journal entries and26 base tables. Documents and document_versions are direct tenant tables; no global exception. Required keys/types/checks appear in the same executable TABLES/FK/UNIQUE/type/nullable/check contract.
+
+documents: non-null org/creator, root/user RESTRICT FKs, unique id/public_id/(org,id), title255/descriptionLONGTEXT/created_at, index(org,created_at,id).
+document_versions: non-null org/document/actor, composite(org,document)→documents(org,id), restrictive root/global actor FKs, unique public_id/storage_key/(document,version), positive unsigned32 range, fixed exact local disk, lowercase64hex SHA256 and nonnegative unsigned64 size checks. Optional detected media type is metadata, not a MIME permission.
+
+New MySQL tests remove/change every critical FK/key/type/check fact and require contract failure; raw cross-tenant/duplicate/out-of-range/delete tests verify actual constraints. Model/service immutability is not raw-SQL immutability.
+
+Fixture compatibility is measured, not an unknown-table/count bypass: full24; original five identity migrations removal leaves19; single history removal23; Permission offsets16/18 retain original targets. Explicit lead amendment additionally permits ApproachSchemaIsolationTest to select its original three/two/one migrations by path, leaving21/22/23 and preserving populated refusal before first DROP. Trigger fixture remains unchanged because document tables do not reference units. Existing assertions and scenarios stay enabled.
+
+The two new migrations have atomic per-table DDL, existing-object refusal, guarded populated rollback including identity-only state, and empty rollback/reapply tests. No trigger/global DB changes or operational UI/authorization. See document-version-foundation.md and report42.md.
