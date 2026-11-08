@@ -40,7 +40,12 @@ final class ApproachAccess
         }
 
         return app(TenantContext::class)->run($actor, $organization, fn () => app(CreateApproach::class)->withinContext($actor,
-            function (int $organizationId, User $current) use ($operation, $publicId, $callback): mixed {
+            function (int $organizationId, User $current) use ($operation, $publicId, $callback, $actor): mixed {
+                // Login freshness checked before waiting for the lock can age.
+                // The existing boundary supplies the current locked User row.
+                if (! hash_equals($current->getAuthPassword(), $actor->getAuthPassword())) {
+                    throw new AuthorizationException;
+                }
                 $resource = null;
                 if ($publicId !== null) {
                     $resource = Str::isUlid($publicId) ? Approach::query()->where('organization_id', $organizationId)

@@ -24,6 +24,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
@@ -327,6 +328,24 @@ class ApproachFilamentIntegrationTest extends TestCase
         $this->assertDatabaseCount('approaches', 1);
         DB::table('approaches')->where('id', $approach->id)->delete(); // Exact synthetic fixture, no history exists.
         Livewire::test(ApproachBank::class)->assertSee('لا توجد منهجيات');
+    }
+
+    public function test_password_change_between_provider_read_and_transaction_lock_denies_write(): void
+    {
+        [$actor, $organization, , $approach] = $this->fixture44();
+        $this->login44($actor, $organization);
+        $armed = true;
+        Event::listen('eloquent.retrieved: '.User::class, function (User $row) use (&$armed, $actor): void {
+            if ($armed && $row->id === $actor->id) {
+                $armed = false;
+                // Deterministic interleaving: the provider holds the old row,
+                // while the transaction's subsequent current locking read sees a reset.
+                DB::table('users')->where('id', $actor->id)->update(['password' => password_hash('replacement-synthetic-only', PASSWORD_BCRYPT)]);
+            }
+        });
+        $this->deny44(fn () => app(ApproachAccess::class)->saveDraft($approach->public_id, 'must not commit', 'none'));
+        $this->assertFalse($armed, 'The reset must happen after the provider fetched its password snapshot.');
+        $this->assertDatabaseCount('approach_content_revisions', 0);
     }
 
     private function visual44(string $name, string $html): void
