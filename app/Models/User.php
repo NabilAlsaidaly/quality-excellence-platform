@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Filament\Institution\Approaches\ApproachAccess;
 use App\Identity\LoginEmail;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -50,6 +51,10 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
+        if ($panel->getId() === 'institution') {
+            return app(ApproachAccess::class)->canEnter($this);
+        }
+
         // Development shell only; no production policy or tenant privilege is implied.
         return $this->principal_type === 'legacy' && $panel->getId() === 'admin' && app()->environment(['local', 'testing']);
     }

@@ -6,6 +6,9 @@
     <h1>الحساب المؤسسي</h1>
     <p>أهلًا {{ $account->name }}. تم التحقق من حسابك وسياق المؤسسة.</p>
     <p>هذه صفحة الحساب فقط. لا تمنح الوصول إلى محتوى المؤسسة أو صلاحيات إدارتها.</p>
+    @if ($account->canAccessPanel(\Filament\Facades\Filament::getPanel('institution')))
+        <p><a href="{{ route('filament.institution.pages.institution-dashboard', [], false) }}">فتح مساحة المؤسسة</a></p>
+    @endif
     <form method="post" action="{{ route('institution.logout', ['organization' => request()->route('organization')], false) }}">
         @csrf
         <button type="submit" style="min-height:44px">تسجيل الخروج</button>

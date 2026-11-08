@@ -9,6 +9,7 @@ use App\Actions\Approaches\SaveApproachContentRevision;
 use App\Actions\Approaches\UpdateApproach;
 use App\Authorization\TenantContext;
 use App\Models\Approach;
+use App\Models\OrganizationalUnit;
 use App\Models\User;
 use App\Policies\ApproachPolicy;
 use Closure;
@@ -23,6 +24,13 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 /** Presentation application adapter; existing Actions remain domain source of truth. */
 final class ApproachAccess
 {
+    public function canEnter(?User $actor): bool
+    {
+        return $actor !== null && $actor->principal_type === 'institution'
+            && (int) Auth::guard('institution')->id() === (int) $actor->getKey()
+            && $this->can('list');
+    }
+
     private function within(string $operation, ?string $publicId, Closure $callback): mixed
     {
         if (! app()->environment(['local', 'testing'])) {
@@ -75,7 +83,33 @@ final class ApproachAccess
     {
         // list is its own organization-wide metadata grant in synthetic tests;
         // it never grants detail, draft, audit or mutations for any resource.
-        return $this->within('list', null, fn (User $actor) => app(ListApproaches::class)->execute($actor, $search, $sort, $direction, $page, $perPage));
+        return $this->within('list', null, function (User $actor) use ($search, $sort, $direction, $page, $perPage): LengthAwarePaginator {
+            $records = app(ListApproaches::class)->execute($actor, $search, $sort, $direction, $page, $perPage);
+            $viewable = app(ApproachPolicy::class)->viewablePublicIds($actor, $records->getCollection()->pluck('public_id')->all());
+            $records->setCollection($records->getCollection()->map(fn (array $record) => $record + ['can_view' => in_array($record['public_id'], $viewable, true)]));
+
+            return $records;
+        });
+    }
+
+    /** Bounded server-side selector; mutation rules stay in existing domain Actions. */
+    public function searchOwners(string $operation, ?string $publicId = null, string $search = '', ?string $selected = null): array
+    {
+        if (! in_array($operation, ['create', 'changeOwner'], true)) {
+            throw new AuthorizationException;
+        }
+
+        return $this->within($operation, $publicId, function () use ($search, $selected): array {
+            if (! mb_check_encoding($search, 'UTF-8') || mb_strlen($search) > 255 || ($selected !== null && ! Str::isUlid($selected))) {
+                throw ValidationException::withMessages(['owning_unit_public_id' => 'معايير البحث غير صالحة.']);
+            }
+            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
+
+            return OrganizationalUnit::query()->where('organization_id', app(TenantContext::class)->organizationId())
+                ->when($selected !== null, fn ($query) => $query->where('public_id', $selected))
+                ->when($search !== '', fn ($query) => $query->whereRaw("name LIKE ? ESCAPE '!'", [$pattern]))
+                ->orderBy('name')->orderBy('id')->limit(20)->pluck('name', 'public_id')->all();
+        });
     }
 
     public function show(string $publicId): array
@@ -121,6 +155,17 @@ final class ApproachAccess
     public function draftToken(string $publicId): string
     {
         return $this->within('editDraft', $publicId, fn (User $actor, Approach $resource) => $this->latestDraftToken($resource));
+    }
+
+    public function draftForm(string $publicId): array
+    {
+        return $this->within('editDraft', $publicId, function (User $actor, Approach $resource) use ($publicId): array {
+            $token = $this->latestDraftToken($resource);
+            $body = app(ApproachPolicy::class)->allowsOperation($actor, 'viewDraftHistory', $resource)
+                ? (app(ListApproaches::class)->draftHistory($actor, $publicId, perPage: 1)->first()['body'] ?? '') : '';
+
+            return ['draft_token' => $token, 'body' => $body];
+        });
     }
 
     public function saveDraft(string $publicId, string $body, string $expectedRevision): void

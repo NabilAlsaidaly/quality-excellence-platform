@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Filament;
 
+use App\Filament\Institution\InstitutionAuthenticate;
 use App\Filament\Institution\InstitutionPanel;
+use App\Filament\Institution\InstitutionPanelEnvironment;
+use App\Filament\Institution\InstitutionPanelSession;
 use App\Filament\Institution\Resources\ApproachResource;
 use App\Filament\Platform\PlatformPanel;
 use App\Identity\PlatformUserProvider;
@@ -22,7 +25,7 @@ class PanelSeparationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_panel_candidates_have_distinct_guards_and_are_not_registered_or_discovered(): void
+    public function test_local_institution_registration_preserves_distinct_guards_and_denied_platform_and_real_users(): void
     {
         $platform = PlatformPanel::make();
         $institution = InstitutionPanel::make();
@@ -31,12 +34,12 @@ class PanelSeparationTest extends TestCase
         foreach ([$platform, $institution] as $panel) {
             $this->assertContains(PreventRequestForgery::class, $panel->getMiddleware());
             $this->assertContains(AuthenticateSession::class, $panel->getMiddleware());
-            $this->assertContains(Authenticate::class, $panel->getAuthMiddleware());
+            $this->assertContains($panel->getId() === 'institution' ? InstitutionAuthenticate::class : Authenticate::class, $panel->getAuthMiddleware());
             $this->assertFalse($panel->hasLogin());
         }
         $this->assertSame([], $platform->getResources());
         $this->assertSame([ApproachResource::class], $institution->getResources());
-        $this->assertSame(['admin'], array_keys(Filament::getPanels()));
+        $this->assertSame(['admin', 'institution'], array_keys(Filament::getPanels()));
         $this->assertArrayNotHasKey('platform', config('auth.guards'));
         $this->assertNotContains(ApproachResource::class, Filament::getPanel('admin')->getResources());
         $this->assertSame('resources/css/filament/admin/theme.css', $institution->getViteTheme());
@@ -55,7 +58,10 @@ class PanelSeparationTest extends TestCase
         $this->assertSame([], config('authorization.capabilities'));
         foreach (Route::getRoutes() as $route) {
             $this->assertFalse(str_starts_with($route->uri(), 'platform'));
-            $this->assertFalse(str_starts_with($route->uri(), 'institution/workspace'));
+            if (str_starts_with($route->uri(), 'institution/workspace')) {
+                $this->assertContains(InstitutionPanelEnvironment::class, $route->gatherMiddleware());
+                $this->assertContains(InstitutionPanelSession::class, $route->gatherMiddleware());
+            }
         }
     }
 

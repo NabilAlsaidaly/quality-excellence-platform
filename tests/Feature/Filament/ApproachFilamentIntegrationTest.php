@@ -130,8 +130,8 @@ class ApproachFilamentIntegrationTest extends TestCase
         $other = OrganizationalUnit::factory()->for($organization)->create();
         $this->login44($actor, $organization);
         $page = Livewire::test(ApproachWorkspace::class, ['approach' => $approach->public_id])->assertOk()->assertSee('لا توجد نسخة منشورة معتمدة');
-        $page->callAction('edit', data: ['name' => 'اسم معدل'])->assertHasNoActionErrors();
-        $page->callAction('transfer', data: ['owning_unit_public_id' => $other->public_id])->assertHasNoActionErrors();
+        $page->callAction('edit', data: ['name' => 'اسم معدل'])->assertHasNoActionErrors()->assertSee('اسم معدل');
+        $page->callAction('transfer', data: ['owning_unit_public_id' => $other->public_id])->assertHasNoActionErrors()->assertSee($other->name);
         $page->callAction('draft', data: ['body' => 'مسودة أولى <script>alert(1)</script>'])->assertHasNoActionErrors();
         $page->callAction('draft', data: ['body' => 'مسودة ثانية'])->assertHasNoActionErrors()->assertSee('مسودة ثانية');
         $this->assertDatabaseCount('approach_changes', 2);
@@ -199,12 +199,12 @@ class ApproachFilamentIntegrationTest extends TestCase
         $page = Livewire::test(ApproachWorkspace::class, ['approach' => $approach->public_id])->mountAction('edit');
         SyntheticApproachPolicy::$grants[$actor->id]['updateMetadata'] = [];
         $this->deny44(fn () => app(ApproachAccess::class)->update($approach->public_id, ['name' => 'forbidden'], app(ApproachAccess::class)->show($approach->public_id)['edit_token']));
-        $page->fillForm(['name' => 'forbidden'])->callMountedAction();
+        $page->fillForm(['name' => 'forbidden'])->callMountedAction()->assertForbidden();
         $this->assertSame('منهجية اختبار عربية', $approach->fresh()->name);
         app(TenantContext::class)->run($actor, $organization->id,
             fn () => app(RoleManagement::class)->revoke($actor->roles()->firstOrFail(), $actor));
         OrganizationMembership::query()->where('user_id', $actor->id)->delete();
-        $page->call('$refresh')->assertForbidden();
+        Livewire::test(ApproachWorkspace::class, ['approach' => $approach->public_id])->assertForbidden();
         $this->assertDatabaseCount('approach_changes', 0);
     }
 

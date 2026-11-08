@@ -11,6 +11,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
+use Filament\Support\Components\Attributes\Exposed;
 use Filament\Support\Components\Attributes\Unexposed;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\TextColumn;
@@ -32,7 +33,7 @@ class ApproachBank extends Page implements HasTable
     #[Unexposed]
     public function content(Schema $schema): Schema
     {
-        return $schema->components([Text::make(__('approach_workspace.gated')), EmbeddedTable::make()]);
+        return $schema->components([Text::make(__('approach_workspace.local_scope')), EmbeddedTable::make()]);
     }
 
     #[Unexposed]
@@ -43,6 +44,7 @@ class ApproachBank extends Page implements HasTable
             $records->setCollection($records->getCollection()->mapWithKeys(fn (array $record) => [$record['public_id'] => [
                 'public_id' => $record['public_id'], 'name' => $record['name'],
                 'owning_unit' => $record['owning_unit'], 'created_at' => $record['created_at'],
+                'can_view' => $record['can_view'],
             ]]));
 
             return $records;
@@ -54,7 +56,7 @@ class ApproachBank extends Page implements HasTable
             ])->from('md'),
         ])->searchable()->searchPlaceholder(__('approach_workspace.search'))->defaultSort('created_at', 'desc')
             ->paginated([10, 20])->defaultPaginationPageOption(20)->recordActions([])->toolbarActions([])
-            ->recordUrl(fn (array $record) => app(ApproachAccess::class)->can('view', $record['public_id'])
+            ->recordUrl(fn (array $record) => $record['can_view']
                 ? $this->getResourceUrl('workspace', ['approach' => $record['public_id']]) : null)
             ->emptyStateHeading(__('approach_workspace.empty'));
     }
@@ -65,12 +67,22 @@ class ApproachBank extends Page implements HasTable
             ->modalSubmitActionLabel(__('approach_workspace.create'))
             ->visible(fn () => app(ApproachAccess::class)->can('create'))
             ->schema([...ApproachResource::metadataFields(), Select::make('owning_unit_public_id')->label(__('approach_workspace.owner'))
-                ->options(fn () => app(ApproachAccess::class)->ownerOptions('create'))->required()->searchable()])
+                ->options(fn () => app(ApproachAccess::class)->searchOwners('create'))->required()->searchable()
+                ->getSearchResultsUsing(fn (string $search) => app(ApproachAccess::class)->searchOwners('create', search: $search))
+                ->getOptionLabelUsing(fn ($value) => is_string($value) ? (app(ApproachAccess::class)->searchOwners('create', selected: $value)[$value] ?? null) : null)])
             ->action(function (array $data): void {
                 app(ApproachAccess::class)->create($data);
                 Notification::make()->title(__('approach_workspace.saved'))->success()->send();
                 $this->resetTable();
             })];
+    }
+
+    #[Exposed]
+    public function callMountedAction(array $arguments = []): mixed
+    {
+        abort_unless($this->getMountedAction()?->getName() === 'create' && app(ApproachAccess::class)->can('create'), 403);
+
+        return parent::callMountedAction($arguments);
     }
 
     // InteractsWithSchemas includes file-upload support. This Resource accepts none.
