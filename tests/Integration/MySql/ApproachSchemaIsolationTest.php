@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Testing\PendingCommand;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -33,6 +34,19 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
     use DatabaseMigrations;
 
     private array $ownedApproaches = [];
+
+    /** Keep the original feature DDL target independent of later document migrations. */
+    private function rollbackApproachMigrations(int $step): PendingCommand
+    {
+        $paths = [
+            'database/migrations/2026_11_07_000001_create_approaches_table.php',
+            'database/migrations/2026_11_07_000002_create_approach_content_revisions_table.php',
+            'database/migrations/2026_11_08_000001_create_approach_changes_table.php',
+        ];
+
+        return $this->artisan('migrate:rollback', ['--path' => array_slice($paths, -$step),
+            '--step' => DB::table('migrations')->count(), '--force' => true]);
+    }
 
     protected function tearDown(): void
     {
@@ -93,8 +107,8 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
     public function test_actual_schema_and_journal_match_explicit_reviewed_tenant_contract(): void
     {
         $this->assertSame('quality_platform_ci', DB::selectOne('SELECT DATABASE() AS name')->name);
-        $this->assertSame(22, count(glob(database_path('migrations/*.php'))));
-        $this->assertSame(22, DB::table('migrations')->count());
+        $this->assertSame(24, count(glob(database_path('migrations/*.php'))));
+        $this->assertSame(24, DB::table('migrations')->count());
         $schema = TenantIsolationSchemaContract::read(DB::connection());
         $this->assertSame([], TenantIsolationSchemaContract::violations($schema));
         $this->assertSame('organization_id,created_at,id', $schema['approaches']['indexes']['approaches_organization_created_idx']['columns']);
@@ -196,8 +210,8 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
 
     public function test_empty_additive_rollback_repeat_and_atomic_fk_failure_recover_without_partial_table(): void
     {
-        $this->artisan('migrate:rollback', ['--step' => 3, '--force' => true])->assertExitCode(0);
-        $this->assertSame(19, DB::table('migrations')->count());
+        $this->rollbackApproachMigrations(3)->assertExitCode(0);
+        $this->assertSame(21, DB::table('migrations')->count());
         $this->assertFalse(Schema::hasTable('approaches'));
         $this->assertFalse(Schema::hasTable('approach_content_revisions'));
         DB::statement('RENAME TABLE organizational_units TO approach_units_fixture');
@@ -205,28 +219,28 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
             $migration = require database_path('migrations/2026_11_07_000001_create_approaches_table.php');
             $this->sqlFailure(fn () => $migration->up(), 1824);
             $this->assertFalse(Schema::hasTable('approaches'));
-            $this->assertSame(19, DB::table('migrations')->count());
+            $this->assertSame(21, DB::table('migrations')->count());
         } finally {
             DB::statement('RENAME TABLE approach_units_fixture TO organizational_units');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
-        $this->assertSame(22, DB::table('migrations')->count());
+        $this->assertSame(24, DB::table('migrations')->count());
     }
 
     public function test_revision_fk_ddl_failure_preserves_parent_and_retries_with_no_orphan_table(): void
     {
-        $this->artisan('migrate:rollback', ['--step' => 2, '--force' => true])->assertExitCode(0);
+        $this->rollbackApproachMigrations(2)->assertExitCode(0);
         DB::statement('RENAME TABLE approaches TO approach_parent_fixture');
         try {
             $migration = require database_path('migrations/2026_11_07_000002_create_approach_content_revisions_table.php');
             $this->sqlFailure(fn () => $migration->up(), 1824);
             $this->assertFalse(Schema::hasTable('approach_content_revisions'));
-            $this->assertSame(20, DB::table('migrations')->count());
+            $this->assertSame(22, DB::table('migrations')->count());
         } finally {
             DB::statement('RENAME TABLE approach_parent_fixture TO approaches');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
-        $this->assertSame(22, DB::table('migrations')->count());
+        $this->assertSame(24, DB::table('migrations')->count());
     }
 
     public function test_populated_rollback_refuses_before_first_drop_and_existing_table_is_not_adopted(): void
@@ -236,7 +250,7 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
         $revision = $this->trusted($member, fn () => app(SaveApproachContentRevision::class)->execute($member->user, $approach->public_id, 'preserved'));
         $migration = require database_path('migrations/2026_11_07_000001_create_approaches_table.php');
         $this->sqlFailure(fn () => $migration->up(), 1050);
-        foreach ([fn () => Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]),
+        foreach ([fn () => Artisan::call('migrate:rollback', ['--path' => ['database/migrations/2026_11_08_000001_create_approach_changes_table.php'], '--step' => DB::table('migrations')->count(), '--force' => true]),
             fn () => $migration->down()] as $operation) {
             try {
                 $operation();
@@ -245,7 +259,7 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
                 $this->assertStringContainsString('preserved', $error->getMessage());
             }
             $this->assertTrue(Schema::hasTable('approach_content_revisions'));
-            $this->assertSame(22, DB::table('migrations')->count());
+            $this->assertSame(24, DB::table('migrations')->count());
             $this->assertSame('preserved', $revision->fresh()->body);
         }
     }
@@ -509,21 +523,21 @@ PHP;
 
     public function test_new_audit_atomic_ddl_failure_and_empty_retry_preserve_existing_tables(): void
     {
-        $this->artisan('migrate:rollback', ['--step' => 1, '--force' => true])->assertExitCode(0);
-        $this->assertSame(21, DB::table('migrations')->count());
+        $this->rollbackApproachMigrations(1)->assertExitCode(0);
+        $this->assertSame(23, DB::table('migrations')->count());
         DB::statement('RENAME TABLE approaches TO audit_parent_fixture');
         $migration = require database_path('migrations/2026_11_08_000001_create_approach_changes_table.php');
         try {
             $this->sqlFailure(fn () => $migration->up(), 1824);
             $this->assertFalse(Schema::hasTable('approach_changes'));
             $this->assertTrue(Schema::hasTable('approach_content_revisions'));
-            $this->assertSame(21, DB::table('migrations')->count());
+            $this->assertSame(23, DB::table('migrations')->count());
         } finally {
             DB::statement('RENAME TABLE audit_parent_fixture TO approaches');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
         $this->sqlFailure(fn () => $migration->up(), 1050);
         $this->assertTrue(Schema::hasTable('approach_changes'));
-        $this->assertSame(22, DB::table('migrations')->count());
+        $this->assertSame(24, DB::table('migrations')->count());
     }
 }

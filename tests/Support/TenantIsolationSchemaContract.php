@@ -10,6 +10,8 @@ final class TenantIsolationSchemaContract
 {
     // The single executable classification source. Never infer scope from a name.
     public const TABLES = [
+        'documents' => 'direct',
+        'document_versions' => 'direct',
         'approaches' => 'direct',
         'approach_changes' => 'direct',
         'approach_content_revisions' => 'direct',
@@ -39,6 +41,15 @@ final class TenantIsolationSchemaContract
     // Ordered local columns => [target table, ordered target columns]. All are
     // same-schema RESTRICT/RESTRICT. Global actors are NOT membership references.
     private const FOREIGN_KEYS = [
+        'documents' => [
+            'organization_id' => ['organizations', 'id'],
+            'created_by' => ['users', 'id'],
+        ],
+        'document_versions' => [
+            'organization_id' => ['organizations', 'id'],
+            'organization_id,document_id' => ['documents', 'organization_id,id'],
+            'actor_id' => ['users', 'id'],
+        ],
         'approach_changes' => [
             'organization_id' => ['organizations', 'id'],
             'organization_id,approach_id' => ['approaches', 'organization_id,id'],
@@ -93,6 +104,8 @@ final class TenantIsolationSchemaContract
     ];
 
     private const UNIQUE_KEYS = [
+        'documents' => ['id', 'public_id', 'organization_id,id'],
+        'document_versions' => ['id', 'public_id', 'document_id,version_number', 'storage_key'],
         'approach_changes' => ['id', 'public_id'],
         'approaches' => ['id', 'public_id', 'organization_id,id'],
         'approach_content_revisions' => ['id', 'public_id', 'approach_id,version_number'],
@@ -278,7 +291,34 @@ SQL);
                     }
                 }
             }
-            if (in_array($table, ['authorization_changes', 'organizational_unit_changes', 'organization_changes', 'approach_content_revisions', 'approach_changes'], true)) {
+            if (in_array($table, ['documents', 'document_versions'], true)) {
+                $columns = ['id' => 'bigint unsigned', 'public_id' => 'char(26)', 'created_at' => 'timestamp'];
+                $columns += $table === 'documents' ? ['title' => 'varchar(255)', 'description' => 'longtext']
+                    : ['version_number' => 'int unsigned', 'storage_disk' => 'varchar(16)', 'storage_key' => 'varchar(255)',
+                        'sha256' => 'char(64)', 'byte_size' => 'bigint unsigned', 'original_filename' => 'varchar(255)'];
+                foreach ($columns as $column => $type) {
+                    if (($actual['columns'][$column] ?? null) !== ['type' => $type, 'nullable' => false]) {
+                        $errors[] = "$table: $column must retain its required type and non-nullability.";
+                    }
+                }
+                if ($table === 'document_versions') {
+                    foreach ([
+                        'document_versions_number_check' => 'version_number>=1andversion_number<=4294967295',
+                        'document_versions_disk_check' => "regexp_likestorage_disk,'^local$','c'",
+                        'document_versions_hash_check' => "regexp_likesha256,'^[0-9a-f]{64}$','c'",
+                        'document_versions_size_check' => 'byte_size>=0',
+                    ] as $name => $required) {
+                        $expression = str_replace(['`', '(', ')'], '', $actual['checks'][$name]['clause'] ?? '');
+                        if (($actual['checks'][$name]['enforced'] ?? false) !== true || $expression !== $required) {
+                            $errors[] = "$table: required enforced CHECK $name is missing or changed.";
+                        }
+                    }
+                    if (($actual['columns']['detected_media_type'] ?? null) !== ['type' => 'varchar(255)', 'nullable' => true]) {
+                        $errors[] = "$table: detected media type must remain optional technical metadata.";
+                    }
+                }
+            }
+            if (in_array($table, ['authorization_changes', 'organizational_unit_changes', 'organization_changes', 'approach_content_revisions', 'approach_changes', 'document_versions'], true)) {
                 foreach ($actual['foreign_keys'] as $key) {
                     if ($key['delete'] !== 'RESTRICT' || $key['update'] !== 'RESTRICT') {
                         $errors[] = "$table: every historical foreign key must remain RESTRICT on delete and update.";
