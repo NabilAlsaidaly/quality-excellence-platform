@@ -33,7 +33,7 @@ trait DocumentFixtures
 
     protected function prepareDocuments(): void
     {
-        Storage::fake('local');
+        Storage::set('local', Storage::fake('documents-'.strtolower((string) Str::ulid())));
         Event::listen('eloquent.created: '.Document::class, function (Document $document): void {
             $this->documentIds[] = $document->id;
         });
@@ -236,7 +236,8 @@ class DocumentManagementTest extends TestCase
         $b = $this->member();
         $stream = $this->stream();
         try {
-            foreach ([fn () => app(CreateDocumentWithVersion::class)->execute($a->user, $this->data(), $stream),
+            foreach ([fn () => app(CreateDocumentWithVersion::class)->execute(null, $this->data(), $stream),
+                fn () => app(CreateDocumentWithVersion::class)->execute($a->user, $this->data(), $stream),
                 fn () => $this->trusted($a, fn () => app(CreateDocumentWithVersion::class)->execute($b->user, $this->data(), $stream)),
                 fn () => $this->trusted($a, function () use ($a, $stream) {
                     $a->delete();
@@ -320,5 +321,62 @@ class DocumentManagementTest extends TestCase
         $this->assertFalse(Gate::forUser($member->user)->allows('create', Document::class));
         $this->actingAs($member->user)->get('/admin/documents')->assertNotFound();
         $this->post('/institution/'.$member->organization->public_id.'/documents', ['file' => 'forged'])->assertNotFound();
+    }
+
+    public function test_append_rejects_identity_metadata_and_authority_fields_without_touching_v1(): void
+    {
+        $member = $this->member();
+        $first = $this->createDocument($member);
+        $before = DocumentVersion::sole()->fresh()->getAttributes();
+        $files = Storage::disk('local')->allFiles();
+        foreach (['title', 'organization_id', 'actor_id', 'disk', 'path', 'owner_id', 'status'] as $field) {
+            $stream = $this->stream('forged v2');
+            try {
+                $this->trusted($member, fn () => app(AppendDocumentVersion::class)->execute($member->user, $first['document_public_id'],
+                    ['original_filename' => 'synthetic.bin', $field => 'forged'], $stream));
+                $this->fail('Append may not reinterpret document identity or authority fields.');
+            } catch (ValidationException) {
+                $this->assertSame($before, DocumentVersion::sole()->getAttributes());
+                $this->assertSame($files, Storage::disk('local')->allFiles());
+            } finally {
+                fclose($stream);
+            }
+        }
+    }
+
+    public function test_institution_principal_uses_persisted_binding_without_receiving_operational_grants(): void
+    {
+        $legacy = $this->member();
+        $account = User::factory()->create(['principal_type' => 'institution', 'organization_id' => $legacy->organization_id]);
+        $member = OrganizationMembership::factory()->create(['user_id' => $account->id, 'organization_id' => $legacy->organization_id]);
+        try {
+            $first = $this->createDocument($member);
+            $this->assertSame($account->id, Document::sole()->created_by);
+            $this->assertSame($account->id, DocumentVersion::sole()->actor_id);
+            $this->trusted($member, fn () => $this->assertSame($first['document_public_id'],
+                app(ListDocuments::class)->show($account, $first['document_public_id'])['document_public_id']));
+            $this->assertSame([], config('authorization.capabilities'));
+        } finally {
+            $this->cleanupDocuments();
+            $member->delete();
+            $account->delete();
+        }
+    }
+
+    public function test_invalid_metadata_is_rejected_by_action_without_rows_or_blobs(): void
+    {
+        $member = $this->member();
+        foreach ([['title' => ''], ['title' => "\u{2003}"], ['title' => str_repeat('م', 256)],
+            ['description' => null], ['description' => "\xFF"], ['description' => str_repeat('م', 65536)],
+            ['original_filename' => ''], ['original_filename' => str_repeat('a', 256)]] as $invalid) {
+            try {
+                $this->createDocument($member, 'valid bytes', $invalid);
+                $this->fail('Domain validation must reject invalid metadata before storage.');
+            } catch (ValidationException) {
+                $this->assertDatabaseCount('documents', 0);
+                $this->assertDatabaseCount('document_versions', 0);
+                $this->assertSame([], Storage::disk('local')->allFiles());
+            }
+        }
     }
 }

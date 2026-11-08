@@ -26,7 +26,7 @@ trait DocumentMySqlFixtures
 
     protected function prepareDocumentFixtures(): void
     {
-        Storage::fake('local');
+        Storage::set('local', Storage::fake('documents-'.strtolower((string) Str::ulid())));
         Event::listen('eloquent.created: '.Document::class, function (Document $document): void {
             $this->ownedDocuments[] = $document->id;
         });

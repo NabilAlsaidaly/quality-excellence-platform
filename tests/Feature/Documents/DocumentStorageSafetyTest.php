@@ -8,6 +8,7 @@ use App\Models\DocumentVersion;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Events\TransactionCommitted;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
@@ -39,7 +40,7 @@ class DocumentStorageSafetyTest extends TestCase
     public function test_paths_uploaded_file_objects_empty_and_nonfixture_streams_are_rejected(): void
     {
         $member = $this->member();
-        foreach (['/private/file.pdf', new \stdClass, null, $this->stream('')] as $input) {
+        foreach (['/private/file.pdf', new \stdClass, UploadedFile::fake()->create('synthetic.bin', 1), null, $this->stream('')] as $input) {
             try {
                 $this->trusted($member, fn () => app(CreateDocumentWithVersion::class)->execute($member->user, $this->data(), $input));
                 $this->fail('Only nonempty synthetic streams are accepted.');
