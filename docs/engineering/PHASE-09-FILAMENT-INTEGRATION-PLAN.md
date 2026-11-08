@@ -64,3 +64,7 @@ Any further provider/middleware/routes/login file must be proposed separately af
 ## Remaining authority checkpoint
 
 D002 approval must identify first quality-officer bootstrap authority, each action/resource/actual-user assignment, supporting delegation, revocation/expiry and independent reviewer. Do not repeat answered category-level questions. Sensitive path approval is separate from business grant ratification. Until both exist, only isolated synthetic execution and unregistered candidate panels are permitted; preserve default denial in all ordinary environments.
+
+## Lead amendment received before implementation
+
+The lead approved the seven exact proposed paths **for security architecture preparation only**. Explicit constraints: preserve existing authentication/session/backward compatibility; no activation/registration of panels, guards, flows or permissions; no runtime authentication change without a separate prior review; no D002 ratification, production access or deployment. Therefore implement the new, unregistered `app/Identity/PlatformUserProvider.php` candidate and test it in isolation. Do not edit the six existing shared paths merely because they were named: their runtime integrations remain blocked. This amendment does not authorize any additional path. Platform/browser three-guard transitions remain unimplemented and must be reviewed together before registration.
