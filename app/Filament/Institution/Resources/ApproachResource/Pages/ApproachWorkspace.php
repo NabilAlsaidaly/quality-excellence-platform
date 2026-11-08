@@ -91,10 +91,12 @@ class ApproachWorkspace extends Page implements HasTable
             TextColumn::make('created_at')->label(__('approach_workspace.created_at'))->dateTime('Y-m-d H:i'),
         ]), Stack::make([
             TextColumn::make('event')->label(__('approach_workspace.event'))->formatStateUsing(fn (?string $state) => $state ? __('approach_workspace.'.$state) : '—'),
-            TextColumn::make('before_state')->label(__('approach_workspace.before'))->formatStateUsing(fn ($state) => $this->formatHistoryState($state))->wrap(),
-            TextColumn::make('after_state')->label(__('approach_workspace.after'))->formatStateUsing(fn ($state) => $this->formatHistoryState($state))->wrap(),
+            TextColumn::make('before_display')->label(__('approach_workspace.before'))->state(fn (array $record) => $this->formatHistoryState($record['before_state'] ?? null))->wrap(),
+            TextColumn::make('after_display')->label(__('approach_workspace.after'))->state(fn (array $record) => $this->formatHistoryState($record['after_state'] ?? null))->wrap(),
         ])])->from('md')])->paginated([10, 20])->defaultPaginationPageOption(20)->recordActions([])->toolbarActions([])->recordUrl(null)
-            ->emptyStateHeading(__('approach_workspace.empty_history'))->emptyStateDescription(__('approach_workspace.history_denied'));
+            ->emptyStateHeading(__('approach_workspace.empty_history'))->emptyStateDescription(fn () => app(ApproachAccess::class)
+            ->can($this->historyType === 'draft' ? 'viewDraftHistory' : 'viewAuditHistory', $this->approach)
+                ? __('approach_workspace.history_empty_details') : __('approach_workspace.history_denied'));
     }
 
     private function formatHistoryState(mixed $state): string
@@ -103,13 +105,16 @@ class ApproachWorkspace extends Page implements HasTable
             return is_string($state) ? $state : '—';
         }
 
-        return implode('؛ ', array_map(fn ($key, $value) => ($key === 'public_id' ? 'المعرّف' : __('approach_workspace.'.$key)).': '.($value ?? '—'), array_keys($state), array_values($state)));
+        $owner = array_key_exists('public_id', $state);
+
+        return implode('؛ ', array_map(fn ($key, $value) => ($key === 'public_id' ? 'المعرّف' : ($owner && $key === 'name' ? 'اسم الوحدة' : __('approach_workspace.'.$key))).': '.($value ?? '—'), array_keys($state), array_values($state)));
     }
 
     protected function getHeaderActions(): array
     {
         return [
             Action::make('edit')->label(__('approach_workspace.edit'))
+                ->modalSubmitActionLabel('حفظ البيانات')
                 ->visible(fn () => app(ApproachAccess::class)->can('updateMetadata', $this->approach))
                 ->fillForm(fn () => app(ApproachAccess::class)->show($this->approach))
                 ->schema([...ApproachResource::metadataFields(), Hidden::make('edit_token')->required()])
@@ -120,6 +125,7 @@ class ApproachWorkspace extends Page implements HasTable
                     $this->saved();
                 }),
             Action::make('transfer')->label(__('approach_workspace.transfer'))->requiresConfirmation()
+                ->modalSubmitActionLabel('تأكيد النقل')
                 ->modalDescription(__('approach_workspace.confirm_transfer'))
                 ->visible(fn () => app(ApproachAccess::class)->can('changeOwner', $this->approach))
                 ->fillForm(fn () => ['edit_token' => app(ApproachAccess::class)->show($this->approach)['edit_token']])
@@ -130,6 +136,7 @@ class ApproachWorkspace extends Page implements HasTable
                     $this->saved();
                 }),
             Action::make('draft')->label(__('approach_workspace.save_draft'))
+                ->modalSubmitActionLabel(__('approach_workspace.save_draft'))
                 ->visible(fn () => app(ApproachAccess::class)->can('editDraft', $this->approach))
                 ->fillForm(fn () => ['draft_token' => app(ApproachAccess::class)->draftToken($this->approach)])
                 ->schema([Textarea::make('body')->label(__('approach_workspace.body'))->required()->maxLength(1000000)->rows(10), Hidden::make('draft_token')->required()])

@@ -62,6 +62,7 @@ class ApproachBank extends Page implements HasTable
     protected function getHeaderActions(): array
     {
         return [Action::make('create')->label(__('approach_workspace.create'))
+            ->modalSubmitActionLabel(__('approach_workspace.create'))
             ->visible(fn () => app(ApproachAccess::class)->can('create'))
             ->schema([...ApproachResource::metadataFields(), Select::make('owning_unit_public_id')->label(__('approach_workspace.owner'))
                 ->options(fn () => app(ApproachAccess::class)->ownerOptions('create'))->required()->searchable()])

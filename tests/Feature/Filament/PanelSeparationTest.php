@@ -40,6 +40,7 @@ class PanelSeparationTest extends TestCase
         $this->assertArrayNotHasKey('platform', config('auth.guards'));
         $this->assertNotContains(ApproachResource::class, Filament::getPanel('admin')->getResources());
         $this->assertSame('resources/css/filament/admin/theme.css', $institution->getViteTheme());
+        $this->assertSame(Filament::getPanel('admin')->getColors(), $institution->getColors());
         $legacy = User::factory()->create();
         $organization = Organization::factory()->create();
         $institutionActor = User::factory()->create(['principal_type' => 'institution', 'organization_id' => $organization->id]);

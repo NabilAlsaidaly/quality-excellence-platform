@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
@@ -143,7 +144,9 @@ class ApproachFilamentIntegrationTest extends TestCase
         $this->assertFalse(app(ApproachPolicy::class)->approve($actor, $approach));
         $this->visual44('workspace', $page->html());
         $page->mountAction('edit');
-        $this->visual44('edit', $page->html());
+        if (getenv('ISSUE44_VISUAL_FIXTURES') === '1') {
+            $this->visual44('edit', $page->instance()->getSchema($page->instance()->getMountedActionSchemaName())->toHtml());
+        }
     }
 
     public function test_default_policy_and_membership_never_grant_backend_operations(): void
@@ -308,6 +311,22 @@ class ApproachFilamentIntegrationTest extends TestCase
         }
         $this->assertDatabaseCount('approach_changes', 0);
         $this->assertDatabaseCount('approach_content_revisions', 0);
+    }
+
+    public function test_native_empty_validation_and_literal_search_states_are_honest(): void
+    {
+        [$actor, $organization, , $approach] = $this->fixture44();
+        $this->login44($actor, $organization);
+        Livewire::test(ApproachWorkspace::class, ['approach' => $approach->public_id])->assertSee('لم تُحفظ تغييرات')->assertDontSee('لا توجد صلاحية لعرض هذا السجل');
+        $bank = Livewire::test(ApproachBank::class);
+        $bank->callAction('create', data: ['name' => ''])->assertHasActionErrors(['name' => 'required']);
+        $bank->unmountAction(); // Close the invalid modal before interacting with its background table.
+        $bank->searchTable('%')->assertSet('tableSearch', '%');
+        $this->assertSame(0, $bank->instance()->getTableRecords()->count());
+        $bank->assertDontSee($approach->name)->assertSee('لا توجد منهجيات');
+        $this->assertDatabaseCount('approaches', 1);
+        DB::table('approaches')->where('id', $approach->id)->delete(); // Exact synthetic fixture, no history exists.
+        Livewire::test(ApproachBank::class)->assertSee('لا توجد منهجيات');
     }
 
     private function visual44(string $name, string $html): void
