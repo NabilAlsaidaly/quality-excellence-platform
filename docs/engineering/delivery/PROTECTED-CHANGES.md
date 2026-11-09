@@ -1,6 +1,6 @@
 # Future protected changes — proposal only
 
-No protected file is changed by #51. Creating an Issue or this document does not authorize an amendment.
+No protected file is changed by #51 or #53. Creating an Issue or this document does not authorize an amendment. NEXT-APPROACH-AUTHORITY-GATE.md distinguishes the minimum required assignment/registry/schema changes from conditional list/locking changes for the next bounded slice.
 
 | Later surface | File-specific reason/risk | Required approval and validation |
 |---|---|---|
@@ -11,4 +11,4 @@ No protected file is changed by #51. Creating an Issue or this document does not
 | New additive migration paths and shared schema-test inventory | Durable grants/reviews/publication require actual integrity/rollback plan | Propose exact filenames/constraints once behavior ratified; MySQL DDL-failure/retry/rollback and scoped lead review before writing |
 | app/Providers/Filament/InstitutionPanelProvider.php | Mount real modules/navigation; registered runtime access risk | Exact route/middleware/policy diff after approved domain boundaries; #37 integration only after accepted merge; full tests/browser evidence |
 
-This is not an omnibus amendment request. Exact future new migration/UI filenames depend on the owner-approved behavior and must be separately proposed. The current pure invariant subtask needs none of these changes.
+This is not an omnibus amendment request. Exact future new migration/UI filenames depend on the owner-approved behavior and must be separately proposed. Neither the accepted invariant subtask nor Issue53 identity verification needs these changes. The existing registered local/testing workspace requires no additional panel/route/guard change merely to exercise that first bounded draft slice after its authority is approved.
