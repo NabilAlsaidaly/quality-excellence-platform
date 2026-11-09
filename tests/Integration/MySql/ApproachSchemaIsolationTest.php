@@ -26,18 +26,20 @@ use Illuminate\Testing\PendingCommand;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Symfony\Component\Process\Process;
+use Tests\Support\ApproachAssignmentFixtures;
 use Tests\Support\MySqlTestCase;
 use Tests\Support\TenantIsolationSchemaContract;
 
 class ApproachSchemaIsolationTest extends MySqlTestCase
 {
-    use DatabaseMigrations;
+    use ApproachAssignmentFixtures, DatabaseMigrations;
 
     private array $ownedApproaches = [];
 
     /** Keep the original feature DDL target independent of later document migrations. */
     private function rollbackApproachMigrations(int $step): PendingCommand
     {
+        $this->rollbackEmptyAssignmentMigrations();
         $paths = [
             'database/migrations/2026_11_07_000001_create_approaches_table.php',
             'database/migrations/2026_11_07_000002_create_approach_content_revisions_table.php',
@@ -107,8 +109,8 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
     public function test_actual_schema_and_journal_match_explicit_reviewed_tenant_contract(): void
     {
         $this->assertSame('quality_platform_ci', DB::selectOne('SELECT DATABASE() AS name')->name);
-        $this->assertSame(24, count(glob(database_path('migrations/*.php'))));
-        $this->assertSame(24, DB::table('migrations')->count());
+        $this->assertSame(26, count(glob(database_path('migrations/*.php'))));
+        $this->assertSame(26, DB::table('migrations')->count());
         $schema = TenantIsolationSchemaContract::read(DB::connection());
         $this->assertSame([], TenantIsolationSchemaContract::violations($schema));
         $this->assertSame('organization_id,created_at,id', $schema['approaches']['indexes']['approaches_organization_created_idx']['columns']);
@@ -224,7 +226,7 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
             DB::statement('RENAME TABLE approach_units_fixture TO organizational_units');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
-        $this->assertSame(24, DB::table('migrations')->count());
+        $this->assertSame(26, DB::table('migrations')->count());
     }
 
     public function test_revision_fk_ddl_failure_preserves_parent_and_retries_with_no_orphan_table(): void
@@ -240,7 +242,7 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
             DB::statement('RENAME TABLE approach_parent_fixture TO approaches');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
-        $this->assertSame(24, DB::table('migrations')->count());
+        $this->assertSame(26, DB::table('migrations')->count());
     }
 
     public function test_populated_rollback_refuses_before_first_drop_and_existing_table_is_not_adopted(): void
@@ -259,7 +261,7 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
                 $this->assertStringContainsString('preserved', $error->getMessage());
             }
             $this->assertTrue(Schema::hasTable('approach_content_revisions'));
-            $this->assertSame(24, DB::table('migrations')->count());
+            $this->assertSame(26, DB::table('migrations')->count());
             $this->assertSame('preserved', $revision->fresh()->body);
         }
     }
@@ -538,6 +540,6 @@ PHP;
         }
         $this->sqlFailure(fn () => $migration->up(), 1050);
         $this->assertTrue(Schema::hasTable('approach_changes'));
-        $this->assertSame(24, DB::table('migrations')->count());
+        $this->assertSame(26, DB::table('migrations')->count());
     }
 }

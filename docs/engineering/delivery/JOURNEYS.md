@@ -6,7 +6,7 @@ Every journey needs build SHA/time, actor/scope, DB target, real entry/steps, pe
 |---|---|---|---|
 | J01 | Independent accounts/same email, reset/session isolation | L3_PASS; NOT_L4_ACCEPTED | Issue53/report53:45 browser assertions, independent MySQL readback; two institutions/three contexts, CSRF/signed-link/token/session negatives and native RTL375/768/1280. Source alignment, owner acceptance and review remain gates |
 | J02 | Provision institution/first actor and valid unit tree | BLOCKED_OWNER | D-002 bootstrap; coworker #37 unmerged |
-| J03 | Assigned multi-actor Approach edit/reassign/publish | BLOCKED_OWNER | Issue55 named fixture parameters selected TEST_ONLY, v2 exact-file/schema/lock proposal under requested review. No protected approval/implementation/new pass; operational ratification and later transfer/publication remain separate |
+| J03 | Assigned multi-actor Approach edit/reassign/publish | PARTIAL_TEST_ONLY_L3; NOT_L4_ACCEPTED | Issue57 bounded actual-Policy create/initial assignments/metadata/contributor drafts/history PASS64 browser checks plus independent MySQL readback. Review pending. Operational ratification and later transfer/review/publication remain blocked |
 | J04 | Real scanned private file/version/download | BLOCKED_OWNER | D-007 and D-002; #42 trusted internal bytes are not user intake |
 | J05 | Separate document/evidence decisions | BLOCKED_OWNER | P3/P4 and D-027 |
 | J06 | Automatic review/correction/approved publication | BLOCKED_TECHNICAL | P1/P4 implementation/schema approval |
@@ -22,3 +22,5 @@ Every journey needs build SHA/time, actor/scope, DB target, real entry/steps, pe
 Protected earlier demo: actual native Filament login/account/dashboard/bank/create/metadata/draft/history/logout persisted successfully with synthetic named test assignments. Its evidence remains local/private, prior build `3cfea15`; Issue53 did not alter its DB or service. It is not approved customer acceptance. J01 intentionally verifies denied workspace access with the real Policy; it does not repeat synthetic Approach CRUD or claim J03 success.
 
 Issue53/PR54 merged at27c5b5e with post-merge CI42640302018 SUCCESS524/5488 accepts the bounded existing J01 L3 checkpoint only. Issue55 does not duplicate it, issue grants or claim new browser evidence. Its J03 implementation/browser plan is gated in ISSUE-55-CLOSURE-GATE.md.
+
+Later Issue57 explicitly authorizes the bounded TEST_ONLY implementation. Report57 records new actual Policy and persisted assignments, native Filament HTTP/Livewire64 checks, resource/tenant/CSRF negatives and independent SQL readback. J03 remains partial because reassignment/publication and operational owner ratification are not included. Scoped revocation/concurrency evidence does not accept the full J12 or J11–J14 journeys. Earlier Issue55 proposal-only statements are historical, superseded only within the Issue57 approved subset.

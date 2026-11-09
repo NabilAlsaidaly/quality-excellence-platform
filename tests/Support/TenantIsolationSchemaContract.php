@@ -10,6 +10,8 @@ final class TenantIsolationSchemaContract
 {
     // The single executable classification source. Never infer scope from a name.
     public const TABLES = [
+        'approach_assignments' => 'direct',
+        'approach_assignment_changes' => 'direct',
         'documents' => 'direct',
         'document_versions' => 'direct',
         'approaches' => 'direct',
@@ -41,6 +43,21 @@ final class TenantIsolationSchemaContract
     // Ordered local columns => [target table, ordered target columns]. All are
     // same-schema RESTRICT/RESTRICT. Global actors are NOT membership references.
     private const FOREIGN_KEYS = [
+        'approach_assignments' => [
+            'organization_id' => ['organizations', 'id'],
+            'grantee_id,organization_id' => ['users', 'id,organization_id'],
+            'issuer_id,organization_id' => ['users', 'id,organization_id'],
+            'initial_contributor_id,organization_id' => ['users', 'id,organization_id'],
+            'organization_id,approach_id' => ['approaches', 'organization_id,id'],
+            'revoked_by,organization_id' => ['users', 'id,organization_id'],
+        ],
+        'approach_assignment_changes' => [
+            'organization_id' => ['organizations', 'id'],
+            'organization_id,fixture_id,assignment_id,subject_id' => ['approach_assignments', 'organization_id,fixture_id,id,grantee_id'],
+            'organization_id,approach_id' => ['approaches', 'organization_id,id'],
+            'actor_id,organization_id' => ['users', 'id,organization_id'],
+            'subject_id,organization_id' => ['users', 'id,organization_id'],
+        ],
         'documents' => [
             'organization_id' => ['organizations', 'id'],
             'created_by' => ['users', 'id'],
@@ -104,6 +121,9 @@ final class TenantIsolationSchemaContract
     ];
 
     private const UNIQUE_KEYS = [
+        'approach_assignments' => ['id', 'public_id', 'organization_id,id', 'organization_id,fixture_id,id,grantee_id',
+            'organization_id,fixture_id,grantee_id,operation,scope_key'],
+        'approach_assignment_changes' => ['id', 'public_id', 'organization_id,fixture_id,event_key'],
         'documents' => ['id', 'public_id', 'organization_id,id'],
         'document_versions' => ['id', 'public_id', 'document_id,version_number', 'storage_key'],
         'approach_changes' => ['id', 'public_id'],
@@ -125,6 +145,8 @@ final class TenantIsolationSchemaContract
     ];
 
     private const NULLABLE_REFERENCES = [
+        'approach_assignments' => ['approach_id', 'initial_contributor_id', 'revoked_by'],
+        'approach_assignment_changes' => ['approach_id', 'assignment_id'],
         'approach_changes' => ['previous_owner_id', 'new_owner_id'],
         'organizational_units' => ['parent_id'],
         'authorization_changes' => ['subject_user_id'],
@@ -132,9 +154,17 @@ final class TenantIsolationSchemaContract
     ];
 
     private const CHECKS = [
+        'approach_assignment_changes' => ['approach_assignment_changes_event_check', "(eventin('granted','revoked','expiration_observed','access_denied'))"],
         'approach_changes' => ['approach_changes_event_check', "(eventin('metadata_updated','owner_changed'))"],
         'organizational_unit_changes' => ['unit_changes_event_check', "(eventin('created','renamed','reparented'))"],
         'organization_changes' => ['organization_changes_event_check', "(eventin('created','renamed'))"],
+    ];
+
+    private const ASSIGNMENT_CHECKS = [
+        'approach_assignments' => ['approach_assignments_test_check', 'approach_assignments_scope_check',
+            'approach_assignments_recipient_check', 'approach_assignments_time_check', 'approach_assignments_revocation_check'],
+        'approach_assignment_changes' => ['approach_assignment_changes_test_check', 'approach_assignment_changes_reference_check',
+            'approach_assignment_changes_operation_check'],
     ];
 
     /** Read only metadata, never tenant rows. Call after MySqlTestCase's guards. */
@@ -190,7 +220,7 @@ WHERE t.TABLE_SCHEMA = DATABASE() AND t.CONSTRAINT_TYPE = 'CHECK'
 ORDER BY t.TABLE_NAME, t.CONSTRAINT_NAME
 SQL);
         foreach ($checks as $check) {
-            // Only the two fixed literal event expressions above, not a SQL parser.
+            // Only the bounded literal event expressions above, not a SQL parser.
             // Preserve literal contents: whitespace/charset text inside a value
             // must never make a different event appear to be an approved one.
             $clause = preg_replace_callback("/'[^']*'|`event`|_utf8mb4|\\s+/", static fn (array $match): string => match (true) {
@@ -241,8 +271,9 @@ SQL);
                         continue; // Already checked for every directly scoped table.
                     }
                     $nullable = in_array($column, self::NULLABLE_REFERENCES[$table] ?? [], true);
-                    if (($actual['columns'][$column] ?? null) !== ['type' => 'bigint unsigned', 'nullable' => $nullable]) {
-                        $errors[] = "$table: $column must retain its reviewed BIGINT UNSIGNED type and nullability.";
+                    $type = $table === 'approach_assignment_changes' && $column === 'fixture_id' ? 'char(32)' : 'bigint unsigned';
+                    if (($actual['columns'][$column] ?? null) !== ['type' => $type, 'nullable' => $nullable]) {
+                        $errors[] = "$table: $column must retain its reviewed ".strtoupper($type).' type and nullability.';
                     }
                 }
                 $required = ['columns' => $columns, 'target' => $target, 'references' => $references,
@@ -258,11 +289,29 @@ SQL);
             }
             if (isset(self::CHECKS[$table])) {
                 [$name, $clause] = self::CHECKS[$table];
-                if (($actual['columns']['event'] ?? null) !== ['type' => 'varchar(20)', 'nullable' => false]) {
-                    $errors[] = "$table: event must remain non-null VARCHAR(20).";
+                $eventType = $table === 'approach_assignment_changes' ? 'varchar(24)' : 'varchar(20)';
+                if (($actual['columns']['event'] ?? null) !== ['type' => $eventType, 'nullable' => false]) {
+                    $errors[] = "$table: event must remain non-null ".strtoupper($eventType).'.';
                 }
                 if (($actual['checks'][$name] ?? null) !== ['enforced' => true, 'clause' => $clause]) {
                     $errors[] = "$table: required enforced CHECK $name is missing or changed.";
+                }
+            }
+            if (isset(self::ASSIGNMENT_CHECKS[$table])) {
+                foreach (self::ASSIGNMENT_CHECKS[$table] as $name) {
+                    if (($actual['checks'][$name]['enforced'] ?? false) !== true) {
+                        $errors[] = "$table: required enforced assignment CHECK $name is missing or disabled.";
+                    }
+                }
+                $columns = ['id' => 'bigint unsigned', 'public_id' => 'char(26)', 'fixture_id' => 'char(32)',
+                    'classification' => 'varchar(12)', 'scenario' => 'varchar(32)', 'operation' => 'varchar(32)', 'created_at' => 'datetime'];
+                if ($table === 'approach_assignments') {
+                    $columns += ['scope_kind' => 'varchar(16)', 'starts_at' => 'datetime', 'expires_at' => 'datetime'];
+                }
+                foreach ($columns as $column => $type) {
+                    if (($actual['columns'][$column] ?? null) !== ['type' => $type, 'nullable' => false]) {
+                        $errors[] = "$table: $column must retain its reviewed assignment type and nullability.";
+                    }
                 }
             }
             // An added cascade must not erase history through a new reference.

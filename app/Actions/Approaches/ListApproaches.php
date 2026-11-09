@@ -2,6 +2,7 @@
 
 namespace App\Actions\Approaches;
 
+use App\Authorization\ApproachAssignmentAccess;
 use App\Models\Approach;
 use App\Models\ApproachChange;
 use App\Models\OrganizationalUnit;
@@ -18,7 +19,17 @@ final class ListApproaches
 
     public function execute(?User $actor, string $search = '', string $sort = 'created_at', string $direction = 'desc', int $page = 1, int $perPage = 20): LengthAwarePaginator
     {
-        return $this->boundary->withinContext($actor, function (int $organizationId) use ($search, $sort, $direction, $page, $perPage): LengthAwarePaginator {
+        return $this->listing($actor, $search, $sort, $direction, $page, $perPage, false);
+    }
+
+    public function executeAssigned(User $actor, string $search = '', string $sort = 'created_at', string $direction = 'desc', int $page = 1, int $perPage = 20): LengthAwarePaginator
+    {
+        return $this->listing($actor, $search, $sort, $direction, $page, $perPage, true);
+    }
+
+    private function listing(?User $actor, string $search, string $sort, string $direction, int $page, int $perPage, bool $assigned): LengthAwarePaginator
+    {
+        return $this->boundary->withinContext($actor, function (int $organizationId) use ($actor, $search, $sort, $direction, $page, $perPage, $assigned): LengthAwarePaginator {
             if (! in_array($sort, ['name', 'created_at'], true) || ! in_array($direction, ['asc', 'desc'], true)
                 || $page < 1 || $page > 1000000 || $perPage < 1 || $perPage > 100 || mb_strlen($search) > 255
                 || ! mb_check_encoding($search, 'UTF-8')) {
@@ -26,10 +37,14 @@ final class ListApproaches
             }
             // ! escapes LIKE metacharacters identically on both supported engines.
             $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
-            $result = Approach::query()->where('organization_id', $organizationId)
-                ->with(['owningUnit' => fn ($query) => $query->where('organization_id', $organizationId)])
+            $query = Approach::query()->where('approaches.organization_id', $organizationId)
+                ->with(['owningUnit' => fn ($query) => $query->where('organization_id', $organizationId)]);
+            if ($assigned) {
+                $query = app(ApproachAssignmentAccess::class)->constrain($query, $actor);
+            }
+            $result = $query
                 ->when($search !== '', fn ($query) => $query->whereRaw("name LIKE ? ESCAPE '!'", [$pattern]))
-                ->orderBy($sort, $direction)->orderBy('id', $direction)->paginate($perPage, ['*'], 'page', $page);
+                ->orderBy('approaches.'.$sort, $direction)->orderBy('approaches.id', $direction)->paginate($perPage, ['*'], 'page', $page);
             // No request URL/query is trusted or copied into pagination links.
             $result->withPath('');
             $result->setCollection($result->getCollection()->map(fn ($approach) => $this->metadata($approach)));
