@@ -1,6 +1,6 @@
 # Future protected changes — proposal only
 
-No protected file is changed by #51 or #53. Creating an Issue or this document does not authorize an amendment. NEXT-APPROACH-AUTHORITY-GATE.md distinguishes the minimum required assignment/registry/schema changes from conditional list/locking changes for the next bounded slice.
+No protected file is changed by #51/#53/#55. Creating an Issue/proposal does not authorize an amendment. Current Issue55 v2 privately inventories36 exact paths with necessity/change/security/boundary. Selected TEST_ONLY filtering/atomicity/audit/current-read semantics make its seven existing source boundaries required proposed changes; engineering lead expressly selected review without approval. Earlier generic conditional lists below do not supersede that current scope.
 
 | Later surface | File-specific reason/risk | Required approval and validation |
 |---|---|---|
@@ -12,3 +12,5 @@ No protected file is changed by #51 or #53. Creating an Issue or this document d
 | app/Providers/Filament/InstitutionPanelProvider.php | Mount real modules/navigation; registered runtime access risk | Exact route/middleware/policy diff after approved domain boundaries; #37 integration only after accepted merge; full tests/browser evidence |
 
 This is not an omnibus amendment request. Exact future new migration/UI filenames depend on the owner-approved behavior and must be separately proposed. Neither the accepted invariant subtask nor Issue53 identity verification needs these changes. The existing registered local/testing workspace requires no additional panel/route/guard change merely to exercise that first bounded draft slice after its authority is approved.
+
+Issue55 proposal includes an explicit audit-only InstitutionPanelSession amendment; this is not general session/auth permission. Other guard/session/provider/route/CI/coworker paths stay excluded. Future post-transfer, new audit event or additional UI needs require exact evidence and another amendment. No app/test/migration file has been edited for the current proposal.

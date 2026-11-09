@@ -2,7 +2,7 @@
 
 Canonical SRS fetched 2026-11-09. Original IDs/scope/status tags retained; source prose stays private. SOURCE is not granular permission ratification. Newer scope reconciliation is in DECISIONS. Old display-only maturity wording is historical. Every row remains unaccepted pending its full journey/L4; ENG is deferred, not a local MVP prerequisite.
 
-Accepted baseline main16a448fd244844d704438f466d6a8d986df8be18; post-merge CI42612946294 SUCCESS511/5473, Issue51/PR52 bounded L1 verified. Only FR-MAT-001/007/008 have direct partial invariant coverage; immutability is not a persisted snapshot. Issue53 adds45 real browser assertions and MySQL readback for the bounded J01 identity candidate, not provisioning/invitations/grants or every FR-ID row. All requirement acceptance states below remain unchanged; L3 success is not L4, owner ratification or full-phase completion. Its containing Draft PR records the exact final-head CI receipt.
+Accepted baseline main27c5b5e70cedaee5453e72ec09c382d6825929c1; post-merge CI42640302018 SUCCESS524/5488. Issue51 L1 and Issue53 J01 L3 are bounded accepted checkpoints. Only FR-MAT001/007/008 have direct partial invariant coverage; immutability is not a persistent snapshot. Existing45 browser checks do not accept provisioning/invitations/grants or every FR-ID row. Issue55 verifies the current owner source and preserves received responsibilities while narrowing unratified operational grants; no new test/journey success or requirement acceptance is claimed. Exact containing-head CI is recorded in its Draft PR; all acceptance states below remain unchanged.
 
 | Requirement | Acceptance | Test ID | Original tags | Phase | Journey | Implementation / pending gate | Acceptance |
 |---|---|---|---|---|---|---|---|

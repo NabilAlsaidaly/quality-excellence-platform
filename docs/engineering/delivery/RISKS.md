@@ -3,8 +3,9 @@
 | Risk | Severity/impact | Mitigation / decision | State |
 |---|---|---|---|
 | Unratified operational authority mistaken for grants | Critical / tenant privilege escalation | D-002 gate; empty registry, real policy default-deny; #50 synthetic only | OPEN |
+| Selected local fixture mistaken for owner ratification/file permission | Critical / unauthorized activation | J03_LOCAL_APPROACH_001 TEST_ONLY; explicit scope review without approval. V2 proposal only; no sensitive changes/L4 claim | CONTROLLED |
 | Stale canonical wording/ADR004 status vs newer sources | High / incorrect scope or identity assumption | Preserve source history; trace amendment separately, no self-acceptance | OPEN |
-| Latest private source version not independently located | High / decisions might be re-asked or misquoted | Distinguish located candidates from exact latest reference; use independent evidence only | UNDER_REVIEW |
+| Current owner source identity confused with an unavailable copy | High / settled decisions might be re-asked | User confirmed current available source and reported extracted-text identity; exact available bytes/path/hash recorded privately. Agent comparison provenance stated accurately | RESOLVED FOR CURRENT SOURCE |
 | Demo disruption | High / user's active local testing | Preserve process/ports/container/DB and source hashes; no shared protected source edits | MITIGATED FOR CURRENT SCOPE |
 | Coworker #37 collision | High / lost parallel work | No edits/duplication; independently reviewed merge required | MITIGATED FOR CURRENT SCOPE |
 | Unscanned file or arbitrary MIME/size policy | Critical / private file compromise | No user intake until D-007 adapter/whitelist approved; fail closed | BLOCKED |
