@@ -15,11 +15,12 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Tests\Support\ApproachAssignmentFixtures;
 use Tests\Support\MySqlTestCase;
 
 class PermissionIntegrityTest extends MySqlTestCase
 {
-    use DatabaseMigrations;
+    use ApproachAssignmentFixtures, DatabaseMigrations;
 
     public function test_new_identifiers_are_unsigned_bigint_and_composite_scope_is_real(): void
     {
@@ -100,6 +101,7 @@ class PermissionIntegrityTest extends MySqlTestCase
 
     public function test_inline_fk_failure_creates_no_partial_table_and_retry_succeeds(): void
     {
+        $this->rollbackEmptyAssignmentMigrations();
         // Include the later unit/organization history before the original four.
         $this->artisan('migrate:rollback', ['--step' => 16, '--force' => true])->assertExitCode(0);
         $this->assertFalse(Schema::hasTable('role_has_permissions'));
@@ -115,7 +117,7 @@ class PermissionIntegrityTest extends MySqlTestCase
         }
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         $this->assertTrue(Schema::hasTable('role_has_permissions'));
-        $this->assertSame(24, DB::table('migrations')->count());
+        $this->assertSame(26, DB::table('migrations')->count());
         $this->assertSame(2, (int) DB::selectOne("SELECT COUNT(*) AS total FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE = 'organizational_units'")->total);
     }
 
@@ -157,6 +159,7 @@ class PermissionIntegrityTest extends MySqlTestCase
     {
         $unit = OrganizationalUnit::factory()->create();
         $settings = DB::selectOne('SELECT @@GLOBAL.log_bin AS binlog, @@GLOBAL.log_bin_trust_function_creators AS trusted');
+        $this->rollbackEmptyAssignmentMigrations();
         $this->artisan('migrate:rollback', ['--step' => 18, '--force' => true])->assertExitCode(0);
         foreach (['permissions', 'roles', 'role_has_permissions', 'model_has_roles', 'model_has_permissions', 'authorization_changes'] as $table) {
             $this->assertFalse(Schema::hasTable($table));

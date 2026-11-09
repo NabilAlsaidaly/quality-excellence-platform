@@ -4,9 +4,12 @@ namespace App\Filament\Institution\Approaches;
 
 use App\Actions\Approaches\ChangeApproachOwner;
 use App\Actions\Approaches\CreateApproach;
+use App\Actions\Approaches\CreateAuthorizedApproach;
 use App\Actions\Approaches\ListApproaches;
+use App\Actions\Approaches\RecordApproachAccessDecision;
 use App\Actions\Approaches\SaveApproachContentRevision;
 use App\Actions\Approaches\UpdateApproach;
+use App\Authorization\ApproachAssignmentAccess;
 use App\Authorization\TenantContext;
 use App\Models\Approach;
 use App\Models\OrganizationalUnit;
@@ -31,7 +34,7 @@ final class ApproachAccess
             && $this->can('list');
     }
 
-    private function within(string $operation, ?string $publicId, Closure $callback): mixed
+    private function within(string $operation, ?string $publicId, Closure $callback, bool $audit = true): mixed
     {
         if (! app()->environment(['local', 'testing'])) {
             throw new AuthorizationException;
@@ -47,33 +50,49 @@ final class ApproachAccess
             throw new AuthorizationException;
         }
 
-        return app(TenantContext::class)->run($actor, $organization, fn () => app(CreateApproach::class)->withinContext($actor,
-            function (int $organizationId, User $current) use ($operation, $publicId, $callback, $actor): mixed {
-                // Login freshness checked before waiting for the lock can age.
-                // The existing boundary supplies the current locked User row.
-                if (! hash_equals($current->getAuthPassword(), $actor->getAuthPassword())) {
-                    throw new AuthorizationException;
-                }
-                $resource = null;
-                if ($publicId !== null) {
-                    $resource = Str::isUlid($publicId) ? Approach::query()->where('organization_id', $organizationId)
-                        ->where('public_id', $publicId)->lockForUpdate()->first() : null;
-                    if ($resource === null) {
-                        throw (new ModelNotFoundException)->setModel(Approach::class);
+        try {
+            return app(TenantContext::class)->run($actor, $organization, fn () => app(CreateApproach::class)->withinContext($actor,
+                function (int $organizationId, User $current) use ($operation, $publicId, $callback, $actor): mixed {
+                    // Login freshness checked before waiting for the lock can age.
+                    // The existing boundary supplies the current locked User row.
+                    if (! hash_equals($current->getAuthPassword(), $actor->getAuthPassword())) {
+                        throw new AuthorizationException;
                     }
-                }
-                if (! app(ApproachPolicy::class)->allowsOperation($current, $operation, $resource)) {
-                    throw new AuthorizationException;
-                }
+                    $resource = null;
+                    if ($publicId !== null) {
+                        $resource = Str::isUlid($publicId) ? Approach::query()->where('organization_id', $organizationId)
+                            ->where('public_id', $publicId)->lockForUpdate()->first() : null;
+                        if ($resource === null) {
+                            throw (new ModelNotFoundException)->setModel(Approach::class);
+                        }
+                    }
+                    if (! app(ApproachPolicy::class)->allowsOperation($current, $operation, $resource)) {
+                        throw new AuthorizationException;
+                    }
 
-                return $callback($current, $resource);
-            }));
+                    $result = $callback($current, $resource);
+                    if (ApproachAssignmentAccess::context() !== null && ! app(ApproachPolicy::class)->allowsOperation($current, $operation, $resource)) {
+                        throw new AuthorizationException;
+                    }
+
+                    return $result;
+                }));
+        } catch (AuthorizationException|ModelNotFoundException $error) {
+            if ($audit) {
+                try {
+                    app(RecordApproachAccessDecision::class)->execute($actor, $operation, $publicId);
+                } catch (AuthorizationException) {
+                    // An unverified/removed actor must not fabricate a tenant event.
+                }
+            }
+            throw $error;
+        }
     }
 
     public function can(string $operation, ?string $publicId = null): bool
     {
         try {
-            return $this->within($operation, $publicId, fn () => true);
+            return $this->within($operation, $publicId, fn () => true, audit: false);
         } catch (AuthorizationException|ModelNotFoundException) {
             return false;
         }
@@ -84,7 +103,10 @@ final class ApproachAccess
         // list is its own organization-wide metadata grant in synthetic tests;
         // it never grants detail, draft, audit or mutations for any resource.
         return $this->within('list', null, function (User $actor) use ($search, $sort, $direction, $page, $perPage): LengthAwarePaginator {
-            $records = app(ListApproaches::class)->execute($actor, $search, $sort, $direction, $page, $perPage);
+            $reader = app(ListApproaches::class);
+            $records = ApproachAssignmentAccess::context() !== null
+                ? $reader->executeAssigned($actor, $search, $sort, $direction, $page, $perPage)
+                : $reader->execute($actor, $search, $sort, $direction, $page, $perPage);
             $viewable = app(ApproachPolicy::class)->viewablePublicIds($actor, $records->getCollection()->pluck('public_id')->all());
             $records->setCollection($records->getCollection()->map(fn (array $record) => $record + ['can_view' => in_array($record['public_id'], $viewable, true)]));
 
@@ -119,7 +141,9 @@ final class ApproachAccess
 
     public function create(array $data): string
     {
-        return $this->within('create', null, fn (User $actor) => app(CreateApproach::class)->execute($actor, $data)->public_id);
+        return $this->within('create', null, fn (User $actor) => ApproachAssignmentAccess::context() !== null
+            ? app(CreateAuthorizedApproach::class)->execute($actor, $data)->public_id
+            : app(CreateApproach::class)->execute($actor, $data)->public_id);
     }
 
     public function update(string $publicId, array $data, string $token): void

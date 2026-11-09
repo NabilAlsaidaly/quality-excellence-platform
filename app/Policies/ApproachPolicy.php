@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Authorization\ApproachAssignmentAccess;
 use App\Authorization\TenantAuthorization;
 use App\Authorization\TenantContext;
 use App\Models\Approach;
@@ -62,14 +63,14 @@ class ApproachPolicy
         }
         $organization = Organization::query()->find($context->organizationId());
 
-        // Intentionally unregistered. Tests register this structural predicate only
-        // in isolated fixtures, then independently simulate per-resource assignments.
+        // Structural recognition alone is insufficient. The actual assignment
+        // predicate additionally requires the trusted request-bound TEST_ONLY scope.
         return $organization !== null && app(TenantAuthorization::class)->allows($actor, 'approaches.access', $organization) ? $current : null;
     }
 
     protected function hasAssignment(User $actor, string $operation, ?Approach $resource): bool
     {
-        return false;
+        return app(ApproachAssignmentAccess::class)->allows($actor, $operation, $resource);
     }
 
     public function viewAny(User $actor): bool

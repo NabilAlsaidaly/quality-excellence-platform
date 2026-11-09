@@ -11,11 +11,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Tests\Support\ApproachAssignmentFixtures;
 use Tests\Support\MySqlTestCase;
 
 class TriggerMigrationSafetyTest extends MySqlTestCase
 {
-    use DatabaseMigrations;
+    use ApproachAssignmentFixtures, DatabaseMigrations;
 
     private const MIGRATION = '2026_10_31_000003_create_organizational_units_table';
 
@@ -193,6 +194,7 @@ class TriggerMigrationSafetyTest extends MySqlTestCase
 
     private function removeUnitsMigration(): void
     {
+        $this->rollbackEmptyAssignmentMigrations();
         // Additional additive migrations may follow units. Select all journal
         // candidates but roll back units and its new dependent history table,
         // retaining the original

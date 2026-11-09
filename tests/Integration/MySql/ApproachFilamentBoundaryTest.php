@@ -83,7 +83,7 @@ class ApproachFilamentBoundaryTest extends MySqlTestCase
         $this->assertDatabaseCount('approach_changes', 1);
         $this->assertDatabaseCount('approach_content_revisions', 0);
         $this->assertSame('first', $approach->fresh()->name);
-        $this->assertSame(24, DB::table('migrations')->count());
+        $this->assertSame(26, DB::table('migrations')->count());
     }
 
     public function test_mysql_current_lock_rejects_revoked_membership_inside_old_snapshot(): void

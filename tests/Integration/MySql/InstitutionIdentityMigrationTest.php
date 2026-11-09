@@ -17,11 +17,12 @@ use Illuminate\Support\Facades\Schema;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Symfony\Component\Process\Process;
+use Tests\Support\ApproachAssignmentFixtures;
 use Tests\Support\MySqlTestCase;
 
 class InstitutionIdentityMigrationTest extends MySqlTestCase
 {
-    use DatabaseMigrations;
+    use ApproachAssignmentFixtures, DatabaseMigrations;
 
     private array $ownedAccounts = [];
 
@@ -70,12 +71,13 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
         $old = DB::table('users')->orderBy('id')->get(['id', 'name', 'email', 'password', 'remember_token', 'email_verified_at'])->toArray();
         $history = DB::table('organization_changes')->get()->toArray();
         $memberships = DB::table('organization_memberships')->orderBy('id')->get()->toArray();
+        $this->rollbackEmptyAssignmentMigrations();
         $this->artisan('migrate:rollback', ['--path' => array_map(fn ($path) => 'database/migrations/'.basename($path), glob(database_path('migrations/2026_11_05_*.php'))),
             '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
         $this->assertSame(19, DB::table('migrations')->count());
         $this->assertFalse(Schema::hasColumn('users', 'principal_type'));
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
-        $this->assertSame(24, DB::table('migrations')->count());
+        $this->assertSame(26, DB::table('migrations')->count());
         $this->assertEquals($old, DB::table('users')->orderBy('id')->get(['id', 'name', 'email', 'password', 'remember_token', 'email_verified_at'])->toArray());
         $this->assertEquals($history, DB::table('organization_changes')->get()->toArray());
         $this->assertEquals($memberships, DB::table('organization_memberships')->orderBy('id')->get()->toArray());
@@ -94,6 +96,7 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
 
     public function test_missing_fk_target_fails_atomic_alter_without_partial_columns_and_ordinary_migrate_retries(): void
     {
+        $this->rollbackEmptyAssignmentMigrations();
         $this->artisan('migrate:rollback', ['--path' => array_map(fn ($path) => 'database/migrations/'.basename($path), glob(database_path('migrations/2026_11_05_*.php'))),
             '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
         DB::statement('RENAME TABLE organizations TO identity_root_fixture');
@@ -112,7 +115,7 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
             DB::statement('RENAME TABLE identity_root_fixture TO organizations');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
-        $this->assertSame(24, DB::table('migrations')->count());
+        $this->assertSame(26, DB::table('migrations')->count());
     }
 
     public function test_existing_unjournaled_shape_is_not_adopted_and_semantic_rollback_does_not_erase_accounts_or_tokens(): void
@@ -129,7 +132,7 @@ class InstitutionIdentityMigrationTest extends MySqlTestCase
         } catch (RuntimeException $error) {
             $this->assertNotEmpty($error->getMessage());
         }
-        $this->assertSame(24, DB::table('migrations')->count());
+        $this->assertSame(26, DB::table('migrations')->count());
         foreach (glob(database_path('migrations/2026_11_05_*.php')) as $path) {
             try {
                 (require $path)->down();

@@ -1,4 +1,6 @@
-# Future protected changes — proposal only
+# Protected change authority and historical proposals
+
+**Current: Issue57 supersedes the historical proposal-only wait below for rows01–04/08–25 only.** The actual full MySQL regression demonstrated the conditional need for all eleven schema/fixture compatibility paths26–36; report57 records failures and exact maintenance. TenantAuthorization, RoleManagement and InstitutionPanelSession remain excluded/unchanged. No protected file beyond that bounded inventory is authorized. Operational grants and later shared serialization/transfer/review/session changes still need separate applicable approval.
 
 No protected file is changed by #51/#53/#55. Creating an Issue/proposal does not authorize an amendment. Current Issue55 v2 privately inventories36 exact paths with necessity/change/security/boundary. Selected TEST_ONLY filtering/atomicity/audit/current-read semantics make its seven existing source boundaries required proposed changes; engineering lead expressly selected review without approval. Earlier generic conditional lists below do not supersede that current scope.
 

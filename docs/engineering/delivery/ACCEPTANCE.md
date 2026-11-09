@@ -1,5 +1,7 @@
 # Product acceptance and source-truth register
 
+Issue57 adds a bounded TEST_ONLY real-Policy J03 candidate, native browser64 checks and independent MySQL readback (report57). This supersedes Issue55's historical no-implementation status only for the approved subset; it does not accept full FR-APP rows, operational grants, L4 or any overall phase. Row acceptance states remain unchanged; transfer/review/publication and genuine owner/coworker dependencies persist.
+
 Canonical SRS fetched 2026-11-09. Original IDs/scope/status tags retained; source prose stays private. SOURCE is not granular permission ratification. Newer scope reconciliation is in DECISIONS. Old display-only maturity wording is historical. Every row remains unaccepted pending its full journey/L4; ENG is deferred, not a local MVP prerequisite.
 
 Accepted baseline main27c5b5e70cedaee5453e72ec09c382d6825929c1; post-merge CI42640302018 SUCCESS524/5488. Issue51 L1 and Issue53 J01 L3 are bounded accepted checkpoints. Only FR-MAT001/007/008 have direct partial invariant coverage; immutability is not a persistent snapshot. Existing45 browser checks do not accept provisioning/invitations/grants or every FR-ID row. Issue55 verifies the current owner source and preserves received responsibilities while narrowing unratified operational grants; no new test/journey success or requirement acceptance is claimed. Exact containing-head CI is recorded in its Draft PR; all acceptance states below remain unchanged.
@@ -18,16 +20,16 @@ Accepted baseline main27c5b5e70cedaee5453e72ec09c382d6825929c1; post-merge CI426
 | FR-ID-010 | AC-ID-010 | T-ID-010 | CORE-MVP,OPEN | P1/P2 | J01,J02,J11–J13 | #32/#48 identity; grants/source sync gated | NOT_ACCEPTED |
 | FR-ID-011 | AC-ID-011 | T-ID-011 | CORE-MVP,PROPOSED | P1/P2 | J01,J02,J11–J13 | #32/#48 identity; grants/source sync gated | NOT_ACCEPTED |
 | FR-ID-012 | AC-ID-012 | T-TEN-002 | CORE-MVP,PROPOSED | P1/P2 | J01,J02,J11–J13 | #32/#48 identity; grants/source sync gated | NOT_ACCEPTED |
-| FR-APP-001 | AC-APP-001 | T-APP-001 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
-| FR-APP-002 | AC-APP-002 | T-APP-002 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
-| FR-APP-003 | AC-APP-003 | T-APP-003 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
-| FR-APP-004 | AC-APP-004 | T-APP-004 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
-| FR-APP-005 | AC-APP-005 | T-APP-005 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
-| FR-APP-006 | AC-APP-006 | T-APP-006 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
-| FR-APP-007 | AC-APP-007 | T-APP-007 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
-| FR-APP-008 | AC-APP-008 | T-APP-008 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
-| FR-APP-009 | AC-APP-009 | T-APP-009 | CORE-MVP,PROPOSED | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
-| FR-APP-010 | AC-APP-010 | T-APP-010 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; synthetic-only positives; publication absent | NOT_ACCEPTED |
+| FR-APP-001 | AC-APP-001 | T-APP-001 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
+| FR-APP-002 | AC-APP-002 | T-APP-002 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
+| FR-APP-003 | AC-APP-003 | T-APP-003 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
+| FR-APP-004 | AC-APP-004 | T-APP-004 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
+| FR-APP-005 | AC-APP-005 | T-APP-005 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
+| FR-APP-006 | AC-APP-006 | T-APP-006 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
+| FR-APP-007 | AC-APP-007 | T-APP-007 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
+| FR-APP-008 | AC-APP-008 | T-APP-008 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
+| FR-APP-009 | AC-APP-009 | T-APP-009 | CORE-MVP,PROPOSED | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
+| FR-APP-010 | AC-APP-010 | T-APP-010 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
 | FR-DOC-001 | AC-DOC-001 | T-DOC-001 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
 | FR-DOC-002 | AC-DOC-002 | T-DOC-002 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
 | FR-DOC-003 | AC-DOC-003 | T-DOC-003 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
