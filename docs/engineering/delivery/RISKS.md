@@ -10,4 +10,5 @@
 | Unscanned file or arbitrary MIME/size policy | Critical / private file compromise | No user intake until D-007 adapter/whitelist approved; fail closed | BLOCKED |
 | Invented maturity score/scope/reassessment | High / invalid decisions/history | Manual categorical results only; independent invariants; D-003/D-014 remain open | BLOCKED DEPENDENT WORK |
 | False full-MVP acceptance by deadline | High / misleading customer handover | L1–L4, all J01–J14, unchecked phases until review/merge/CI/UAT | OPEN |
+| Local browser evidence mistaken for normal CI or approved UAT | High / misleading acceptance | Issue53 runner is explicitly local; CI covers safety guards and existing regressions.45 browser assertions prove bounded J01 L3 only; no grants or L4 claim | CONTROLLED |
 | Hosting scope creep | Scope violation | Excluded completely; local development/test resources only | CONTROLLED |

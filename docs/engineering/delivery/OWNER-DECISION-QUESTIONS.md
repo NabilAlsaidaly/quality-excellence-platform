@@ -11,4 +11,4 @@ This is a public engineering dependency index, not private owner evidence or a n
 | D-020/D-027 | Establish content licensing and permitted versioned relationship targets | P5/P8 | No protected text or arbitrary polymorphism |
 | D-023 | Ratify lifecycle/session/job effects and restoration authority | P1/J13 | No lifecycle activation or historical deletion |
 
-Public status references: Issues12 and50. Detailed original questions/evidence remain private. Engineering publication approval does not ratify these gates. Ask only the minimum missing decision for the next executable slice.
+Public status references: Issues12 and50. Detailed original questions/evidence remain private. Engineering publication approval does not ratify these gates. Ask only the minimum missing decision for the next executable slice; NEXT-APPROACH-AUTHORITY-GATE.md narrows D-002 to a draft-workflow acceptance matrix without inventing actor mappings or reopening answered identity questions. J01 browser verification needs no content grant.

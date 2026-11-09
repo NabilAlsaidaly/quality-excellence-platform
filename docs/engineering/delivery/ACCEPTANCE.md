@@ -2,7 +2,7 @@
 
 Canonical SRS fetched 2026-11-09. Original IDs/scope/status tags retained; source prose stays private. SOURCE is not granular permission ratification. Newer scope reconciliation is in DECISIONS. Old display-only maturity wording is historical. Every row remains unaccepted pending its full journey/L4; ENG is deferred, not a local MVP prerequisite.
 
-Baseline main `3cfea15e908d19042254a0670ac8c83185d738df`, CI [42532789703](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/42532789703) SUCCESS. Existing reports are historical evidence only. New focused invariants: 25 tests / 32 assertions, exit0; no new L2/L3/L4 or runtime caller. Source/test-only final-head CI 42601585106 SUCCESS at97b8f450cf17fc5dd6eb416ccf047f9e9e128935:511 tests/5473 assertions; sanitized publication approved2026-11-09; verify the documentation commit receipt in PR #52 after it exists.
+Accepted baseline main16a448fd244844d704438f466d6a8d986df8be18; post-merge CI42612946294 SUCCESS511/5473, Issue51/PR52 bounded L1 verified. Only FR-MAT-001/007/008 have direct partial invariant coverage; immutability is not a persisted snapshot. Issue53 adds45 real browser assertions and MySQL readback for the bounded J01 identity candidate, not provisioning/invitations/grants or every FR-ID row. All requirement acceptance states below remain unchanged; L3 success is not L4, owner ratification or full-phase completion. Its containing Draft PR records the exact final-head CI receipt.
 
 | Requirement | Acceptance | Test ID | Original tags | Phase | Journey | Implementation / pending gate | Acceptance |
 |---|---|---|---|---|---|---|---|
@@ -66,25 +66,25 @@ Baseline main `3cfea15e908d19042254a0670ac8c83185d738df`, CI [42532789703](https
 | FR-UX-009 | AC-UX-009 | T-UX-009 | CORE-MVP,OPEN | P6/P9/P10 | J01–J14 | #46/#48 native subset only | NOT_ACCEPTED |
 | FR-UX-010 | AC-UX-010 | T-UX-010 | CORE-MVP,OPEN | P6/P9/P10 | J01–J14 | #46/#48 native subset only | NOT_ACCEPTED |
 | FR-MAT-001 | AC-MAT-001 | T-MAT-001 | CORE-MVP,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-002 | AC-MAT-002 | T-MAT-002 | CORE-MVP,PROPOSED | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-003 | AC-MAT-003 | T-MAT-003 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-004 | AC-MAT-004 | T-MAT-004 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-005 | AC-MAT-005 | T-MAT-005 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-006 | AC-MAT-006 | T-MAT-006 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-002 | AC-MAT-002 | T-MAT-002 | CORE-MVP,PROPOSED | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-003 | AC-MAT-003 | T-MAT-003 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-004 | AC-MAT-004 | T-MAT-004 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-005 | AC-MAT-005 | T-MAT-005 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-006 | AC-MAT-006 | T-MAT-006 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
 | FR-MAT-007 | AC-MAT-007 | T-MAT-007 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
 | FR-MAT-008 | AC-MAT-008 | T-MAT-008 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-009 | AC-MAT-009 | T-MAT-009 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-010 | AC-MAT-010 | T-MAT-010 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-011 | AC-MAT-011 | T-MAT-011 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-012 | AC-MAT-012 | T-MAT-012 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-013 | AC-MAT-013 | T-MAT-013 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-014 | AC-MAT-014 | T-MAT-014 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-015 | AC-MAT-015 | T-MAT-015 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-016 | AC-MAT-016 | T-MAT-016 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-017 | AC-MAT-017 | T-MAT-017 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-018 | AC-MAT-018 | T-MAT-018 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-019 | AC-MAT-019 | T-MAT-019 | FULL-STAGE1,OPEN | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
-| FR-MAT-020 | AC-MAT-020 | T-MAT-020 | FULL-STAGE1,OPEN | P7 | J08,J09,J14 | #51 pure invariants L1 partial only; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-009 | AC-MAT-009 | T-MAT-009 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-010 | AC-MAT-010 | T-MAT-010 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-011 | AC-MAT-011 | T-MAT-011 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | In-memory immutability only; persistent version/snapshot workflow absent | NOT_ACCEPTED |
+| FR-MAT-012 | AC-MAT-012 | T-MAT-012 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | No numeric rating inference; full workflow not implemented | NOT_ACCEPTED |
+| FR-MAT-013 | AC-MAT-013 | T-MAT-013 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-014 | AC-MAT-014 | T-MAT-014 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-015 | AC-MAT-015 | T-MAT-015 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-016 | AC-MAT-016 | T-MAT-016 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | In-memory immutability only; persistent historical snapshot workflow absent | NOT_ACCEPTED |
+| FR-MAT-017 | AC-MAT-017 | T-MAT-017 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | Not implemented; D-003/D-014 and upstream gates | NOT_ACCEPTED |
+| FR-MAT-018 | AC-MAT-018 | T-MAT-018 | FULL-STAGE1,SOURCE | P7 | J08,J09,J14 | No approval inference; full workflow not implemented | NOT_ACCEPTED |
+| FR-MAT-019 | AC-MAT-019 | T-MAT-019 | FULL-STAGE1,OPEN | P7 | J08,J09,J14 | Not implemented; unresolved owner gate | NOT_ACCEPTED |
+| FR-MAT-020 | AC-MAT-020 | T-MAT-020 | FULL-STAGE1,OPEN | P7 | J08,J09,J14 | Not implemented; unresolved owner gate | NOT_ACCEPTED |
 | FR-REF-001 | AC-REF-001 | T-REF-001 | FULL-STAGE1,SOURCE | P8 | J10,J14 | Not implemented; licensing/authorization gates | NOT_ACCEPTED |
 | FR-REF-002 | AC-REF-002 | T-REF-002 | FULL-STAGE1,SOURCE | P8 | J10,J14 | Not implemented; licensing/authorization gates | NOT_ACCEPTED |
 | FR-REF-003 | AC-REF-003 | T-REF-003 | FULL-STAGE1,SOURCE | P8 | J10,J14 | Not implemented; licensing/authorization gates | NOT_ACCEPTED |
