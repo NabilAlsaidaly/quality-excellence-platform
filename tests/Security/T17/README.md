@@ -1,0 +1,25 @@
+# T17 security investigation — intentionally RED, not a fix
+
+Issue58 authorizes isolated investigation and a protected-file change request only. No runtime source, capability registry, route, migration or coworker file is changed. The exact published Issue37 branch was pinned at `4f996e95d65d28a5aa6f06ff302ce2a45ced4eed`; its tree contains neither AuthorizedUnitOperations nor T17 tests. These tests reproduce the **published shared-service boundary**, not an unreviewed implementation of that missing adapter.
+
+Run only on a newly owned disposable **MySQL8.4** server/schema `quality_platform_ci`, never development `quality_platform`, another demo or a shared CI schema. The suite uses DatabaseMigrations and therefore rebuilds that test schema. It checks testing/opt-in/actual database/server UUID/version **before** migration hooks. Set the connection only in the invoking process; never edit normal `.env` or global configuration. The worker verifies the same UUID, uses a distinct connection/process, and both sessions explicitly use InnoDB REPEATABLE READ. Session-only lock timeout is5s. No global database setting changes.
+
+After provisioning/verifying your owned isolated server, supply process environment variables `APP_ENV=testing`, `MYSQL_TESTS_ENABLED=1`, `DB_CONNECTION=mysql`, `DB_DATABASE=quality_platform_ci`, `DB_HOST=127.0.0.1`, its private `DB_PORT/DB_USERNAME/DB_PASSWORD`, empty `DB_URL`, `T17_TESTS_ENABLED=1`, and `T17_SERVER_UUID` equal to that server's **actual** `@@server_uuid`. Use an owner-private `sys_temp_dir` for worker artifacts/barriers. Then:
+
+```powershell
+& $php -d "sys_temp_dir=$privateTemp" vendor/bin/phpunit `
+    --configuration phpunit.mysql.xml --no-progress `
+    tests/Security/T17/RevocationRaceTest.php
+```
+
+Current published main yields **12 tests,132 assertions,6 failures**, with no harness errors/risky tests. The three Gate→unit-write failures are committed role revoke, permission removal and actual password-broker reset; the other three are stale structural decisions under an old RR snapshot (role revoke, permission removal, and a grant yielding conservative stale denial). The last is an availability/currentness failure, not privilege escalation. Required safe outcomes remain genuine failing assertions; there is no skip/xfail or configuration that turns these requirements green.
+
+Passing controls: membership removal blocks the domain write; current-request logout clears context; unchanged authorized operation persists once; default-deny/foreign target stays denied; actual J03 refuses password reset across an organization-lock wait; and a controlled real1213 deadlock demonstrates opposite role/member lock order with complete victim rollback. Worker release files contain only fixed barrier words, live in the verified private temporary directory and are removed after owned processes finish. They are synchronization barriers, not sleep-based assumptions. The separate-process password wait uses a disclosed test outer organization lock around the actual recovery Action; it does not claim recovery itself acquires that mutex.
+
+`T17 {...}` lines provide connection/order/outcome and real EXPLAIN JSON evidence without passwords or reset tokens. The grant query is compared with an equivalent outer-only EXISTS/FOR UPDATE and an actual locking join. The optimizer order is observed, not assumed. Password/reset credentials exist only in ephemeral synthetic fixture data and process environment; never publish logs containing credentials or real tenant data.
+
+These deliberately red **investigation requirements** are in `tests/Security/T17`, outside the existing Unit/Feature/Integration suites. The unchanged Foundation CI runs all existing559 accepted tests, not this opt-in destructive investigation. A green Foundation run is **not T17 acceptance**. After separate scope approval and the exact contributor handoff, implement the shared protocol, consume it in the real adapter, and install the approved acceptance cases in the normal MySQL integration suite. Keep the original red evidence and audit the changed expectations of the deadlock characterization control separately.
+
+The accepted J03 controls can be rerun independently with the existing MySQL configuration and `--filter ApproachAssignmentConcurrencyTest`; they remain bounded TEST_ONLY evidence, not global serialization. Full report, proposed file scope, SQL order and closure gate: `docs/engineering/reports/58.md`. Cleanup removes only the operator's verified owned test service/volume/credentials after preserving redacted evidence; never global Docker/process/browser cleanup.
+
+The Gate→internal-Action cases deliberately preserve the unsafe historical caller pattern. Structural unit Actions are not being assigned an implicit management policy. The later normal-suite acceptance must exercise the actual reviewed contributor adapter consuming the approved outer transaction callback, retaining the same deny/no-write/no-success-audit requirements. This red probe is historical evidence, not a claim that adding an unused callback fixes existing unsafe callers.
