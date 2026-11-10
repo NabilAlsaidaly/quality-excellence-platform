@@ -25,8 +25,26 @@ final readonly class ApprovedStageAssessment
         int $selectedBandIndex,
         array $answers,
         public ReviewSnapshot $review,
+        ?StageSubmission $submission = null,
     ) {
         $json = self::encode($approachPublicId, $stage, $scale, $selectedBandIndex, $answers);
+        if ($submission !== null) {
+            $submission->assertComplete();
+            $target = $submission->reviewTarget();
+            $rated = json_decode($json, true, 64, JSON_THROW_ON_ERROR);
+            $payload = $submission->snapshot();
+            if ($review->state !== ReviewState::Approved || ! $review->target->sameTarget($target)
+                || strcasecmp($review->target->revisionPublicId, $target->revisionPublicId) !== 0
+                || ! hash_equals($review->target->fingerprint, $submission->fingerprint())
+                || $review->target->contributorPublicIds !== $target->contributorPublicIds
+                || strcasecmp($approachPublicId, $submission->approachPublicId) !== 0 || $stage !== $submission->stage()
+                || $rated['scale'] !== $payload['configuration']['scale'] || $answers !== $payload['answers']) {
+                throw new DomainException('لا يطابق التقييم الإجابات والإعدادات والإصدار الذي راجعه المراجع.');
+            }
+            $this->snapshotJson = $json;
+
+            return;
+        }
         if ($review->state !== ReviewState::Approved || $review->target->kind !== ReviewTargetKind::MaturitySubmission
             || ! hash_equals($review->target->fingerprint, hash('sha256', $json))) {
             throw new DomainException('يلزم قرار مراجعة مستقل ومعتمد للّقطة نفسها.');

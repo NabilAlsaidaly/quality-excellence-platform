@@ -1,6 +1,6 @@
 # Customer journey register
 
-Issue62 implementation checkpoint: J04 has actual isolated private-file quarantine with fake scanner outcomes and no release; J06 has immutable domain transitions only; J08 has initial-sequence and approved-snapshot domain proofs only. None is a complete persisted customer journey. The consolidated Document workspace schema/Policy/test-panel amendment is pending explicit lead approval. T17/61 are DEFERRED; T17 still blocks security acceptance. Existing accepted J03 is preserved, not upgraded to L4.
+Issue62 current bounded checkpoint: lead-authorized REVIEW_MATURITY_LOCAL_001 now has real persisted automatic review/correction/independent approval, first5 maturity stages/manual categories/configured questions/exact authorized synthetic versions, atomic in-app notices/read state and one native Arabic Filament journey. Final-source browser87 +independent MySQL19 +15 responsive screenshots PASS. This is TEST_ONLY L3 evidence, not full customer/L4 acceptance. Full suite/final-head CI are reported in report62 and its separate Draft PR/private receipt. T17 remains deferred/BLOCKED; existing accepted J03/Document foundations are preserved.
 
 Every journey needs build SHA/time, actor/scope, DB target, real entry/steps, persisted readback after reload, review/version/notification effects, audit and negative evidence. PASSED requires the whole specified journey, not a previously demonstrated subset. Issue53 verified the bounded J01 identity candidate with real application pages/guards/broker and an owned MySQL8.4 server at application SHA16a448f,2026-11-09T14:23:06Z. It created no grants and replaced no Policy. L3 success does not ratify identity-source alignment, D-002, L4 or full P0/P1/P7. Failed harness attempts remain private and are documented in report53.
 
@@ -11,15 +11,15 @@ Every journey needs build SHA/time, actor/scope, DB target, real entry/steps, pe
 | J03 | Assigned multi-actor Approach edit/reassign/publish | PARTIAL_TEST_ONLY_L3; NOT_L4_ACCEPTED | Issue57 bounded actual-Policy create/initial assignments/metadata/contributor drafts/history PASS64 browser checks plus independent MySQL readback. Review pending. Operational ratification and later transfer/review/publication remain blocked |
 | J04 | Real scanned private file/version/download | PARTIAL_TEST_ONLY; full BLOCKED_OWNER | Issue62 corrected DocumentPolicy/assignments/atomic synthetic versions/metadata/history and independent native workspace; actual evidence in report62. D007/D002 real intake/release/download remain unavailable; synthetic bytes do not accept this full journey |
 | J05 | Separate document/evidence decisions | BLOCKED_OWNER | P3/P4 and D-027 |
-| J06 | Automatic review/correction/approved publication | BLOCKED_TECHNICAL | Issue62 new immutable input/correction/no-op domain evidence; actual persistent bridge/Policy/UI is in one submitted exact amendment, not approved or implemented |
-| J07 | Real event-triggered in-app notices/read state | BLOCKED_TECHNICAL | P4/P6 and approved recipients |
-| J08 | All five maturity stages with independent manual rating | PARTIAL_DOMAIN; full BLOCKED | Issue62 typed required question/evidence snapshots implemented; real five-stage SQL/UI approval bridge awaits exact technical approval; D003 operational scope and upstream gates remain |
+| J06 | Automatic review/correction/approved publication | PARTIAL_TEST_ONLY_L3; full NOT_ACCEPTED | Issue62 actual automatic content review/correction/independent approval/history PASS; general publication and operational grants remain outside this slice |
+| J07 | Real event-triggered in-app notices/read state | PARTIAL_TEST_ONLY_L3; NOT_L4_ACCEPTED | Issue62 atomic origin delivery/dedup/explicit recipients/read-unread/current links PASS; no external channels or broad operational recipient policy |
+| J08 | All five maturity stages with independent manual rating | PARTIAL_TEST_ONLY_L3; full NOT_ACCEPTED | Issue62 actual editable questions/configuration/evidence/unrated submissions and5 initial manual stages PASS; D003 operational placement/D014 reassessment/operational grants remain gated |
 | J09 | Reassessment preserves earlier snapshot/later-stage policy | BLOCKED_OWNER | D-014 |
 | J10 | Licensed versioned reference mapping | BLOCKED_OWNER | D-020/D-027/P8 |
-| J11 | Two-tenant adversarial J03–J10 | NOT_RUN | Existing negative tests cover implemented subset only |
-| J12 | Mid-action revocation and no self-approval | BLOCKED_OWNER | Detailed grants plus reviewed serialization/review implementation |
+| J11 | Two-tenant adversarial J03-J10 | PARTIAL_NEGATIVES; full NOT_RUN | Actual cross-tenant/unassigned workflow and Document denials verified for implemented subset; no unimplemented module claim |
+| J12 | Mid-action revocation and no self-approval | PARTIAL_TEST_ONLY; T17_BLOCKED | Actual independent reviewers/current grants/expiry and two-connection RR tests PASS for bounded slice; global T17 and operational ratification remain blocked |
 | J13 | Approved institution lifecycle behavior | BLOCKED_OWNER | D-023 transition contract |
-| J14 | Integrated multi-actor customer scenario | BLOCKED_TECHNICAL | P1–P9 and all positive gates |
+| J14 | Integrated multi-actor customer scenario | PARTIAL_TEST_ONLY_DEMONSTRATION | One actual native author/reviewer correction-to-five-stage-to-inbox journey PASS; complete operational customer/L4 acceptance remains gated |
 
 Protected earlier demo: actual native Filament login/account/dashboard/bank/create/metadata/draft/history/logout persisted successfully with synthetic named test assignments. Its evidence remains local/private, prior build `3cfea15`; Issue53 did not alter its DB or service. It is not approved customer acceptance. J01 intentionally verifies denied workspace access with the real Policy; it does not repeat synthetic Approach CRUD or claim J03 success.
 

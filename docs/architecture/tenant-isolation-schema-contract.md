@@ -1,5 +1,31 @@
 # Tenant isolation schema contract
 
+## Issue62 — bounded review and initial maturity additions
+
+The [reviewed conditional TEST_ONLY authorization](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/62#issuecomment-6769110851) adds eleven migrations: two explicit revision candidate keys and nine directly tenant-scoped tables. Actual MySQL 8.4.13 inspection found **40 migration files, 40 journal entries and 40 InnoDB base tables**. The earlier measurements below describe their historical baselines.
+
+| Table | Required isolation and integrity |
+|---|---|
+| maturity_workflow_stages | Organization + fixture + Approach identity, five fixed stage/ordinal pairs, one initial root per stage |
+| review_maturity_assignments | Explicit grantee/issuer/revoker composite users(id,organization_id) links, finite content/stage scopes, stored non-NULL scope, exact positive 24-hour interval and paired revocation |
+| maturity_workflow_configurations | Immutable numbered question/scale copies; exact organization/fixture/Approach/stage link, JSON shape and fingerprint |
+| maturity_workflow_submissions | Immutable unrated answers/configuration/evidence snapshots, numbered per stage and bound to the exact configuration |
+| maturity_workflow_evidence | Submission-specific expected-question binding and exact organization/Document/Version FK; no bytes or file serving |
+| review_maturity_reviews | Exact immutable target, one pending slot, ordered predecessor chain, state/decision tuple, reviewer + scope + operation bound to the exact assignment |
+| maturity_workflow_assessments | One initial result per stage, approved-review/submission/reviewer FK, preceding-stage assessment chain and manual category/snapshot consistency |
+| review_maturity_audit | Finite grant/review facts with exact subject/assignment/scope/operation or review binding; deduplicated event keys |
+| review_maturity_notifications | Exact same-tenant recipient and review, event/recipient deduplication, in-transaction delivery and actor-specific read state |
+
+All FKs remain same-schema RESTRICT/RESTRICT. `approach_content_revisions(organization_id,approach_id,id)` and `document_versions(organization_id,document_id,id)` gain explicit UNIQUE candidate keys, independently journaled. No existing row, column or applied migration changes. InnoDB can silently replace an original implicit child-FK support index when the covering key is added. Each reverse key migration therefore restores that original two-column support index, if absent, **in the same atomic ALTER that removes the new candidate key**. This restores the prior integrity shape without changing FK enforcement or global settings.
+
+The executable gate explicitly records every new column type/nullability, ordered FK, full UNIQUE, exact enforced CHECK and stored generation expression. Mutation tests remove or alter each required item and require rejection. MySQL's nullable metadata for stored generated values is preserved; the exact expression supplies the semantic guarantee. SQLite uses corresponding transactional DDL, JSON functions, stored expressions, explicit unsigned lower-bound checks and named candidate-key indexes.
+
+Every one of the eleven reverse migrations checks all nine workflow tables before its first DROP/ALTER and refuses any populated workflow, including root/grant-only state. It also checks the owned shape/journal; unknown objects require reviewed forward recovery. Empty reversal follows explicit dependency order. Atomic CREATE/ALTER failures retain the ordinary migration retry path; a crash after DDL but before journaling still requires operator inspection. Exclusive migration maintenance and the existing MySQL trigger privilege prerequisites remain necessary. No adoption, reset, history purge, FK disabling or global database changes are supplied.
+
+Conditional compatibility changes were justified by the first actual full MySQL run: 238 tests, 10 errors and 20 failures exposed unclassified tables, measured 40-versus-29 journal counts and original rollback fixtures blocked by the new empty FK children. The helper checks all new tables empty before reversing their eleven explicitly inventoried migration paths; original parent scenarios, partial-target counts, error-code checks, historical preservation and assertions remain. No runtime cleanup or retention policy is implied.
+
+The new panel and all grants remain sealed to one trusted TEST_ONLY Request/PDO/database fixture. The actual institutional identity and real Approach, Document and workflow Policies apply. Bounded current-read/concurrency tests do not establish universal revocation synchronization: T17 remains deferred. Operational D002 grants, reassessment, real document release and deployment remain excluded.
+
 ## Issue62 — reviewed TEST_ONLY Document workspace addition
 
 The [scoped engineering authorization](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/62#issuecomment-6764417922) permits the three additive Document workspace tables with explicit user candidate-key order, LONGTEXT capacity and strict expiry. Actual owned MySQL8.4.13 measurement after the new migrations found **29 migration files/journal rows and31 InnoDB base tables**. Existing classifications and negative assertions remain unchanged. These additions are not operational grants, D002/D007 ratification, a normal registered panel, or T17 acceptance.
