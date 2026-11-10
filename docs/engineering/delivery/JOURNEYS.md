@@ -1,5 +1,7 @@
 # Customer journey register
 
+Issue62 implementation checkpoint: J04 has actual isolated private-file quarantine with fake scanner outcomes and no release; J06 has immutable domain transitions only; J08 has initial-sequence and approved-snapshot domain proofs only. None is a complete persisted customer journey. The consolidated Document workspace schema/Policy/test-panel amendment is pending explicit lead approval. T17/61 are DEFERRED; T17 still blocks security acceptance. Existing accepted J03 is preserved, not upgraded to L4.
+
 Every journey needs build SHA/time, actor/scope, DB target, real entry/steps, persisted readback after reload, review/version/notification effects, audit and negative evidence. PASSED requires the whole specified journey, not a previously demonstrated subset. Issue53 verified the bounded J01 identity candidate with real application pages/guards/broker and an owned MySQL8.4 server at application SHA16a448f,2026-11-09T14:23:06Z. It created no grants and replaced no Policy. L3 success does not ratify identity-source alignment, D-002, L4 or full P0/P1/P7. Failed harness attempts remain private and are documented in report53.
 
 | Journey | Required behavior | Current result | Evidence / blocker |

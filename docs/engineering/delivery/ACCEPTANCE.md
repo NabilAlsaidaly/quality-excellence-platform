@@ -1,5 +1,7 @@
 # Product acceptance and source-truth register
 
+Issue62 bounded internal implementation: QuarantineIntakeTest/QuarantineIsolationTest cover private test-file persistence, actual MIME/size, scanner failure, no release, membership/tenant/server-identity refusal; partial FR-DOC007/008/009 only. ReviewWorkflowTest covers local transition invariants for FR-REV001/003..007/010/012 and event intents; it does not provide database uniqueness, transactional outbox, Policy authority or publication. InitialMaturityCycleTest covers initial ordered stages/manual approved categorical snapshots for FR-MAT010..014/016/018 without D003 placement or D014 reassessment. All full requirement acceptance states below stay NOT_ACCEPTED. See report62 for actual results and unresolved Document amendment; no new browser-to-database workflow is claimed for these foundations.
+
 Issue57 adds a bounded TEST_ONLY real-Policy J03 candidate, native browser64 checks and independent MySQL readback (report57). This supersedes Issue55's historical no-implementation status only for the approved subset; it does not accept full FR-APP rows, operational grants, L4 or any overall phase. Row acceptance states remain unchanged; transfer/review/publication and genuine owner/coworker dependencies persist.
 
 Canonical SRS fetched 2026-11-09. Original IDs/scope/status tags retained; source prose stays private. SOURCE is not granular permission ratification. Newer scope reconciliation is in DECISIONS. Old display-only maturity wording is historical. Every row remains unaccepted pending its full journey/L4; ENG is deferred, not a local MVP prerequisite.
@@ -30,33 +32,33 @@ Accepted baseline main27c5b5e70cedaee5453e72ec09c382d6825929c1; post-merge CI426
 | FR-APP-008 | AC-APP-008 | T-APP-008 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
 | FR-APP-009 | AC-APP-009 | T-APP-009 | CORE-MVP,PROPOSED | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
 | FR-APP-010 | AC-APP-010 | T-APP-010 | CORE-MVP,SOURCE | P1/P2/P4 | J03,J06,J11,J12 | #38/#40/#44/#46; prior synthetic positives; #57 actual-Policy subset per report57; full requirement/publication unaccepted | NOT_ACCEPTED |
-| FR-DOC-001 | AC-DOC-001 | T-DOC-001 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-002 | AC-DOC-002 | T-DOC-002 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-003 | AC-DOC-003 | T-DOC-003 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-004 | AC-DOC-004 | T-DOC-004 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-005 | AC-DOC-005 | T-DOC-005 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-006 | AC-DOC-006 | T-DOC-006 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-007 | AC-DOC-007 | T-SEC-004 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-008 | AC-DOC-008 | T-TEN-004 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-009 | AC-DOC-009 | T-SEC-005 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-010 | AC-DOC-010 | T-SEC-006 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-011 | AC-DOC-011 | T-SEC-007 | CORE-MVP,OPEN | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-012 | AC-DOC-012 | T-DOC-012 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-013 | AC-DOC-013 | T-DOC-013 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-DOC-014 | AC-DOC-014 | T-AUD-002 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal bytes/version core; intake/scanner/download absent | NOT_ACCEPTED |
-| FR-REV-001 | AC-REV-001 | T-REV-001 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-002 | AC-REV-002 | T-REV-002 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-003 | AC-REV-003 | T-REV-003 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-004 | AC-REV-004 | T-REV-004 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-005 | AC-REV-005 | T-REV-005 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-006 | AC-REV-006 | T-REV-006 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-007 | AC-REV-007 | T-REV-007 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-008 | AC-REV-008 | T-REV-008 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-009 | AC-REV-009 | T-REV-009 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-010 | AC-REV-010 | T-REV-010 | CORE-MVP,OPEN | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-011 | AC-REV-011 | T-REV-011 | CORE-MVP,OPEN | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-012 | AC-REV-012 | T-REV-012 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
-| FR-REV-013 | AC-REV-013 | T-REV-013 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | Review/publication absent; authority/schema gates | NOT_ACCEPTED |
+| FR-DOC-001 | AC-DOC-001 | T-DOC-001 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-002 | AC-DOC-002 | T-DOC-002 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-003 | AC-DOC-003 | T-DOC-003 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-004 | AC-DOC-004 | T-DOC-004 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-005 | AC-DOC-005 | T-DOC-005 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-006 | AC-DOC-006 | T-DOC-006 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-007 | AC-DOC-007 | T-SEC-004 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-008 | AC-DOC-008 | T-TEN-004 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-009 | AC-DOC-009 | T-SEC-005 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-010 | AC-DOC-010 | T-SEC-006 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-011 | AC-DOC-011 | T-SEC-007 | CORE-MVP,OPEN | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-012 | AC-DOC-012 | T-DOC-012 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-013 | AC-DOC-013 | T-DOC-013 | CORE-MVP,SOURCE | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-DOC-014 | AC-DOC-014 | T-AUD-002 | CORE-MVP,PROPOSED | P3/P5 | J04,J05,J11 | #42 internal core; #62 quarantine TEST_ONLY; operational intake/scanner/download gated | NOT_ACCEPTED |
+| FR-REV-001 | AC-REV-001 | T-REV-001 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-002 | AC-REV-002 | T-REV-002 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-003 | AC-REV-003 | T-REV-003 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-004 | AC-REV-004 | T-REV-004 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-005 | AC-REV-005 | T-REV-005 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-006 | AC-REV-006 | T-REV-006 | CORE-MVP,SOURCE | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-007 | AC-REV-007 | T-REV-007 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-008 | AC-REV-008 | T-REV-008 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-009 | AC-REV-009 | T-REV-009 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-010 | AC-REV-010 | T-REV-010 | CORE-MVP,OPEN | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-011 | AC-REV-011 | T-REV-011 | CORE-MVP,OPEN | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-012 | AC-REV-012 | T-REV-012 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
+| FR-REV-013 | AC-REV-013 | T-REV-013 | CORE-MVP,PROPOSED | P4/P6 | J06,J07,J12 | #62 review domain only; Policy/DB/publication/schema gates | NOT_ACCEPTED |
 | FR-UX-001 | AC-UX-001 | T-UX-001 | CORE-MVP,SOURCE | P6/P9/P10 | J01–J14 | #46/#48 native subset only | NOT_ACCEPTED |
 | FR-UX-002 | AC-UX-002 | T-UX-002 | CORE-MVP,SOURCE | P6/P9/P10 | J01–J14 | #46/#48 native subset only | NOT_ACCEPTED |
 | FR-UX-003 | AC-UX-003 | T-UX-003 | CORE-MVP,SOURCE | P6/P9/P10 | J01–J14 | #46/#48 native subset only | NOT_ACCEPTED |
