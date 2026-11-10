@@ -1,6 +1,6 @@
 # دليل العرض المحلي للمالك — المراجعة والنضج
 
-الهدف: عرض خاص يوم12 نوفمبر2026، بتصنيف **TEST_ONLY** وبيانات خيالية وسياسات Laravel الفعلية ومكونات Filament5 الأصلية. [اعتماد Issue62 المحدد](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/62#issuecomment-6769110851) لا يحسم المنح التشغيلية أو T17 أو إعادة التقييم. لا دمج أو نشر.
+الهدف: عرض خاص يوم12 نوفمبر2026، بتصنيف **TEST_ONLY** وبيانات خيالية وسياسات Laravel الفعلية ومكونات Filament5 الأصلية. [اعتماد جاهزية العرض](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/62#issuecomment-6775974236) يلي دمج PR66، ولا يحسم المنح التشغيلية أو T17 أو إعادة التقييم. لا دمج ذاتي أو نشر. توضح [مصفوفة المتطلبات والشاشات](OWNER-DEMO-COMPLETION-MATRIX.md) الأفعال المثبتة والمتطلبات الجزئية وغير المتاحة.
 
 ## ما يعمل فعليًا
 
@@ -18,22 +18,24 @@
 
 ## تجهيز عرض جديد
 
-تحقق من التزام Draft PR ونجاح CI. حافظ على عمل الزميل والديمو السابق. استخدم PHP8.4 وDocker وصورة MySQL8.4.13 وPlaywright المثبتة أصلًا، واعتمادات المشروع وأصول Vite المبنية. لا تثبت حزمة ولا تغير `.env` أو إعدادات PHP/MySQL العامة. لا توجه الأداة إلى `quality_platform`، ولا تشارك قاعدة العرض الحية مع PHPUnit.
+تحقق من نجاح CI بعد الدمج على المصدر المحدد ثم زامن فرع التنفيذ بتقديم آمن فقط. بوابة هذا التسليم هي `9bac8771f104976fc64de84588d3b9c8b90f6f7b` و[CI42877149742](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/42877149742) الناجح:690/7382. حافظ على عمل الزميل والديمو السابق. استخدم PHP8.4 وDocker وصورة MySQL8.4.13 وPlaywright المثبتة أصلًا، واعتمادات المشروع وأصول Vite المبنية. لا تثبت حزمة ولا تغير `.env` أو إعدادات PHP/MySQL العامة. لا توجه الأداة إلى `quality_platform`، ولا تشارك قاعدة العرض الحية مع PHPUnit.
 
-اختر اسم تشغيل جديدًا. الأداة ترفض اعتماد مجلد أو قاعدة موجودة. جهز السيناريو في يوم العرض؛ الإسنادات فعالة24 ساعة فقط، ولا تمددها الجلسة المفتوحة.
+اختر اسم تشغيل جديدًا. الأداة ترفض اعتماد مجلد أو قاعدة موجودة. **browser-90 وbrowser-91 استُخدما في بروفة10 نوفمبر؛ الأمثلة التالية لنسخة يوم العرض الجديدة browser-92 بعد التحقق من عدم وجودها.** جهز السيناريو في يوم العرض؛ الإسنادات فعالة24 ساعة فقط، ولا تمددها الجلسة المفتوحة. نسخة10 نوفمبر لا تكفي لعرض12 نوفمبر ولا تُمدد منحها أو يُعاد ضبطها. لا توقف نسخة يدوية مأهولة قبل أن ينهي المالك اختبارها.
 
 ```powershell
 $php = 'C:\path\to\existing\php.exe'
 $cli = 'C:\path\to\existing\playwright-cli.cmd'
-& tests/Browser/ReviewMaturity/Run.ps1 -Mode Prepare -RunName browser-90 -Php $php
-& tests/Browser/ReviewMaturity/Run.ps1 -Mode Demo -RunName browser-90 -Php $php -PlaywrightCli $cli
+& tests/Browser/ReviewMaturity/Run.ps1 -Mode Prepare -RunName browser-92 -Php $php
+& tests/Browser/ReviewMaturity/Run.ps1 -Mode Demo -RunName browser-92 -Php $php -PlaywrightCli $cli
 ```
 
 تطبع الأداة عنوان الدخول المحلي الفعلي على127.0.0.6، وتترك خادمها عاملًا حتى انتهاء التجربة. افتح الملف التالي محليًا في محرر نصوص لاسترجاع المؤسسة والبريد وكلمة المرور العشوائية:
 
-`.local-tools/reports/issue62/review-maturity/browser-90/fixture.json`
+`.local-tools/reports/issue62/review-maturity/browser-92/fixture.json`
 
 لا تطبعه في الطرفية ولا تنسخه إلى Git أو PR أو السجلات. استخدم `author` للمؤلف و`reviewer` للمراجع في ملفي متصفح مستقلين. حسابات `issuer` و`quality` و`foreign` حالات تحقق من رفض لوحة المراجعة، وليست منحًا للمحتوى.
+
+للبروفة اليدوية العاملة حاليًا، افتح محليًا `.local-tools/reports/issue62/owner-demo-readiness/OWNER-QUICKSTART-AR.md`. يحتوي عنوان الخدمة الفعلي ومسار الحسابات وموعد الانتهاء والأوامر الدقيقة لتنظيف مواردها **بعد انتهاء الاختبار فقط**. تبقى هذه التفاصيل والحسابات خارج Git. هذه النسخة جديدة: لا محتوى محفوظًا أو أسئلة أو تقييمات أو إشعارات مستهلكة؛ إثبات الرحلة الكاملة نفذ في نسخة منفصلة نُظفت وحدها.
 
 ## الرحلة اليدوية
 
@@ -49,6 +51,8 @@ $cli = 'C:\path\to\existing\playwright-cli.cmd'
 10. افتح «الإشعارات»، وغيّر القراءة وافتح الرابط المحمي. افحص بنك الوثائق دون رفع أو تنزيل.
 11. جرّب المؤسسة الأخرى والحسابات غير المخولة؛ تُرفض المساحة. ارجع للحساب وسجّل الخروج ثم تحقق من رفض الوصول المحمي بالجلسة المنتهية.
 
+التنقل داخل اللوحة من القائمة الجانبية: «المراجعة والنضج»، «بنك الوثائق»، «الإشعارات». على الهاتف افتح زر القائمة. تعيد روابط المراحل «المحتوى والمراحل» إلى المنهجية، ويوفر بنك الوثائق «حسابي» للعودة إلى الحساب والخروج. عرض مرحلة لاحقة للقراءة لا يعني السماح بالإجابة أو التقييم قبل السابقة. بنك المراجعة لا ينشئ منهجية جديدة؛ منهجية السيناريو أُنشئت بالفعل بأكشن J03. إعداد الأسئلة متاح للمراجع فقط، وتظهر إجابة المؤلف بعد حفظ إعداد المرحلة. هذه الحدود تمنع التباس الزر الغائب مع عطل في العرض.
+
 تشمل الاختبارات الآلية أيضًا سحب الإسناد والدور والصلاحية والعضوية وتغيير كلمة المرور وانتهاء المدة والقرار القديم والتراجع عند فشل الإشعار. لا تقبل هذه النتائج إصلاح T17 العام.
 
 ## إعادة الإثبات الآلي
@@ -56,8 +60,8 @@ $cli = 'C:\path\to\existing\playwright-cli.cmd'
 اختر اسمًا جديدًا بدل العرض اليدوي المأهول:
 
 ```powershell
-& tests/Browser/ReviewMaturity/Run.ps1 -Mode Prepare -RunName browser-91 -Php $php
-& tests/Browser/ReviewMaturity/Run.ps1 -Mode Browser -RunName browser-91 -Php $php -PlaywrightCli $cli
+& tests/Browser/ReviewMaturity/Run.ps1 -Mode Prepare -RunName browser-93 -Php $php
+& tests/Browser/ReviewMaturity/Run.ps1 -Mode Browser -RunName browser-93 -Php $php -PlaywrightCli $cli
 ```
 
 يتحقق وضع Browser من الرحلة وMySQL واللقطات ثم ينظف موارده فقط ويحفظ الأدلة الخاصة. تثبت الأداة بصمات المصدر؛ لا تعدّل الملفات أثناء التشغيل. الديمو السابق وأداة الوثائق السابقة مستقلان ولا يُعاد ضبطهما من هذا الدليل.
@@ -65,10 +69,10 @@ $cli = 'C:\path\to\existing\playwright-cli.cmd'
 ## التنظيف بعد انتهاء العرض اليدوي فقط
 
 ```powershell
-& tests/Browser/ReviewMaturity/Run.ps1 -Mode Cleanup -RunName browser-90 -Php $php
+& tests/Browser/ReviewMaturity/Run.ps1 -Mode Cleanup -RunName browser-92 -Php $php
 ```
 
 تتحقق الأداة من المسار وUUID والملكية وPID ومسار الخادم والحجم الحصري قبل إزالة مواردها. لا تستخدم تنظيفًا عامًا لـDocker أو Redis أو العمليات ولا توقف الديمو السابق.
 
 غير متاح: المنح التشغيلية، إصلاح T17، موضع السلم D003، إعادة التقييم D014، الملفات الحقيقية وفحصها وإتاحتها وتنزيلها، اعتماد الوثائق المؤسسي العام، والعلاقات والمراجع المرخصة غير المعتمدة. لا يعد هذا العرض قبولًا كاملًا لـMVP/L4 أو الإنتاج.
-مرجع التنفيذ المتحقق منه: [Draft PR66](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/66)، والتزام الشيفرة81bc3c0. نجح [Foundation42869295738](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/42869295738) بعدد690 اختبارًا و7382 تأكيدًا. تحقق من رأس التسليم النهائي عبر [فحوص PR الحالية](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/66/checks) قبل تجهيز العرض.
+مرجع التنفيذ المتحقق منه: [PR66 المدمج بواسطة القائد](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/66)، والتزام الدمج9bac877؛ نجح CI بعد الدمج قبل تجهيز البروفة. أُعيد الإثبات:87 تحقق متصفح و19 قراءة SQL و15 لقطة، ثم57 تحقق تنقل/دخول على النسخة اليدوية الجديدة و19 قراءة تثبت بقاء دورتها غير مستهلكة. لا تشغّل وضع Browser على النسخة اليدوية: وضعه ينظف موارده عند الانتهاء. لا تغيّر مصادر التطبيق المجمدة أثناء خدمتها؛ تحديث وثائق العرض لا يغيرها.
