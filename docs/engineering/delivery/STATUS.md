@@ -23,7 +23,7 @@ Accepted baseline: merged PR #54 at `27c5b5e70cedaee5453e72ec09c382d6825929c1`; 
 ## Subtasks and publication
 
 - [x] Issue62/PR63 bounded quarantine/review/initial-maturity foundations: accepted merge3419c54; successful postmerge42792974359,597/5867. Full review/publication/maturity workflows remain incomplete.
-- [ ] Issue62 DOCUMENT_LOCAL_001: IMPLEMENTED_AWAITING_REVIEW;29 required paths and11 actually justified conditional compatibility paths. Row34 remains unchanged. Actual Policy/independent native admission/MySQL concurrency, browser67 plus SQL readback and full local640/6535 PASS are verified; exact-head CI is recorded in the associated separate Draft PR/private receipt. No operational grant or overall phase is accepted.
+- [ ] Issue62 DOCUMENT_LOCAL_001: IMPLEMENTED_AWAITING_REVIEW;29 required paths and11 actually justified conditional compatibility paths. Row34 remains unchanged. Actual Policy/independent native admission/MySQL concurrency, browser67 plus SQL readback and full local640/6535 PASS are verified; implementation CI42811731252 SUCCESS640/6535 with pinned Node24 and runtime/HTTP checks. Draft PR64 remains unmerged; exact final documentation-HEAD receipt is recorded there/private. No operational grant or overall phase is accepted.
 
 - [ ] P0 source-ID/decision/journey tracking: IMPLEMENTED_AWAITING_REVIEW;105 FR rows plus34 other canonical IDs.
 - [x] Issue #51 bounded L1 definitions: COMPLETED_VERIFIED; merged PR #52 at16a448f; post-merge CI42612946294 SUCCESS511/5473. Overall P7 remains incomplete; no workflow acceptance.
