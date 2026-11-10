@@ -24,7 +24,7 @@ final class CreateDocumentWithVersion
 {
     public function __construct(private TenantContext $context, private PrivateDocumentBlobStore $blobs) {}
 
-    public function execute(?User $actor, array $data, mixed $stream): array
+    public function execute(?User $actor, array $data, mixed $stream, ?Closure $afterPersist = null): array
     {
         $this->assertStandaloneWrite();
         $scope = $this->withinContext($actor, fn (Organization $organization) => $organization->public_id);
@@ -33,13 +33,16 @@ final class CreateDocumentWithVersion
         $versionId = strtolower((string) Str::ulid());
         $receipt = $this->writeBlob($scope, $documentId, $versionId, $stream);
 
-        return $this->completeWrite($actor, $receipt, function (Organization $organization, User $currentActor) use ($data, $documentId, $receipt): array {
+        return $this->completeWrite($actor, $receipt, function (Organization $organization, User $currentActor) use ($data, $documentId, $receipt, $afterPersist): array {
             $document = new Document;
             $document->forceFill(['public_id' => $documentId, 'organization_id' => $organization->id, 'created_by' => $currentActor->id,
                 'title' => $data['title'], 'description' => $data['description']]);
             $document->save();
 
-            return $this->persistVersion($document, $currentActor, 1, $data['original_filename'], $receipt);
+            $result = $this->persistVersion($document, $currentActor, 1, $data['original_filename'], $receipt);
+            $afterPersist?->__invoke($currentActor, $document, $result);
+
+            return $result;
         });
     }
 

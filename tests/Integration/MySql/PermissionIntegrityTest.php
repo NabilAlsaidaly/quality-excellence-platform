@@ -117,7 +117,7 @@ class PermissionIntegrityTest extends MySqlTestCase
         }
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         $this->assertTrue(Schema::hasTable('role_has_permissions'));
-        $this->assertSame(26, DB::table('migrations')->count());
+        $this->assertSame(29, DB::table('migrations')->count());
         $this->assertSame(2, (int) DB::selectOne("SELECT COUNT(*) AS total FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE = 'organizational_units'")->total);
     }
 
