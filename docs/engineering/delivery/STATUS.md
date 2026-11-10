@@ -1,8 +1,8 @@
 # MVP delivery status
 
-Updated2026-11-10 (Asia/Damascus). Branch `feat/mvp-completion-2026-11`; verified main/base `803989602ac25e8b496b244408d6891b6b5fca39`; active Issue62 independent MVP implementation. Post-merge CI42708900330 SUCCESS559/5697 verified before clean fast-forward; all four worktrees preserved. Issue58/T17 and Issue61 remediation are DEFERRED by Issue62; T17 remains BLOCKED, not waived.
+Updated2026-11-10 (Asia/Damascus). Branch `feat/mvp-completion-2026-11`; verified main/base `3419c5478d7fafa739401dd0f41193e279dae822`; active Issue62 Document workspace implementation. PR63 merged; postmerge CI42792974359 SUCCESS597/5867 verified before clean fast-forward; all four worktrees preserved. Issue58/T17 and Issue61 remediation are DEFERRED by Issue62; T17 remains BLOCKED, not waived.
 
-Issue62 adds isolated quarantine file/scan-receipt persistence and tested review/initial-maturity domain transitions, with no existing product-source, schema, route or permission change. Full Document workspace amendment remains REQUESTED / NOT APPROVED after the lead selected consolidated review. Report62 records exact new paths, measured validation and module-level limitations. No new customer workflow or overall phase is accepted by these internal foundations.
+Issue62's quarantine/review/initial-maturity foundations were accepted in PR63. The later binding lead comment6764417922 approves Document rows01–29 with corrections and conditional30–41 only on actual failures. The corrected three-table schema, real DocumentPolicy/assignments/atomicity/scoped reads/history and native isolated TEST_ONLY panel are implemented. Report62 records exact files, RED evidence, measured validation and remaining gates. This is no operational/L4/full-phase acceptance; normal runtime identity/panels and shared T17 sources are unchanged.
 
 Accepted baseline: merged PR #54 at `27c5b5e70cedaee5453e72ec09c382d6825929c1`; post-merge CI [42640302018](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/42640302018) SUCCESS,524 tests/5488 assertions. Issue51 L1 and Issue53 J01 L3 are bounded accepted checkpoints. Issue55 reconciles authority and the minimum next gate; its containing Draft PR records exact final-head CI after the commit exists.
 
@@ -21,6 +21,9 @@ Accepted baseline: merged PR #54 at `27c5b5e70cedaee5453e72ec09c382d6825929c1`; 
 | [ ] | P10 local customer UAT | BLOCKED_TECHNICAL_DEPENDENCY | Full J14 and all required positive/negative acceptance; hosting excluded |
 
 ## Subtasks and publication
+
+- [x] Issue62/PR63 bounded quarantine/review/initial-maturity foundations: accepted merge3419c54; successful postmerge42792974359,597/5867. Full review/publication/maturity workflows remain incomplete.
+- [ ] Issue62 DOCUMENT_LOCAL_001: IMPLEMENTED_AWAITING_REVIEW;29 required paths and11 actually justified conditional compatibility paths. Row34 remains unchanged. Actual Policy/independent native admission/MySQL concurrency, browser67 plus SQL readback and full local640/6535 PASS are verified; implementation CI42811731252 SUCCESS640/6535 with pinned Node24 and runtime/HTTP checks. Draft PR64 remains unmerged; exact final documentation-HEAD receipt is recorded there/private. No operational grant or overall phase is accepted.
 
 - [ ] P0 source-ID/decision/journey tracking: IMPLEMENTED_AWAITING_REVIEW;105 FR rows plus34 other canonical IDs.
 - [x] Issue #51 bounded L1 definitions: COMPLETED_VERIFIED; merged PR #52 at16a448f; post-merge CI42612946294 SUCCESS511/5473. Overall P7 remains incomplete; no workflow acceptance.

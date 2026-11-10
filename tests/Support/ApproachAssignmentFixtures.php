@@ -119,11 +119,34 @@ trait ApproachAssignmentFixtures
                 throw new RuntimeException('Populated assignment history preserved before any fixture DROP.');
             }
         }
+        $this->rollbackEmptyDocumentWorkspaceMigrations();
         $this->artisan('migrate:rollback', ['--path' => [
             'database/migrations/2026_11_10_000001_create_approach_assignments_table.php',
             'database/migrations/2026_11_10_000002_create_approach_assignment_changes_table.php',
         ], '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
         $this->assertFalse(Schema::hasTable('approach_assignments'));
         $this->assertFalse(Schema::hasTable('approach_assignment_changes'));
+    }
+
+    /** Only for original-migration regression fixtures; never purge populated history. */
+    protected function rollbackEmptyDocumentWorkspaceMigrations(): void
+    {
+        if (DB::getDriverName() !== 'mysql' || DB::connection()->getDatabaseName() !== 'quality_platform_ci'
+            || getenv('MYSQL_TESTS_ENABLED') !== '1' || DB::selectOne('SELECT DATABASE() AS name')->name !== 'quality_platform_ci') {
+            throw new RuntimeException('Refuse compatibility cleanup outside disposable MySQL.');
+        }
+        foreach (['document_workspace_assignments', 'document_workspace_assignment_changes', 'document_metadata_revisions'] as $table) {
+            if (Schema::hasTable($table) && DB::table($table)->exists()) {
+                throw new RuntimeException('Populated document workspace history preserved before any fixture DROP.');
+            }
+        }
+        $this->artisan('migrate:rollback', ['--path' => [
+            'database/migrations/2026_11_11_000001_create_document_workspace_assignments_table.php',
+            'database/migrations/2026_11_11_000002_create_document_workspace_assignment_changes_table.php',
+            'database/migrations/2026_11_11_000003_create_document_metadata_revisions_table.php',
+        ], '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
+        foreach (['document_workspace_assignments', 'document_workspace_assignment_changes', 'document_metadata_revisions'] as $table) {
+            $this->assertFalse(Schema::hasTable($table));
+        }
     }
 }

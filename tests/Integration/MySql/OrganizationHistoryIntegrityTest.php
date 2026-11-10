@@ -70,12 +70,12 @@ class OrganizationHistoryIntegrityTest extends MySqlTestCase
         $settings = DB::selectOne('SELECT @@GLOBAL.log_bin AS binlog, @@GLOBAL.log_bin_trust_function_creators AS trusted');
         $this->artisan('migrate:rollback', ['--path' => 'database/migrations/'.self::MIGRATION.'.php', '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
         $this->assertFalse(Schema::hasTable('organization_changes'));
-        $this->assertSame(25, DB::table('migrations')->count());
+        $this->assertSame(28, DB::table('migrations')->count());
         $this->assertSame($organizationBefore, $unit->organization->fresh()->getAttributes());
         $this->assertSame($unitBefore, $unit->fresh()->getAttributes());
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         $this->assertTrue(Schema::hasTable('organization_changes'));
-        $this->assertSame(26, DB::table('migrations')->count());
+        $this->assertSame(29, DB::table('migrations')->count());
         $this->assertSame($unitBefore, $unit->fresh()->getAttributes());
         $this->assertSame(2, (int) DB::selectOne("SELECT COUNT(*) AS total FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE = 'organizational_units'")->total);
         $this->assertEquals($settings, DB::selectOne('SELECT @@GLOBAL.log_bin AS binlog, @@GLOBAL.log_bin_trust_function_creators AS trusted'));
@@ -96,7 +96,7 @@ class OrganizationHistoryIntegrityTest extends MySqlTestCase
         }
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         $this->assertTrue(Schema::hasTable('organization_changes'));
-        $this->assertSame(26, DB::table('migrations')->count());
+        $this->assertSame(29, DB::table('migrations')->count());
     }
 
     public function test_existing_history_table_and_data_are_preserved_when_create_fails(): void

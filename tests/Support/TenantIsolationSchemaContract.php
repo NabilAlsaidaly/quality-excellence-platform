@@ -14,6 +14,9 @@ final class TenantIsolationSchemaContract
         'approach_assignment_changes' => 'direct',
         'documents' => 'direct',
         'document_versions' => 'direct',
+        'document_workspace_assignments' => 'direct',
+        'document_workspace_assignment_changes' => 'direct',
+        'document_metadata_revisions' => 'direct',
         'approaches' => 'direct',
         'approach_changes' => 'direct',
         'approach_content_revisions' => 'direct',
@@ -43,6 +46,25 @@ final class TenantIsolationSchemaContract
     // Ordered local columns => [target table, ordered target columns]. All are
     // same-schema RESTRICT/RESTRICT. Global actors are NOT membership references.
     private const FOREIGN_KEYS = [
+        'document_workspace_assignments' => [
+            'organization_id' => ['organizations', 'id'],
+            'grantee_id,organization_id' => ['users', 'id,organization_id'],
+            'issuer_id,organization_id' => ['users', 'id,organization_id'],
+            'revoked_by,organization_id' => ['users', 'id,organization_id'],
+            'organization_id,document_id' => ['documents', 'organization_id,id'],
+        ],
+        'document_workspace_assignment_changes' => [
+            'organization_id' => ['organizations', 'id'],
+            'actor_id,organization_id' => ['users', 'id,organization_id'],
+            'subject_id,organization_id' => ['users', 'id,organization_id'],
+            'organization_id,document_id' => ['documents', 'organization_id,id'],
+            'organization_id,fixture_id,assignment_id,subject_id,scope_key,operation' => ['document_workspace_assignments', 'organization_id,fixture_id,id,grantee_id,scope_key,operation'],
+        ],
+        'document_metadata_revisions' => [
+            'organization_id' => ['organizations', 'id'],
+            'organization_id,document_id' => ['documents', 'organization_id,id'],
+            'actor_id,organization_id' => ['users', 'id,organization_id'],
+        ],
         'approach_assignments' => [
             'organization_id' => ['organizations', 'id'],
             'grantee_id,organization_id' => ['users', 'id,organization_id'],
@@ -121,6 +143,10 @@ final class TenantIsolationSchemaContract
     ];
 
     private const UNIQUE_KEYS = [
+        'document_workspace_assignments' => ['id', 'public_id', 'organization_id,id', 'organization_id,fixture_id,grantee_id,operation,scope_key',
+            'organization_id,fixture_id,id,grantee_id,scope_key,operation'],
+        'document_workspace_assignment_changes' => ['id', 'public_id', 'organization_id,id', 'organization_id,fixture_id,event_key'],
+        'document_metadata_revisions' => ['id', 'public_id', 'organization_id,id', 'organization_id,document_id,version_number'],
         'approach_assignments' => ['id', 'public_id', 'organization_id,id', 'organization_id,fixture_id,id,grantee_id',
             'organization_id,fixture_id,grantee_id,operation,scope_key'],
         'approach_assignment_changes' => ['id', 'public_id', 'organization_id,fixture_id,event_key'],
@@ -145,6 +171,10 @@ final class TenantIsolationSchemaContract
     ];
 
     private const NULLABLE_REFERENCES = [
+        'document_workspace_assignments' => ['document_id', 'revoked_by'],
+        // Stored COALESCE scope_key is reported nullable by MySQL; its exact
+        // generation expression is checked separately and can never yield NULL.
+        'document_workspace_assignment_changes' => ['document_id', 'assignment_id', 'scope_key'],
         'approach_assignments' => ['approach_id', 'initial_contributor_id', 'revoked_by'],
         'approach_assignment_changes' => ['approach_id', 'assignment_id'],
         'approach_changes' => ['previous_owner_id', 'new_owner_id'],
@@ -167,6 +197,28 @@ final class TenantIsolationSchemaContract
             'approach_assignment_changes_operation_check'],
     ];
 
+    private const DOCUMENT_WORKSPACE_CHECKS = [
+        'document_workspace_assignments' => [
+            'doc_ws_assignment_class' => "((`classification`='TEST_ONLY')and(`scenario`='DOCUMENT_LOCAL_001'))",
+            'doc_ws_assignment_fixture' => "((char_length(`fixture_id`)=32)and(not(regexp_like(`fixture_id`,'[^0-9a-f]'))))",
+            'doc_ws_assignment_scope' => "(((`scope_kind`='institution')and(`document_id`isnull)and(`operation`in('create','list')))or((`scope_kind`='document')and(`document_id`isnotnull)and(`operation`in('view','metadata','append','history'))))",
+            'doc_ws_assignment_period' => '(((`starts_at`+interval24hour)isnotnull)and(`expires_at`>`starts_at`)and(`expires_at`=(`starts_at`+interval24hour)))',
+            'doc_ws_assignment_revoke' => '(((`revoked_at`isnull)and(`revoked_by`isnull))or((`revoked_at`isnotnull)and(`revoked_by`isnotnull)and(`revoked_at`>=`starts_at`)))',
+        ],
+        'document_workspace_assignment_changes' => [
+            'doc_ws_change_class' => "((`classification`='TEST_ONLY')and(`scenario`='DOCUMENT_LOCAL_001'))",
+            'doc_ws_change_fixture' => "((char_length(`fixture_id`)=32)and(not(regexp_like(`fixture_id`,'[^0-9a-f]'))))",
+            'doc_ws_change_kind' => "(eventin('granted','revoked','expiration_observed','access_denied'))",
+            'doc_ws_change_reference' => "((`assignment_id`isnotnull)or(event='access_denied'))",
+            'doc_ws_change_scope' => "(((`document_id`isnull)and(`operation`in('create','list')))or((`document_id`isnotnull)and(`operation`in('view','metadata','append','history'))))",
+        ],
+        'document_metadata_revisions' => [
+            'doc_meta_number' => '((`version_number`>0)and(`version_number`<=4294967295))',
+            'doc_meta_title' => '(char_length(trim(`title`))>0)',
+            'doc_meta_description' => '(char_length(trim(`description`))>0)',
+        ],
+    ];
+
     /** Read only metadata, never tenant rows. Call after MySqlTestCase's guards. */
     public static function read(Connection $db): array
     {
@@ -177,9 +229,12 @@ final class TenantIsolationSchemaContract
         foreach ($db->select("SELECT TABLE_NAME AS name, ENGINE AS engine FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME") as $table) {
             $schema[$table->name] = ['engine' => $table->engine, 'columns' => [], 'foreign_keys' => [], 'indexes' => [], 'checks' => []];
         }
-        foreach ($db->select('SELECT TABLE_NAME AS tbl, COLUMN_NAME AS col, COLUMN_TYPE AS type, IS_NULLABLE AS nullable FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME, ORDINAL_POSITION') as $column) {
+        foreach ($db->select('SELECT TABLE_NAME AS tbl, COLUMN_NAME AS col, COLUMN_TYPE AS type, IS_NULLABLE AS nullable, GENERATION_EXPRESSION AS generation, EXTRA AS extra FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME, ORDINAL_POSITION') as $column) {
             if (isset($schema[$column->tbl])) {
                 $schema[$column->tbl]['columns'][$column->col] = ['type' => $column->type, 'nullable' => $column->nullable === 'YES'];
+                if ($column->col === 'scope_key' && in_array($column->tbl, ['document_workspace_assignments', 'document_workspace_assignment_changes'], true)) {
+                    $schema[$column->tbl]['scope_generation'] = ['expression' => $column->generation, 'extra' => $column->extra];
+                }
             }
         }
         $foreignKeys = $db->select(<<<'SQL'
@@ -271,7 +326,11 @@ SQL);
                         continue; // Already checked for every directly scoped table.
                     }
                     $nullable = in_array($column, self::NULLABLE_REFERENCES[$table] ?? [], true);
-                    $type = $table === 'approach_assignment_changes' && $column === 'fixture_id' ? 'char(32)' : 'bigint unsigned';
+                    $type = match (true) {
+                        in_array($table, ['approach_assignment_changes', 'document_workspace_assignment_changes'], true) && $column === 'fixture_id' => 'char(32)',
+                        $table === 'document_workspace_assignment_changes' && $column === 'operation' => 'varchar(20)',
+                        default => 'bigint unsigned',
+                    };
                     if (($actual['columns'][$column] ?? null) !== ['type' => $type, 'nullable' => $nullable]) {
                         $errors[] = "$table: $column must retain its reviewed ".strtoupper($type).' type and nullability.';
                     }
@@ -311,6 +370,31 @@ SQL);
                 foreach ($columns as $column => $type) {
                     if (($actual['columns'][$column] ?? null) !== ['type' => $type, 'nullable' => false]) {
                         $errors[] = "$table: $column must retain its reviewed assignment type and nullability.";
+                    }
+                }
+            }
+            if (isset(self::DOCUMENT_WORKSPACE_CHECKS[$table])) {
+                foreach (self::DOCUMENT_WORKSPACE_CHECKS[$table] as $name => $clause) {
+                    if (($actual['checks'][$name] ?? null) !== ['enforced' => true, 'clause' => $clause]) {
+                        $errors[] = "$table: required enforced document CHECK $name is missing or changed.";
+                    }
+                }
+                $columns = ['id' => ['bigint unsigned', false], 'public_id' => ['char(26)', false], 'created_at' => ['datetime', false]];
+                if ($table === 'document_metadata_revisions') {
+                    $columns += ['title' => ['varchar(255)', false], 'description' => ['longtext', false], 'version_number' => ['int unsigned', false]];
+                } else {
+                    $columns += ['fixture_id' => ['char(32)', false], 'scenario' => ['varchar(40)', false], 'classification' => ['varchar(16)', false],
+                        'operation' => ['varchar(20)', false], 'scope_key' => ['bigint unsigned', true]];
+                    $columns += $table === 'document_workspace_assignments' ? ['scope_kind' => ['varchar(16)', false],
+                        'starts_at' => ['datetime', false], 'expires_at' => ['datetime', false], 'revoked_at' => ['datetime', true]]
+                        : ['event' => ['varchar(24)', false], 'event_key' => ['varchar(100)', false]];
+                    if (($actual['scope_generation'] ?? null) !== ['expression' => 'coalesce(`document_id`,0)', 'extra' => 'STORED GENERATED']) {
+                        $errors[] = "$table: scope_key must retain the stored non-NULL COALESCE document scope expression.";
+                    }
+                }
+                foreach ($columns as $column => [$type, $nullable]) {
+                    if (($actual['columns'][$column] ?? null) !== ['type' => $type, 'nullable' => $nullable]) {
+                        $errors[] = "$table: $column must retain its reviewed document type and nullability.";
                     }
                 }
             }
@@ -367,7 +451,7 @@ SQL);
                     }
                 }
             }
-            if (in_array($table, ['authorization_changes', 'organizational_unit_changes', 'organization_changes', 'approach_content_revisions', 'approach_changes', 'document_versions'], true)) {
+            if (in_array($table, ['authorization_changes', 'organizational_unit_changes', 'organization_changes', 'approach_content_revisions', 'approach_changes', 'document_versions', 'document_workspace_assignments', 'document_workspace_assignment_changes', 'document_metadata_revisions'], true)) {
                 foreach ($actual['foreign_keys'] as $key) {
                     if ($key['delete'] !== 'RESTRICT' || $key['update'] !== 'RESTRICT') {
                         $errors[] = "$table: every historical foreign key must remain RESTRICT on delete and update.";

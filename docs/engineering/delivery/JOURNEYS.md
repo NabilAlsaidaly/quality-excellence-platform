@@ -9,7 +9,7 @@ Every journey needs build SHA/time, actor/scope, DB target, real entry/steps, pe
 | J01 | Independent accounts/same email, reset/session isolation | L3_PASS; NOT_L4_ACCEPTED | Issue53/report53:45 browser assertions, independent MySQL readback; two institutions/three contexts, CSRF/signed-link/token/session negatives and native RTL375/768/1280. Source alignment, owner acceptance and review remain gates |
 | J02 | Provision institution/first actor and valid unit tree | BLOCKED_OWNER | D-002 bootstrap; coworker #37 unmerged |
 | J03 | Assigned multi-actor Approach edit/reassign/publish | PARTIAL_TEST_ONLY_L3; NOT_L4_ACCEPTED | Issue57 bounded actual-Policy create/initial assignments/metadata/contributor drafts/history PASS64 browser checks plus independent MySQL readback. Review pending. Operational ratification and later transfer/review/publication remain blocked |
-| J04 | Real scanned private file/version/download | BLOCKED_OWNER | D-007 and D-002; #42 trusted internal bytes are not user intake |
+| J04 | Real scanned private file/version/download | PARTIAL_TEST_ONLY; full BLOCKED_OWNER | Issue62 corrected DocumentPolicy/assignments/atomic synthetic versions/metadata/history and independent native workspace; actual evidence in report62. D007/D002 real intake/release/download remain unavailable; synthetic bytes do not accept this full journey |
 | J05 | Separate document/evidence decisions | BLOCKED_OWNER | P3/P4 and D-027 |
 | J06 | Automatic review/correction/approved publication | BLOCKED_TECHNICAL | P1/P4 implementation/schema approval |
 | J07 | Real event-triggered in-app notices/read state | BLOCKED_TECHNICAL | P4/P6 and approved recipients |
