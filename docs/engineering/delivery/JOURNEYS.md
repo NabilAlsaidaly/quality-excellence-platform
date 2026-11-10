@@ -11,9 +11,9 @@ Every journey needs build SHA/time, actor/scope, DB target, real entry/steps, pe
 | J03 | Assigned multi-actor Approach edit/reassign/publish | PARTIAL_TEST_ONLY_L3; NOT_L4_ACCEPTED | Issue57 bounded actual-Policy create/initial assignments/metadata/contributor drafts/history PASS64 browser checks plus independent MySQL readback. Review pending. Operational ratification and later transfer/review/publication remain blocked |
 | J04 | Real scanned private file/version/download | PARTIAL_TEST_ONLY; full BLOCKED_OWNER | Issue62 corrected DocumentPolicy/assignments/atomic synthetic versions/metadata/history and independent native workspace; actual evidence in report62. D007/D002 real intake/release/download remain unavailable; synthetic bytes do not accept this full journey |
 | J05 | Separate document/evidence decisions | BLOCKED_OWNER | P3/P4 and D-027 |
-| J06 | Automatic review/correction/approved publication | BLOCKED_TECHNICAL | P1/P4 implementation/schema approval |
+| J06 | Automatic review/correction/approved publication | BLOCKED_TECHNICAL | Issue62 new immutable input/correction/no-op domain evidence; actual persistent bridge/Policy/UI is in one submitted exact amendment, not approved or implemented |
 | J07 | Real event-triggered in-app notices/read state | BLOCKED_TECHNICAL | P4/P6 and approved recipients |
-| J08 | All five maturity stages with independent manual rating | BLOCKED_OWNER | D-003 and P1/P4/P5; not static stages |
+| J08 | All five maturity stages with independent manual rating | PARTIAL_DOMAIN; full BLOCKED | Issue62 typed required question/evidence snapshots implemented; real five-stage SQL/UI approval bridge awaits exact technical approval; D003 operational scope and upstream gates remain |
 | J09 | Reassessment preserves earlier snapshot/later-stage policy | BLOCKED_OWNER | D-014 |
 | J10 | Licensed versioned reference mapping | BLOCKED_OWNER | D-020/D-027/P8 |
 | J11 | Two-tenant adversarial J03–J10 | NOT_RUN | Existing negative tests cover implemented subset only |
