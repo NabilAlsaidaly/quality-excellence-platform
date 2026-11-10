@@ -111,10 +111,10 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
 
     public function test_measured_schema_journal_and_strict_negative_contract_match_actual_mysql(): void
     {
-        $this->assertSame(29, count(glob(database_path('migrations/*.php'))));
-        $this->assertSame(29, DB::table('migrations')->count());
+        $this->assertSame(40, count(glob(database_path('migrations/*.php'))));
+        $this->assertSame(count(glob(database_path('migrations/*.php'))), DB::table('migrations')->count());
         $schema = TenantIsolationSchemaContract::read(DB::connection());
-        $this->assertCount(31, $schema);
+        $this->assertCount(40, $schema);
         $this->assertSame([], TenantIsolationSchemaContract::violations($schema));
         $this->assertSame('organization_id,created_at,id', $schema['documents']['indexes']['documents_organization_created_idx']['columns']);
         foreach (['documents', 'document_versions'] as $table) {
@@ -203,6 +203,7 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
             DB::statement('RENAME TABLE documents_root_fixture TO organizations');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
+        $this->rollbackEmptyReviewMaturityMigrations();
         $this->artisan('migrate:rollback', ['--path' => ['database/migrations/2026_11_08_000003_create_document_versions_table.php'],
             '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
         $this->assertSame(28, DB::table('migrations')->count());
@@ -215,7 +216,7 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
             DB::statement('RENAME TABLE versions_parent_fixture TO documents');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
-        $this->assertSame(29, DB::table('migrations')->count());
+        $this->assertSame(count(glob(database_path('migrations/*.php'))), DB::table('migrations')->count());
         $migration = require database_path('migrations/2026_11_08_000003_create_document_versions_table.php');
         $this->sqlFailure(fn () => $migration->up(), 1050);
         $this->assertTrue(Schema::hasTable('document_versions'));
@@ -234,7 +235,7 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
             } catch (RuntimeException $error) {
                 $this->assertStringContainsString('preserved', $error->getMessage());
                 $this->assertTrue(Schema::hasTable('document_versions'));
-                $this->assertSame(29, DB::table('migrations')->count());
+                $this->assertSame(count(glob(database_path('migrations/*.php'))), DB::table('migrations')->count());
             }
         }
         $this->createDocumentFixture($member);
@@ -243,7 +244,7 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
                 '--step' => DB::table('migrations')->count(), '--force' => true]);
             $this->fail('Populated first DROP must refuse.');
         } catch (RuntimeException) {
-            $this->assertSame(29, DB::table('migrations')->count());
+            $this->assertSame(count(glob(database_path('migrations/*.php'))), DB::table('migrations')->count());
             $this->assertDatabaseCount('document_versions', 1);
         }
     }

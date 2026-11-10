@@ -140,6 +140,7 @@ trait ApproachAssignmentFixtures
                 throw new RuntimeException('Populated document workspace history preserved before any fixture DROP.');
             }
         }
+        $this->rollbackEmptyReviewMaturityMigrations();
         $this->artisan('migrate:rollback', ['--path' => [
             'database/migrations/2026_11_11_000001_create_document_workspace_assignments_table.php',
             'database/migrations/2026_11_11_000002_create_document_workspace_assignment_changes_table.php',
@@ -148,5 +149,25 @@ trait ApproachAssignmentFixtures
         foreach (['document_workspace_assignments', 'document_workspace_assignment_changes', 'document_metadata_revisions'] as $table) {
             $this->assertFalse(Schema::hasTable($table));
         }
+    }
+
+    /** Demonstrated original-DDL compatibility only; never discard any workflow history. */
+    protected function rollbackEmptyReviewMaturityMigrations(): void
+    {
+        if (DB::getDriverName() !== 'mysql' || DB::connection()->getDatabaseName() !== 'quality_platform_ci'
+            || getenv('MYSQL_TESTS_ENABLED') !== '1' || DB::selectOne('SELECT DATABASE() AS name')->name !== 'quality_platform_ci') {
+            throw new RuntimeException('Refuse workflow compatibility rollback outside disposable MySQL.');
+        }
+        foreach (['maturity_workflow_stages', 'review_maturity_assignments', 'maturity_workflow_configurations', 'maturity_workflow_submissions',
+            'maturity_workflow_evidence', 'review_maturity_reviews', 'maturity_workflow_assessments', 'review_maturity_audit', 'review_maturity_notifications'] as $table) {
+            if (Schema::hasTable($table) && DB::table($table)->exists()) {
+                throw new RuntimeException('Populated review/maturity history preserved before any fixture DROP.');
+            }
+        }
+        $paths = array_map(fn ($path) => 'database/migrations/'.basename($path), glob(database_path('migrations/2026_11_12_*.php')));
+        $this->assertCount(11, $paths, 'Reviewed two candidate keys and nine additive tables.');
+        $this->artisan('migrate:rollback', ['--path' => $paths, '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
+        $this->assertFalse(Schema::hasTable('review_maturity_reviews'));
+        $this->assertFalse(Schema::hasTable('maturity_workflow_stages'));
     }
 }
