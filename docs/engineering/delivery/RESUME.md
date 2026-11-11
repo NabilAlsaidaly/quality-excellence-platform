@@ -1,3 +1,27 @@
+
+## Verified core checkpoint -2026-11-12
+
+Full SQLite515tests/4887assertions PASS,0failures/errors/skips, before formatting-only cleanup. Final focused actual-adapter/T17/J03 MySQL16tests/157assertions PASS,0failures/errors/skips. Includes committed role/permission/member/password revocation-first, stale RR permission grant, writer-first actual performance_schema wait on Organization, real1205 and real1213. The1205 test originally exposed Laravel13 wrapping nested QueryException in DeadlockException; source now follows the preserved exception chain and rolls back the whole application transaction. Actual1213 uses a deliberately inverted owned test holder, not a supported protocol; supported role writers wait on Organization first. Prior writes, unit state and success audit remain rolled back with original SQL codes visible and no retry. Timeout1/14 and deadlock1/15 are subsets, not additional totals. Full MySQL/Redis/browser/current-head CI remain pending.
+
+# Final MVP integration - authoritative active checkpoint
+
+- CURRENT_BRANCH: `integration/mvp-final-2026-11-12`.
+- WORKTREE: isolated final integration; the original feature checkout stays at `4b81e88`.
+- START/LAST_GOOD_COMMIT: `b3db07e8afe4cc6f637946865f0d0e51fd9d07ca`, Foundation43090486295 SUCCESS773tests/7966assertions. This is baseline evidence, not current-head CI.
+- CONTRIBUTOR_MERGE: `01f2e53419a9a11030656ae023fc914f017fad52`, parents b3db07e + published contributor `5c86b4fdc8327975dab84faf9a4f39f82ad694fe`. Original branch/history preserved.
+- AUTHORITY: explicit final Engineering Lead instruction2026-11-12 supersedes earlier contributor ownership/T17 technical deferral for this isolated branch only. No operational D002/D007/D014 grants or normal privileged routes.
+- ACTIVE_ISSUES:37/50/58/61/62/68. ACTIVE_PHASE: integrated unit workflow and current-grant serialization.
+- WORKTREE_DIRTY: five technical application boundaries, contributor MySQL fixture/regression, and new focused Feature/MySQL tests. No migration, route, normal provider, registry, dependency or CI change.
+- ACTUAL_EVIDENCE: original contributor SQLite15/336 PASS; original MySQL1/12 ERROR at the existing identity rollback guard. Owned-fixture cleanup retains that guard. New actual-adapter fail-first5/47 had3failures(role/permission/password),0errors; membership already denied. Initial integrated adapter + unchanged J03 concurrency subset12/106 PASS. Broader lock/currentness tests still running; full regression/browser/current-head CI NOT_TESTED.
+- TEST_TARGET: newly owned disposable MySQL8.4.11, loopback19371, quality_platform_ci; namespace/UUID guarded. Never use the original demo or development database. Private runtime credentials are outside Git.
+- PRESERVATION: previous promotion remains STOPPED; retain archive, both stashes including9b30bc6b578ac4b6c4ab1b7db035a775ea31a2fa, old manifest and expired grants. No promotion/fingerprint update/pop/drop/reset.
+- EXACT_NEXT_ACTION: collect private t17-lock-contract result; fix actual defects; run focused Feature/current structural tests, full SQLite/MySQL/Redis and browser verification. Then publish sanitized commits/Draft PR and independently verify exact-head CI.
+- OPEN_BUSINESS_GATES: operational granular D002, D003 scale placement, operational D007/D014, source/licensing/relationships for reference mapping. Reuse settled local scenarios. Never claim TEST_ONLY as L4 or a complete MVP.
+- Full execution report: [FINAL-MVP-DELIVERY-2026-11-12](../reports/FINAL-MVP-DELIVERY-2026-11-12.md).
+
+
+## Historical checkpoints (superseded only within the scope above)
+
 #LATEST2026-11-11 — Issue68 APPROVED PERSISTENCE IMPLEMENTATION. Read private .local-tools/reports/issue68/CURRENT.md first. Exact v4 SHA1ef1f318a5b245b377cb93ba42a034611a58d7aad906cbc2fbbb8e045347fa3a R01–R26 approved; C15–C18 separately approved after actual18-test failures. All26 R files plus four C paths exist uncommitted on feat/mvp-completion-2026-11 at b9cdf047. Preserve them. Canonical12 SQL blocks still exact; six migrations executed ONLY new exclusive persistence-runtime MySQL8.4/quality_platform_ci and SQLite memory. Models/Actions remain unregistered; current actual Policies deny new operations. C01–14/C19–21 and new grant backing excluded. Full SQLite495/4529 PASS; selected final13/45 PASS. Compatibility18/737 PASS. Redis4/19/Composer/Pint/npm private build PASS. R implementation4b81e88 committed/pushed; exact-head CI43060745091 and local MySQL266/3032 FAILED16errors/1failure. R subset16/291 PASS. New codec negative RED1/1 uncommitted; minimum three-file correction/two demo fingerprints request pending. Do not apply unapproved patch or rebase hashes automatically. Continue exact failures/approvals, final regression, source audit/reports and normal push/DraftPR69, exact-head CI. Prior b9 CI43025574535 SUCCESS is historical only. Old demo has exactly two independently reviewed/Lead-approved fingerprint updates, actual HTTP200/eight read-only browser/thirteen SELECT-only checks PASS; original40 migrations/pristine data/current24h grants/server retained. Never extend expiry or touch demoDB. Complete features/operational ratification/T17 NOT_ACCEPTED. Earlier pending review notes below are historical and superseded only for the approved subset; do not reopen settled local questions.
  RESUME - Issue62 owner-demo readiness
 

@@ -2,16 +2,15 @@
 
 namespace App\Actions\Approaches;
 
+use App\Authorization\TenantAuthorization;
 use App\Authorization\TenantContext;
 use App\Models\Approach;
 use App\Models\Organization;
 use App\Models\OrganizationalUnit;
-use App\Models\OrganizationMembership;
 use App\Models\User;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -67,21 +66,7 @@ final class CreateApproach
             throw new AuthorizationException;
         }
 
-        $organizationId = $this->context->organizationId();
-        $actorId = $this->context->actorId();
-
-        return DB::transaction(function () use ($organizationId, $actorId, $operation): mixed {
-            $organization = Organization::query()->whereKey($organizationId)->lockForUpdate()->first();
-            $currentActor = User::query()->whereKey($actorId)->lockForUpdate()->first();
-            $membership = OrganizationMembership::query()->where('organization_id', $organizationId)
-                ->where('user_id', $actorId)->lockForUpdate()->first();
-            if ($organization === null || $currentActor === null || $membership === null
-                || ! ($currentActor->principal_type === 'legacy' || ($currentActor->principal_type === 'institution'
-                    && (int) $currentActor->organization_id === $organizationId))) {
-                throw new AuthorizationException;
-            }
-
-            return $operation($organizationId, $currentActor);
-        }, 1);
+        return app(TenantAuthorization::class)->withinMutation($actor,
+            fn (Organization $organization, User $currentActor) => $operation((int) $organization->id, $currentActor));
     }
 }

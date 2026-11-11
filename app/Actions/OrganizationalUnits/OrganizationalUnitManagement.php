@@ -2,10 +2,10 @@
 
 namespace App\Actions\OrganizationalUnits;
 
+use App\Authorization\TenantAuthorization;
 use App\Authorization\TenantContext;
 use App\Models\Organization;
 use App\Models\OrganizationalUnit;
-use App\Models\OrganizationMembership;
 use App\Models\User;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -124,26 +124,15 @@ final class OrganizationalUnitManagement
         });
     }
 
-    private function withinContext(?User $actor, Closure $operation): mixed
+    public function withinContext(?User $actor, Closure $operation): mixed
     {
         if ($actor === null || ! $actor->exists || $this->context->organizationId() === null
             || $this->context->actorId() !== (int) $actor->getKey()) {
             throw new AuthorizationException;
         }
 
-        return DB::transaction(function () use ($actor, $operation): mixed {
-            // Every supported operation uses this common lock order. Never make
-            // ancestry decisions from an earlier ordinary MVCC snapshot.
-            $organization = Organization::query()->whereKey($this->context->organizationId())->lockForUpdate()->first();
-            $user = User::query()->whereKey($actor->getKey())->lockForUpdate()->first();
-            $membership = OrganizationMembership::query()->where('user_id', $actor->getKey())
-                ->where('organization_id', $this->context->organizationId())->lockForUpdate()->first();
-            if ($organization === null || $user === null || $membership === null || ! $this->context->verifiedFor($actor)) {
-                throw new AuthorizationException;
-            }
-
-            return $operation();
-        });
+        return app(TenantAuthorization::class)->withinMutation($actor,
+            fn (Organization $organization, User $currentActor) => $operation((int) $organization->id, $currentActor));
     }
 
     private function findUnit(string $publicId): OrganizationalUnit

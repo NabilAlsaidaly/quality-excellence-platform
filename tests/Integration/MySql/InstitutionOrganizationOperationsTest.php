@@ -9,25 +9,53 @@ use App\Models\Organization;
 use App\Models\OrganizationMembership;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Tests\Support\MySqlTestCase;
 
 final class InstitutionOrganizationOperationsTest extends MySqlTestCase
 {
     use DatabaseMigrations;
 
+    private array $ownedAccounts = [];
+
+    protected function tearDown(): void
+    {
+        try {
+            if ($this->app) {
+                while (DB::transactionLevel() > 0) {
+                    DB::rollBack();
+                }
+                // Delete only identities and related fixture rows created by this test.
+                // The original migration guards still run during framework teardown.
+                $ids = array_keys($this->ownedAccounts);
+                foreach ($this->ownedAccounts as $id => $organizationId) {
+                    if (User::find($id)?->organization_id !== $organizationId) {
+                        throw new \RuntimeException('Owned unit fixture identity changed.');
+                    }
+                }
+                $organizations = array_unique(array_values($this->ownedAccounts));
+                DB::table('organizational_unit_changes')->whereIn('organization_id', $organizations)->whereIn('actor_id', $ids)->delete();
+                DB::table('authorization_changes')->whereIn('organization_id', $organizations)->whereIn('actor_id', $ids)->delete();
+                DB::table('model_has_roles')->where('model_type', User::class)->whereIn('organization_id', $organizations)->whereIn('model_id', $ids)->delete();
+                DB::table('institution_password_reset_tokens')->whereIn('account_id', $ids)->delete();
+                DB::table('organization_memberships')->whereIn('organization_id', $organizations)->whereIn('user_id', $ids)->delete();
+                DB::table('users')->whereIn('id', $ids)->delete();
+            }
+        } finally {
+            parent::tearDown();
+        }
+    }
+
     /**
-     * Characterization test for the current Gate-to-write gap.
-     *
-     * A passing test demonstrates that a permission revoked after Gate
-     * authorization can still be followed by a successful unit write.
-     * This does not satisfy T17. The shared locking/authorization protocol
-     * remains a separate integration decision under Issue #58.
+     * The original characterization at contributor SHA 5c86b4f demonstrated
+     * an unsafe successful write. Integrated acceptance preserves that exact
+     * two-connection schedule and now requires denial without domain/audit data.
      */
-    public function test_t17_characterizes_permission_revocation_between_gate_and_unit_write(): void
+    public function test_t17_rejects_permission_revocation_between_gate_and_unit_write(): void
     {
         config(['authorization.capabilities' => [
             'organization.units.view' => Organization::class,
@@ -54,7 +82,9 @@ final class InstitutionOrganizationOperationsTest extends MySqlTestCase
             },
         );
 
-        Auth::guard('institution')->setUser($actor);
+        $this->post('/institution/login', ['organization' => $organization->public_id,
+            'email' => $actor->email, 'password' => 'first-account-password'])->assertRedirect();
+        $this->assertAuthenticatedAs($actor, 'institution');
 
         $gateInitiallyAllowed = $context->run(
             $actor,
@@ -145,15 +175,17 @@ final class InstitutionOrganizationOperationsTest extends MySqlTestCase
             // The adapter performs its own Gate check. The callback above
             // revokes the permission after that check and before the unit
             // service acquires its first organization lock.
-            $context->run(
-                $actor,
-                $organization->public_id,
-                fn () => app(AuthorizedUnitOperations::class)->create(
-                    $actor,
-                    $organization->public_id,
-                    'Created after permission revocation',
-                ),
-            );
+            $denied = false;
+            try {
+                $context->run($actor, $organization->public_id,
+                    fn () => app(AuthorizedUnitOperations::class)->create($actor, $organization->public_id, 'Created after permission revocation'));
+            } catch (AuthorizationException) {
+                $denied = true;
+            } catch (HttpExceptionInterface $error) {
+                $this->assertSame(403, $error->getStatusCode());
+                $denied = true;
+            }
+            $this->assertTrue($denied, 'The actual adapter must refuse the committed permission revocation.');
 
             $this->assertTrue(
                 $revocationObserved,
@@ -174,11 +206,11 @@ final class InstitutionOrganizationOperationsTest extends MySqlTestCase
                 'role_id' => $role->getKey(),
             ]);
 
-            // Characterization result: current code still writes after the
-            // capability has been revoked on the independent connection.
-            $this->assertDatabaseCount('organizational_units', 1);
-            $this->assertDatabaseCount('organizational_unit_changes', 1);
-            $this->assertDatabaseHas('organizational_units', [
+            // Same original schedule, strengthened from known unsafe behavior
+            // into the required fail-closed regression. Historical RED retained.
+            $this->assertDatabaseCount('organizational_units', 0);
+            $this->assertDatabaseCount('organizational_unit_changes', 0);
+            $this->assertDatabaseMissing('organizational_units', [
                 'organization_id' => $organization->id,
                 'name' => 'Created after permission revocation',
                 'parent_id' => null,
@@ -202,6 +234,8 @@ final class InstitutionOrganizationOperationsTest extends MySqlTestCase
             'user_id' => $actor->id,
             'organization_id' => $organization->id,
         ]);
+
+        $this->ownedAccounts[$actor->id] = (int) $organization->id;
 
         return $actor;
     }

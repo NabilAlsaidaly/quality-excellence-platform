@@ -53,6 +53,8 @@ final class RoleManagement
         foreach ($capabilities as $capability) {
             $this->capabilities->requireRecognized($capability);
         }
+        $capabilities = array_values(array_unique($capabilities));
+        sort($capabilities, SORT_STRING);
         $this->mutate('role.permissions_changed', $role, null, function (Role $current) use ($capabilities): void {
             $permissions = array_map(fn (string $name) => Permission::findOrCreate($name, 'web'), array_unique($capabilities));
             $current->syncPermissions($permissions);
@@ -86,13 +88,9 @@ final class RoleManagement
 
     private function mutate(string $event, ?Role $role, ?User $member, Closure $operation): mixed
     {
-        return DB::transaction(function () use ($event, $role, $member, $operation): mixed {
-            $this->requireContext();
-            // Serialize actor-membership removal with this internal mutation.
-            if (! OrganizationMembership::query()->where('user_id', $this->context->actorId())
-                ->where('organization_id', $this->context->organizationId())->lockForUpdate()->first()) {
-                throw new AuthorizationException;
-            }
+        $actor = User::query()->find($this->context->actorId());
+
+        return app(TenantAuthorization::class)->withinMutation($actor, function () use ($event, $role, $member, $operation): mixed {
             $current = $role === null ? null : Role::query()
                 ->where('organization_id', $this->context->organizationId())
                 ->where('guard_name', 'web')->whereKey($role->getKey())->lockForUpdate()->first();
@@ -108,7 +106,7 @@ final class RoleManagement
             $member?->unsetRelation('roles')->unsetRelation('permissions');
 
             return $result;
-        });
+        }, $member === null ? [] : [$member]);
     }
 
     private function requireContext(): void
@@ -126,7 +124,7 @@ final class RoleManagement
             throw new AuthorizationException;
         }
 
-        return User::query()->findOrFail($member->getKey());
+        return User::query()->whereKey($member->getKey())->lockForUpdate()->firstOrFail();
     }
 
     private function validName(string $name): string

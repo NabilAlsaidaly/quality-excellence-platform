@@ -1,3 +1,19 @@
+# Final integration status -2026-11-12
+
+All overall P0-P10 phases remain pending their actual acceptance. The existing execution branch for this wave is `integration/mvp-final-2026-11-12`.
+
+| Complete | Bounded work | state | Actual evidence / next action |
+|---|---|---|---|
+| [x] | Preserve remote contributor history locally | IMPLEMENTED_INTERNAL | Merge01f2e53 with exact5c86b4f parent; no contributor branch rewrite |
+| [ ] | Real unit adapter security integration | IN_PROGRESS | RED3 actual revocation failures reproduced; first focused green12/106; further lock graph/rollback/currentness in execution |
+| [ ] | Native integrated owner journey | IN_PROGRESS | Original contributor HTTP15/336 baseline; new native browser path and independent SQL readback not yet executed |
+| [ ] | Final regression and exact-head CI | IN_PROGRESS | Baseline773/7966 belongs tob3db07e only; no final-head result claimed |
+| [ ] | Operational authorization and full MVP | BLOCKED_OWNER | No granular grants, reference license/relationships or other open business policy inferred |
+
+The previous local promotion incident remains unresolved and is not a prerequisite for this isolated integration. Its archive and retained stashes are preserved. See RESUME for current source/test targets.
+
+## Historical checkpoints (superseded only within the scope above)
+
 # MVP delivery status
 
 VERIFIED SOURCE CHECKPOINT2026-11-11: isolated candidatea9cdb69358f691a34e483a67b22fb10004a6cf9c; exact-head CI43087327592/job130755024444 SUCCESS773 tests/7966 assertions,0errors/0failures/0skipped, all required checks PASS. Actual checkout tree ce0ee3e60c44dcc766fe54757d27bd2aeb95de6b equals source tree with expected main/head parents. Local full counts agree; private real Laravel failure injection2/23 separately PASS. All17 former failures pass. Original live4b81e88/branch/five dirty files/frozen sources/.env/assets/connection bytes/process/container/40-journal/login200 preserved. Grants expired at original19:00:15Z and were not renewed. No fingerprint/promotion authorization. This engineering-evidence update needs containing-head CI in PR/private receipt; validated source bytes remain unchanged. Stop for separate fingerprint/promotion review after final checks. Earlier notes are historical.

@@ -1,3 +1,9 @@
+# Active final integration authority
+
+The Engineering Lead explicitly authorized contributor37 integration/repair and shared T17 technical candidate changes in the isolated final integration branch on2026-11-12. This supersedes earlier technical deferment and exclusive-edit restrictions only in that worktree. Contributor branch/history, original demo, normal environment and databases remain protected. Operational D002 and other owner-policy gates remain unchanged. The common supported-writer lock prefix is Organization -> ascending User PKs -> ascending membership PKs -> role/domain suffix; final claims require actual MySQL evidence. An arbitrary open transaction is not proof that this prefix was acquired.
+
+## Historical checkpoints (superseded only within the scope above)
+
 # Public decision-gate register
 
 Only public engineering status and references are recorded. Private decision text is excluded. RECEIVED is not RATIFIED; historical sources remain unchanged.

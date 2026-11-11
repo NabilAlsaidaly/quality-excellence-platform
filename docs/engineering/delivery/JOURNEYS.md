@@ -1,3 +1,15 @@
+# Active final integration journey checkpoint
+
+| Journey | Current evidence | State |
+|---|---|---|
+| J02 institution/unit tree/create/rename/move | Exact contributor source merged into isolated branch; original HTTP15/336 PASS; current mutation boundary in testing | PARTIAL_TEST_ONLY; integrated browser NOT_TESTED |
+| J12 revocation | Actual published adapter reproduced three fail-first defects; initial adapter/J03 subset12/106 PASS; broader lock graph/current grant/rollback pending | PARTIAL; security acceptance not yet claimed |
+| J14 complete customer path | Historical bounded native journeys preserved; no new complete integrated browser result yet | PARTIAL/BLOCKED_OWNER |
+
+No new L4 acceptance, operational grants, expired-demo renewal, file serving or full MVP completion is claimed.
+
+## Historical checkpoints (superseded only within the scope above)
+
 # Customer journey register
 
 Owner-demo checkpoint2026-11-10: PR66 lead-merged9bac877; exact postmerge42877149742 SUCCESS690/7382 verified before safe synchronization. Fresh complete rehearsal on that source PASS87 browser/19 independent SQL checks/15 responsive screenshots; its owned services cleaned. Separate fresh manual fixture PASS57 browser navigation checks plus19 SQL checks proving no reviews/questions/answers/assessments/notices consumed, and remains running for the owner. The [requirement-to-screen matrix](OWNER-DEMO-COMPLETION-MATRIX.md) and [runbook](OWNER-DEMO-RUNBOOK.md) describe entry/navigation/24h expiry and exact limits. No whole-journey/L4 state is promoted.
