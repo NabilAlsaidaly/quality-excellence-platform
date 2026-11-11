@@ -66,7 +66,7 @@ Result **PASS2 tests/23 assertions**, separate from public suite totals. No Poli
 | Composer | Strict validation/platform/audit PASS, zero advisories |
 | Pint | Candidate repository PASS; final check repeated before publication |
 | npm | Locked offline install and existing isolated build PASS62 modules; no package/lock or live asset change |
-| Exact-head CI | Pending candidate publication/verification; earlier4b81e88 CI failure is baseline evidence, not candidate success |
+| Verified source-head CI | [Foundation43087327592 SUCCESS](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43087327592), job130755024444, sourcea9cdb69358f691a34e483a67b22fb10004a6cf9c:773 tests/7966 assertions,0errors/0failures/0skipped; all required checks PASS |
 
 Complete local total: **773 tests/7966 assertions,0 errors/0 failures/0 skipped** (SQLite495/4529 +MySQL274/3418 +Redis4/19). The private actual Laravel injection2/23 is separate. Every original17 case also matched a passing record in the complete MySQL JUnit, not only in the targeted subset. Counts are actual; subsets are not added to the full suites. Full exact-head results and source identity are recorded in Draft PR/private final receipt after the containing commit exists. No identifier-only commit is needed to record its own SHA.
 
@@ -78,3 +78,11 @@ An independently captured receipt records original HEAD/branch, four existing wo
 
 After complete candidate validation and final-head CI, provide final source hashes and a proposed **two-value-only** fingerprint diff. This is review evidence, not permission to apply it. Stop for separate explicit fingerprint/promotion approval. Preserve the current live checkout even though the remote feature branch may contain the validated candidate. No merge, deployment, operational grant, T17 completion or new functional acceptance.
 The original demo assignments reached their unchanged24-hour expiry on2026-11-11 at19:00:15UTC (22:00:15 Asia/Damascus). They were not renewed; source/fingerprint approval does not renew authorization. Login HTTP and frozen-source preservation remain independent of expired workspace access.
+
+## Independently verified CI and preservation evidence
+
+Actual source-head job logs confirm SQLite495/4529, MySQL8.4.13 274/3418 and Redis4/19. PHP8.4.27/Node24.22.2; Composer validate/install/platform/audit, migrations up/rollback/reapply, Pint, npm ci/build and runtime configuration/HTTP all succeeded. The unrelated conditional Issue4 scope step was skipped; no test was skipped. Npm reported zero vulnerabilities.
+
+Checkout f76948305bb5e555fb3e6706e9cb24e8f972d5f7 has tree ce0ee3e60c44dcc766fe54757d27bd2aeb95de6b, identical to the source-head tree, with exactly protected main9089405 and candidatea9cdb69 parents. The complete original17-case list was also individually matched to passing full local JUnit cases. This evidence update changes engineering records only; its containing final HEAD requires its own successful CI, recorded in the Draft PR/private final receipt without an identifier-only follow-up commit.
+
+Final live preservation checks passed for original HEAD4b81e88/branch, all five dirty files, frozen sources, normal.env, public assets and connection.json bytes; original PHP26688/container/database identities,40-migration journal/no R tail, loginHTTP200 were retained. Original grant expiry was not extended. Candidate four source hashes and a two-value-only proposed fingerprint diff are saved privately; no fingerprint update or live promotion occurred. The isolated candidate remains reviewable; separate explicit approval is required for either action. No new functional/operational acceptance, merge or deployment.
