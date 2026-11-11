@@ -141,7 +141,8 @@ final class CreateDocumentWithVersion
         $version->forceFill(['public_id' => $receipt['version_public_id'], 'organization_id' => $document->organization_id,
             'document_id' => $document->id, 'version_number' => $number, 'actor_id' => $actor->id,
             'storage_disk' => 'local', 'storage_key' => $receipt['storage_key'], 'sha256' => $receipt['sha256'],
-            'byte_size' => $receipt['byte_size'], 'original_filename' => $filename]);
+            'byte_size' => $receipt['byte_size'], 'original_filename' => $filename,
+            'detected_media_type' => $receipt['detected_media_type'] ?? null]);
         $version->save();
 
         return ['document_public_id' => $document->public_id, 'version_public_id' => $version->public_id,

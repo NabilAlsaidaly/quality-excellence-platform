@@ -158,6 +158,7 @@ class ReviewMaturityIntegrityTest extends MySqlTestCase
 
     public function test_every_new_down_refuses_root_only_and_grant_only_history_before_first_drop_or_alter(): void
     {
+        $this->rollbackEmptyPersistenceMigrations();
         $f = $this->reviewMaturityFixture();
         $grant = (array) DB::table('review_maturity_assignments')->where('fixture_id', $f['proof']['fixture_id'])->where('operation', 'edit_content')->first();
         unset($grant['scope_key']);
@@ -190,6 +191,7 @@ class ReviewMaturityIntegrityTest extends MySqlTestCase
         $paths = glob(database_path('migrations/2026_11_12_*.php'));
         $this->assertCount(11, $paths);
         foreach ($paths as $index => $path) {
+            $this->rollbackEmptyPersistenceMigrations();
             // Original sources/rows remain intact. Only EMPTY, exactly inventoried workflow DDL is reversed.
             $tail = array_slice($paths, $index);
             $this->artisan('migrate:rollback', ['--path' => array_map(fn ($p) => 'database/migrations/'.basename($p), $tail),
@@ -225,6 +227,7 @@ class ReviewMaturityIntegrityTest extends MySqlTestCase
 
     public function test_unknown_external_reference_and_missing_key_journal_refuse_before_any_reverse_statement(): void
     {
+        $this->rollbackEmptyPersistenceMigrations();
         DB::statement('CREATE TABLE rm_external_fixture (stage_id BIGINT UNSIGNED NOT NULL, CONSTRAINT rm_external_fk FOREIGN KEY(stage_id) REFERENCES maturity_workflow_stages(id) ON DELETE RESTRICT ON UPDATE RESTRICT) ENGINE=InnoDB');
         try {
             $before = TenantIsolationSchemaContract::read(DB::connection());
@@ -253,6 +256,24 @@ class ReviewMaturityIntegrityTest extends MySqlTestCase
             $this->assertTrue(collect(Schema::getIndexes('approach_content_revisions'))->contains('name', 'approach_revision_workflow_scope'));
         } finally {
             DB::table('migrations')->insert($journal);
+        }
+    }
+
+    private function rollbackEmptyPersistenceMigrations(): void
+    {
+        $paths = [
+            'database/migrations/2026_11_13_000001_add_reassessment_parent_key.php',
+            'database/migrations/2026_11_13_000002_create_document_intakes_table.php',
+            'database/migrations/2026_11_13_000003_create_document_intake_events_table.php',
+            'database/migrations/2026_11_13_000004_create_maturity_reassessment_attempts_table.php',
+            'database/migrations/2026_11_13_000005_create_maturity_reassessment_decisions_table.php',
+            'database/migrations/2026_11_13_000006_create_maturity_reassessment_events_table.php',
+        ];
+        $stems = array_map(fn ($path) => basename($path, '.php'), $paths);
+        if (DB::table('migrations')->whereIn('migration', $stems)->exists()) {
+            // New guards independently refuse populated, drifted or unjournaled state.
+            $this->artisan('migrate:rollback', ['--path' => $paths,
+                '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
         }
     }
 }

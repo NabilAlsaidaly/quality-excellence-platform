@@ -109,12 +109,64 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
         parent::tearDown();
     }
 
+    private const MIGRATION_INVENTORY = [
+        '0001_01_01_000000_create_users_table.php',
+        '0001_01_01_000001_create_cache_table.php',
+        '0001_01_01_000002_create_jobs_table.php',
+        '2026_10_31_000001_create_organizations_table.php',
+        '2026_10_31_000002_create_organization_memberships_table.php',
+        '2026_10_31_000003_create_organizational_units_table.php',
+        '2026_11_03_000001_create_permission_permissions_table.php',
+        '2026_11_03_000002_create_permission_roles_table.php',
+        '2026_11_03_000003_create_permission_role_has_permissions_table.php',
+        '2026_11_03_000004_create_permission_model_has_roles_table.php',
+        '2026_11_03_000005_create_permission_model_has_permissions_table.php',
+        '2026_11_03_000006_create_permission_authorization_changes_table.php',
+        '2026_11_03_000007_create_organizational_unit_changes_table.php',
+        '2026_11_03_000008_create_organization_changes_table.php',
+        '2026_11_05_000001_expand_user_identity_namespaces.php',
+        '2026_11_05_000002_guard_identity_membership_insert.php',
+        '2026_11_05_000003_guard_identity_membership_update.php',
+        '2026_11_05_000004_guard_identity_binding_update.php',
+        '2026_11_05_000005_create_institution_password_reset_tokens.php',
+        '2026_11_07_000001_create_approaches_table.php',
+        '2026_11_07_000002_create_approach_content_revisions_table.php',
+        '2026_11_08_000001_create_approach_changes_table.php',
+        '2026_11_08_000002_create_documents_table.php',
+        '2026_11_08_000003_create_document_versions_table.php',
+        '2026_11_10_000001_create_approach_assignments_table.php',
+        '2026_11_10_000002_create_approach_assignment_changes_table.php',
+        '2026_11_11_000001_create_document_workspace_assignments_table.php',
+        '2026_11_11_000002_create_document_workspace_assignment_changes_table.php',
+        '2026_11_11_000003_create_document_metadata_revisions_table.php',
+        '2026_11_12_000001_add_approach_revision_workflow_candidate_key.php',
+        '2026_11_12_000002_add_document_version_workflow_candidate_key.php',
+        '2026_11_12_000003_create_maturity_workflow_stages_table.php',
+        '2026_11_12_000004_create_review_maturity_assignments_table.php',
+        '2026_11_12_000005_create_maturity_workflow_configurations_table.php',
+        '2026_11_12_000006_create_maturity_workflow_submissions_table.php',
+        '2026_11_12_000007_create_maturity_workflow_evidence_table.php',
+        '2026_11_12_000008_create_review_maturity_reviews_table.php',
+        '2026_11_12_000009_create_maturity_workflow_assessments_table.php',
+        '2026_11_12_000010_create_review_maturity_audit_table.php',
+        '2026_11_12_000011_create_review_maturity_notifications_table.php',
+        '2026_11_13_000001_add_reassessment_parent_key.php',
+        '2026_11_13_000002_create_document_intakes_table.php',
+        '2026_11_13_000003_create_document_intake_events_table.php',
+        '2026_11_13_000004_create_maturity_reassessment_attempts_table.php',
+        '2026_11_13_000005_create_maturity_reassessment_decisions_table.php',
+        '2026_11_13_000006_create_maturity_reassessment_events_table.php',
+    ];
+
     public function test_measured_schema_journal_and_strict_negative_contract_match_actual_mysql(): void
     {
-        $this->assertSame(40, count(glob(database_path('migrations/*.php'))));
+        $actualMigrations = array_map('basename', glob(database_path('migrations/*.php')));
+        sort($actualMigrations);
+        $this->assertSame(count(self::MIGRATION_INVENTORY), count($actualMigrations));
+        $this->assertSame(self::MIGRATION_INVENTORY, $actualMigrations);
         $this->assertSame(count(glob(database_path('migrations/*.php'))), DB::table('migrations')->count());
         $schema = TenantIsolationSchemaContract::read(DB::connection());
-        $this->assertCount(40, $schema);
+        $this->assertCount(count(TenantIsolationSchemaContract::TABLES), $schema);
         $this->assertSame([], TenantIsolationSchemaContract::violations($schema));
         $this->assertSame('organization_id,created_at,id', $schema['documents']['indexes']['documents_organization_created_idx']['columns']);
         foreach (['documents', 'document_versions'] as $table) {
@@ -187,6 +239,7 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
 
     public function test_empty_rollback_reapply_and_each_atomic_fk_failure_leave_no_partial_table(): void
     {
+        $this->rollbackEmptyPersistenceMigrations();
         $this->rollbackEmptyDocumentWorkspaceMigrations();
         $this->artisan('migrate:rollback', ['--path' => [
             'database/migrations/2026_11_08_000002_create_documents_table.php',
@@ -203,6 +256,7 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
             DB::statement('RENAME TABLE documents_root_fixture TO organizations');
             $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
         }
+        $this->rollbackEmptyPersistenceMigrations();
         $this->rollbackEmptyReviewMaturityMigrations();
         $this->artisan('migrate:rollback', ['--path' => ['database/migrations/2026_11_08_000003_create_document_versions_table.php'],
             '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
@@ -279,6 +333,24 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
         } finally {
             fclose($stream);
             $armed = false;
+        }
+    }
+
+    private function rollbackEmptyPersistenceMigrations(): void
+    {
+        $paths = [
+            'database/migrations/2026_11_13_000001_add_reassessment_parent_key.php',
+            'database/migrations/2026_11_13_000002_create_document_intakes_table.php',
+            'database/migrations/2026_11_13_000003_create_document_intake_events_table.php',
+            'database/migrations/2026_11_13_000004_create_maturity_reassessment_attempts_table.php',
+            'database/migrations/2026_11_13_000005_create_maturity_reassessment_decisions_table.php',
+            'database/migrations/2026_11_13_000006_create_maturity_reassessment_events_table.php',
+        ];
+        $stems = array_map(fn ($path) => basename($path, '.php'), $paths);
+        if (DB::table('migrations')->whereIn('migration', $stems)->exists()) {
+            // New guards independently refuse populated, drifted or unjournaled state.
+            $this->artisan('migrate:rollback', ['--path' => $paths,
+                '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
         }
     }
 }

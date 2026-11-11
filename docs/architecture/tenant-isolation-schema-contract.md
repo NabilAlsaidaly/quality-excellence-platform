@@ -212,3 +212,23 @@ Metadata checks add required candidate keys, typed/nullability references, test 
 Two independently atomic CREATE migrations preserve retry after either failure; populated grant/event reverse steps refuse before the first DROP. Current-read assignment/structural checks live only in the named candidate boundary. This schema does not register operational privileges: normal authorization stays denied outside the trusted request-bound testing context. Raw SQL is not made immutable and existing deployment trigger prerequisites are unchanged.
 
 Observed initial full-MySQL failures (193 tests/1434 assertions,8 errors/21 failures) demonstrated all eleven compatibility paths: missing classifications, actual26 versus old24 journals, old parent FK children and last-migration rollback targets. Empty new assignment children are rolled back by their explicit paths before an original parent fixture; populated history refuses. Original identity/Approach/trigger/permission scenarios and assertions remain, and document rollback selects its two original migration paths explicitly. There is no FK disable, global setting, deletion of historical fixture data to pass rollback, or CI amendment.
+
+## Issue68 — approved v4 persistence foundation
+
+Measured on the exclusively owned MySQL8.4.13 fixture:46 migration files/journal entries and45 base tables. The six additive migrations introduce five tables and one explicit initial-assessment parent candidate. The original40-migration manifest plus the six exact approved filenames is verified independently of journal count; base-table inventory must exactly match the executable classification map. Unknown tables still fail.
+
+| Direct tenant table | Mandatory scoped references and integrity |
+|---|---|
+| document_intakes | Existing exact organization/document/version candidate; ordered actor and independent release actor references to users(id,organization_id); explicit fixture/TEST_ONLY/scenario; request/version uniqueness; scan/lease/generation/release CHECKs |
+| document_intake_events | Exact organization/fixture/intake parent, nullable ordered actor reference, request uniqueness and enforced event/object/generation checks |
+| maturity_reassessment_attempts | Exact original organization/fixture/Approach/stage/assessment candidate, pinned configuration and author; numbered approved predecessor; one-open generated slot; approved terminal submission/review pair and state CHECK |
+| maturity_reassessment_decisions | Stored approved-state FK to the exact attempt, a second FK to its declared terminal submission/review pair, existing approved-review/submission/reviewer FK and ordered reviewer account reference; one decision per attempt/review; manual snapshot checks |
+| maturity_reassessment_events | Exact scoped attempt and optional immutable submission, ordered actor reference, request uniqueness and enforced event/object checks |
+
+Each has its own non-null BIGINT UNSIGNED organization_id and restrictive composite tenant relationships; the existing parent chain enforces organization existence. The contract records every actual column/type/nullability, required FK/UNIQUE/enforced CHECK and stored-generated expression. The initial-assessment candidate additionally requires organization_id,fixture_id,approach_id,stage_id,id. Removing or changing a required fact must fail the contract; raw-SQL operator immutability is not claimed.
+
+MySQL reserializes the original fixture regex with an _ascii introducer after the additive parent-key ALTER. Only that proven charset-format difference outside quoted values is normalized, alongside the existing _utf8mb4 normalization. Quoted literal contents and all original drift/mutation assertions remain intact. Invalid fixture values remain subject to the actual enforced CHECK.
+
+Engineering Lead separately approved only C15–C18 after the18-test run reproduced2 errors/9 failures. Empty R-tail migrations are reversed by explicit paths before original document/workflow rollback fixtures; no data is deleted to force compatibility, and every original safety assertion stays active. Populated new persistence refuses before any reverse DDL and has independent integrity tests. No old migration, Policy, permission, route, provider or CI change is part of this compatibility approval.
+
+This is TEST_ONLY persistence. Exact initial-review exclusion also requires the locked Action invariant; SQL binding alone does not prove same-attempt creation history. Actual file/scanner/release/download and reassessment UI acceptance, operational grants and downstream effects remain separately gated. C01–C14/C19–C21 are excluded.
