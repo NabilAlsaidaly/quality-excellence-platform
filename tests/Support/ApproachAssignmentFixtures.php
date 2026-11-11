@@ -164,10 +164,80 @@ trait ApproachAssignmentFixtures
                 throw new RuntimeException('Populated review/maturity history preserved before any fixture DROP.');
             }
         }
+        $this->rollbackEmptyRealPersistenceMigrations();
         $paths = array_map(fn ($path) => 'database/migrations/'.basename($path), glob(database_path('migrations/2026_11_12_*.php')));
         $this->assertCount(11, $paths, 'Reviewed two candidate keys and nine additive tables.');
         $this->artisan('migrate:rollback', ['--path' => $paths, '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
         $this->assertFalse(Schema::hasTable('review_maturity_reviews'));
         $this->assertFalse(Schema::hasTable('maturity_workflow_stages'));
+    }
+
+    /** Exact complete-or-absent fixture preflight; no partial journal adoption or direct DROP. */
+    protected function rollbackEmptyRealPersistenceMigrations(): void
+    {
+        if (! app()->environment('testing') || DB::getDriverName() !== 'mysql'
+            || DB::connection()->getDatabaseName() !== 'quality_platform_ci' || getenv('MYSQL_TESTS_ENABLED') !== '1'
+            || DB::selectOne('SELECT DATABASE() AS name')->name !== 'quality_platform_ci') {
+            throw new RuntimeException('Persistence fixture requires the isolated testing MySQL database.');
+        }
+        $paths = [
+            'database/migrations/2026_11_13_000001_add_reassessment_parent_key.php',
+            'database/migrations/2026_11_13_000002_create_document_intakes_table.php',
+            'database/migrations/2026_11_13_000003_create_document_intake_events_table.php',
+            'database/migrations/2026_11_13_000004_create_maturity_reassessment_attempts_table.php',
+            'database/migrations/2026_11_13_000005_create_maturity_reassessment_decisions_table.php',
+            'database/migrations/2026_11_13_000006_create_maturity_reassessment_events_table.php',
+        ];
+        $names = array_map(fn ($path) => basename($path, '.php'), $paths);
+        $tables = ['document_intakes', 'document_intake_events', 'maturity_reassessment_attempts',
+            'maturity_reassessment_decisions', 'maturity_reassessment_events'];
+        $readJournal = fn () => DB::table('migrations')->orderBy('id')->get()->map(fn ($row) => (array) $row)->all();
+        $journal = $readJournal();
+        $allNames = array_column($journal, 'migration');
+        $known = array_map(fn ($path) => basename($path, '.php'), glob(database_path('migrations/*.php')));
+        if (count($allNames) !== count(array_unique($allNames)) || array_diff($allNames, $known)
+            || collect($journal)->contains(fn ($row) => $row['id'] < 1 || $row['batch'] < 1)) {
+            throw new RuntimeException('Persistence fixture has an unknown or duplicate migration journal.');
+        }
+        $actualTables = Schema::getTableListing(schemaQualified: false);
+        foreach ($actualTables as $table) {
+            if ((str_starts_with($table, 'document_intake') || str_starts_with($table, 'maturity_reassessment'))
+                && ! in_array($table, $tables, true)) {
+                throw new RuntimeException('Persistence fixture has an unknown persistence object.');
+            }
+        }
+        $keyColumns = ['organization_id', 'fixture_id', 'approach_id', 'stage_id', 'id'];
+        $readKeys = fn () => Schema::hasTable('maturity_workflow_assessments')
+            ? collect(Schema::getIndexes('maturity_workflow_assessments'))->filter(fn ($key) => $key['name'] === 'mw_assess_reassessment_identity' || $key['columns'] === $keyColumns)->values()->all() : [];
+        $keys = $readKeys();
+        $applied = array_values(array_filter($journal, fn ($row) => in_array($row['migration'], $names, true)));
+        $presentTables = array_values(array_filter($tables, Schema::hasTable(...)));
+        if ($applied === []) {
+            if ($presentTables !== [] || $keys !== []) {
+                throw new RuntimeException('Persistence fixture has unjournaled objects; reviewed recovery required.');
+            }
+
+            return;
+        }
+        $sortedJournal = $allNames;
+        sort($sortedJournal);
+        sort($known);
+        if (array_column($applied, 'migration') !== $names || array_slice($allNames, -count($names)) !== $names
+            || $sortedJournal !== $known || count(array_unique(array_column($applied, 'batch'))) !== 1
+            || count($presentTables) !== count($tables) || count($keys) !== 1
+            || $keys[0]['name'] !== 'mw_assess_reassessment_identity' || ! $keys[0]['unique'] || $keys[0]['columns'] !== $keyColumns
+            || ! collect(Schema::getIndexes('maturity_workflow_assessments'))->contains(fn ($key) => $key['name'] === 'mw_assess_first_only' && $key['unique']
+                && $key['columns'] === ['organization_id', 'fixture_id', 'approach_id', 'stage_id'])) {
+            throw new RuntimeException('Persistence fixture is partial or inconsistent before any reverse DDL.');
+        }
+        // Preflight ALL data, journals, FKs, columns, enforced CHECKs and generated expressions before the first down.
+        (require database_path('migrations/2026_11_13_000001_add_reassessment_parent_key.php'))->assertRollbackSafe();
+        $expectedJournal = array_values(array_filter($journal, fn ($row) => ! in_array($row['migration'], $names, true)));
+        $expectedTables = array_values(array_diff($actualTables, $tables));
+        $this->artisan('migrate:rollback', ['--path' => $paths,
+            '--step' => count($journal), '--force' => true])->assertExitCode(0);
+        $this->assertSame($expectedJournal, $readJournal(), 'Only the six approved journal entries may be removed.');
+        $this->assertSame($expectedTables, Schema::getTableListing(schemaQualified: false), 'Only the five approved empty tables may be removed.');
+        $this->assertSame([], $readKeys(), 'The approved parent key must be absent after rollback.');
     }
 }

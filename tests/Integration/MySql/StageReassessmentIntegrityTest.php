@@ -27,6 +27,25 @@ class StageReassessmentIntegrityTest extends MySqlTestCase
         '2026_11_13_000006_create_maturity_reassessment_events_table' => ['maturity_reassessment_attempts', 'maturity_reassessment_events'],
     ];
 
+    public function test_mysql_metadata_preserves_ascii_identifiers_and_literal_bytes(): void
+    {
+        DB::statement(<<<'SQL'
+CREATE TABLE qep68_ascii_codec_fixture (
+ source_ascii VARCHAR(10) NOT NULL,
+ CONSTRAINT qep68_codec_identifier CHECK (source_ascii = _ascii'clean'),
+ CONSTRAINT qep68_codec_literal CHECK (source_ascii <> _ascii'_ascii')
+) ENGINE=InnoDB
+SQL);
+        try {
+            $metadata = TenantIsolationSchemaContract::read(DB::connection());
+            $checks = $metadata['qep68_ascii_codec_fixture']['checks'];
+            $this->assertSame(['enforced' => true, 'clause' => "(`source_ascii`='clean')"], $checks['qep68_codec_identifier']);
+            $this->assertSame(['enforced' => true, 'clause' => "(`source_ascii`<>'_ascii')"], $checks['qep68_codec_literal']);
+        } finally {
+            Schema::drop('qep68_ascii_codec_fixture');
+        }
+    }
+
     public function test_migration_target_requires_explicit_local_opt_in_or_the_existing_repository_ci_job(): void
     {
         $names = ['MYSQL_TESTS_ENABLED', 'GITHUB_ACTIONS', 'CI', 'GITHUB_REPOSITORY', 'GITHUB_RUN_ID'];

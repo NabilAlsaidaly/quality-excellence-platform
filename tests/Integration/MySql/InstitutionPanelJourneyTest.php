@@ -34,22 +34,28 @@ class InstitutionPanelJourneyTest extends MySqlTestCase
 
     protected function tearDown(): void
     {
-        while (DB::transactionLevel() > 0) {
-            DB::rollBack();
+        try {
+            while (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            if (DB::connection()->getDatabaseName() !== 'quality_platform_ci' || getenv('MYSQL_TESTS_ENABLED') !== '1') {
+                throw new RuntimeException('Refuse Issue46 cleanup outside disposable MySQL.');
+            }
+            foreach (['approach_changes', 'approach_content_revisions'] as $table) {
+                DB::table($table)->whereIn('approach_id', $this->ownedApproaches46)->delete();
+            }
+            DB::table('approaches')->whereIn('id', $this->ownedApproaches46)->delete();
+            DB::table('authorization_changes')->whereIn('actor_id', $this->ownedUsers46)->delete();
+            foreach (['model_has_roles', 'model_has_permissions'] as $table) {
+                DB::table($table)->where('model_type', User::class)->whereIn('model_id', $this->ownedUsers46)->delete();
+            }
+            DB::table('organization_memberships')->whereIn('user_id', $this->ownedUsers46)->delete();
+            DB::table('users')->whereIn('id', $this->ownedUsers46)->delete();
+        } finally {
+            // Real CSRF HTTP assertions ran in local; always restore the isolated DDL boundary.
+            app()->instance('env', 'testing');
+            config(['app.env' => 'testing']);
+            parent::tearDown();
         }
-        if (DB::connection()->getDatabaseName() !== 'quality_platform_ci' || getenv('MYSQL_TESTS_ENABLED') !== '1') {
-            throw new RuntimeException('Refuse Issue46 cleanup outside disposable MySQL.');
-        }
-        foreach (['approach_changes', 'approach_content_revisions'] as $table) {
-            DB::table($table)->whereIn('approach_id', $this->ownedApproaches46)->delete();
-        }
-        DB::table('approaches')->whereIn('id', $this->ownedApproaches46)->delete();
-        DB::table('authorization_changes')->whereIn('actor_id', $this->ownedUsers46)->delete();
-        foreach (['model_has_roles', 'model_has_permissions'] as $table) {
-            DB::table($table)->where('model_type', User::class)->whereIn('model_id', $this->ownedUsers46)->delete();
-        }
-        DB::table('organization_memberships')->whereIn('user_id', $this->ownedUsers46)->delete();
-        DB::table('users')->whereIn('id', $this->ownedUsers46)->delete();
-        parent::tearDown();
     }
 }

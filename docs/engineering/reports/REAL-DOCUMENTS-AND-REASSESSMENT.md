@@ -1,125 +1,80 @@
-# Issue 68 — real-document and reassessment persistence
+# Issue68 — gated persistence and isolated source correction
 
 ## النتيجة التنفيذية
 
-نُفّذت ملفات R01–R26 المعتمدة، مع تعديلات التوافق C15–C18 فقط. نُفّذ SQL المعتمد على MySQL 8.4 معزول وSQLite في الذاكرة، وأُضيفت قيود الاستمرارية وتاريخ المحاولات والإجراءات الخلفية التي تبقى مرفوضة عبر السياسة الحالية. **هذا تنفيذ لأساس الاستمرارية، وليس اكتمال رفع الملفات وتنزيلها أو إعادة التقييم للمستخدم.** لا توجد منح تشغيلية أو واجهات أو مسارات جديدة مفعّلة. فحص MySQL الشامل ما زال جاريًا؛ لا توجد نتيجة CI لهذا العمل غير الملتزم بعد.
+نُفّذت التصحيحات الأربعة المعتمدة في worktree معزول، مع إبقاء النسخة الحية والعرض وملف الاتصال والبصمات كما هي. اجتازت الحالات الـ17 السابقة الفحص الفعلي، وأُضيف تحقق صارم قبل التراجع وبعده، واختبار فعلي لإخفاق تنظيف Laravel. نجح التحقق المحلي الشامل في773 اختبارًا و7966 تحققًا دون أخطاء أو إخفاقات أو تخطٍ؛ وCI على النسخة المرشحة يلي نشرها؛ لا يُدّعى قبول ميزات الملفات أو إعادة التقييم أو أي صلاحيات تشغيلية.
 
-## Scope and authority
+## Authority and submitted source
 
-Issue [68](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/68), existing branch `feat/mvp-completion-2026-11`, protected base `90894051f249fe9b8aa78af728580bf96ddd9299`. Existing [Draft PR69](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/69) remains unmerged. No reset, branch replacement, force push, deployment or coworker37 edit.
+Issue [68](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/68); existing [Draft PR69](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/69), feature branch `feat/mvp-completion-2026-11`. Protected main/base remains `90894051f249fe9b8aa78af728580bf96ddd9299`; correction starts from `4b81e88cbbd59a0280f58957a375eb2bdb2f5e8a` in a separate detached validation worktree. The live branch/HEAD and all five existing dirty files are preserved. Candidate commits may be pushed normally to the same remote feature branch; live-checkout promotion and fingerprint writes are **not authorized**.
 
-Lead approval selects exact canonical v4 R01?R26 after independently verified full SHA-256, disclosed v3/v4 delta and inventory preconditions. The complete amendment, original contracts, exact SQL review and private receipts remain outside Git. A separate approval admits C15?C18 following reproduced compatibility failures. C01?C14/C19?C21 and new grant backing remain excluded. The separately approved two-fingerprint demo rebase is documented below.
+The Lead conditionally approved four exact test/support source paths, preservation of the already-authorized R25 negative and existing evidence, strict journal preflight/postconditions and actual Laravel failure injection. No product source, migration/SQL definition, Policy/permission/authorization, route/provider, dependency/lock, CI or coworker37 file changes. Accepted ADR-001/002/003, task Issue and decision ledger were rechecked. No engineering approval ratifies operational owner D002/D007/D014 policy. T17 remains deferred.
 
-Accepted ADR-001/002/003 and current decision ledger were checked. The SRS references DOC001?003/007?011/013?014, MAT015?016/020, REV003?010/013 and UX005?006 continue to apply. Bounded TEST_ONLY D007/D014 parameters are received; operational Product Owner D002/D007/D014 ratification and T17 integration remain unresolved. No settled local fixture question was reopened.
+Relevant original requirements: DOC001-003/007-011/013-014, MAT015-016/020, REV003-010/013 and UX005-006. This correction restores regression coverage and fixture safety; it creates no new business rule, permission or user-facing capability.
 
-## Requirements and evidence
+## Persistence foundation retained
 
-| Requirement | Implemented / verified boundary | Remaining acceptance |
-|---|---|---|
-| PDF/DOCX, decimal 30,000,000-byte maximum | Existing real-byte inspector/private quarantine reused; trusted detected MIME retained by R17 | Real authorized upload journey remains closed |
-| Scan and release separated | Durable pending/scanning/clean/suspect/failed/released/release_denied states, lease generation and clean attestation checks | Actual AV engine/signature and independent human-release acceptance |
-| Exact-version private download | Unregistered Action checks current actual Policy, tenant/version/release/digest, streams attachment with no-store/nosniff | Explicit operation grants, endpoint, native UI and real-browser SHA readback |
-| Safe durable history | Five tenant/fixture tables, restrictive composite FKs, exact approved attempt/submission/review pair | DB operators are trusted; no claim of trigger-enforced raw-SQL immutability |
-| Historical reassessment | New immutable submission/review and decision records; original configuration pinned; initial review reuse rejected under locks | New operation admission; full positive Action flow and downstream projection |
-| Lower/equal/higher dependency behavior | Existing bounded pure evaluator retained; R Actions expose no effective-state claim | C01/C02 persistence/effective-state and approved notification integration |
-| Tenant isolation/default deny | Actual unchanged Policies; old synthetic operations do not authorize any new operation | Positive operation acceptance cannot be claimed before reviewed backing |
-| Existing demo preservation | Exactly two authorized source fingerprints updated; HTTP200, eight read-only browser and thirteen SELECT-only checks PASS | Finite assignments retain original expiry; no renewal |
+Previously approved canonical v4 R01-R26 implements six additive migrations/five tenant+fixture tables, guarded persistence models, unregistered real-document Actions and immutable reassessment Actions. Exact SQL for both engines remains unchanged. Approved-attempt generated FK and exact attempt/submission/review pairing, independent reviewer Action invariants, immutable original configuration/history, one active attempt, CAS/idempotency and populated rollback refusal remain.
 
-## Exact implementation inventory
+New file operations and reassessment operations are still denied by the unchanged actual Policies. Synthetic grants do not activate them. Real scanner/signatures, operation-grant backing, native new-feature UI/download, effective downstream reassessment projection and notifications remain separate gates. R-only persistence and this test correction are not full feature/operational acceptance.
 
-The six migration SQL definitions for **both engines** remain byte-for-byte identical to the approved v4 blocks. Added guards do not alter that SQL. No previously applied migration was edited.
+## Exact changed paths for this correction
 
-| Row | Exact path |
+| Path | Change and necessity |
 |---|---|
-| R01 | `database/migrations/2026_11_13_000001_add_reassessment_parent_key.php` |
-| R02 | `database/migrations/2026_11_13_000002_create_document_intakes_table.php` |
-| R03 | `database/migrations/2026_11_13_000003_create_document_intake_events_table.php` |
-| R04 | `database/migrations/2026_11_13_000004_create_maturity_reassessment_attempts_table.php` |
-| R05 | `database/migrations/2026_11_13_000005_create_maturity_reassessment_decisions_table.php` |
-| R06 | `database/migrations/2026_11_13_000006_create_maturity_reassessment_events_table.php` |
-| R07 | `app/Models/DocumentIntake.php` |
-| R08 | `app/Models/DocumentIntakeEvent.php` |
-| R09 | `app/Models/MaturityReassessmentAttempt.php` |
-| R10 | `app/Models/MaturityReassessmentDecision.php` |
-| R11 | `app/Models/MaturityReassessmentEvent.php` |
-| R12 | `app/Actions/Documents/RegisterDocumentIntake.php` |
-| R13 | `app/Actions/Documents/ProcessDocumentIntake.php` |
-| R14 | `app/Actions/Documents/ReleaseDocumentIntake.php` |
-| R15 | `app/Actions/Documents/DownloadDocumentVersion.php` |
-| R16 | `app/Actions/Documents/ReconcileDocumentIntake.php` |
-| R17 | `app/Actions/Documents/CreateDocumentWithVersion.php` |
-| R18 | `app/Actions/Maturity/OpenStageReassessment.php` |
-| R19 | `app/Actions/Maturity/SaveStageReassessment.php` |
-| R20 | `app/Actions/Maturity/DecideStageReassessment.php` |
-| R21 | `app/Actions/Maturity/ReadStageReassessmentHistory.php` |
-| R22 | `tests/Feature/Documents/RealDocumentLifecycleTest.php` |
-| R23 | `tests/Feature/Maturity/StageReassessmentWorkflowTest.php` |
-| R24 | `tests/Integration/MySql/RealDocumentLifecycleTest.php` |
-| R25 | `tests/Integration/MySql/StageReassessmentIntegrityTest.php` |
-| R26 | `tests/Integration/MySql/StageReassessmentConcurrencyTest.php` |
+| `tests/Support/ApproachAssignmentFixtures.php` | Reverse only the complete, exactly journaled, EMPTY approved R tail before the original workflow fixture; reject partial/unknown/inconsistent state before DDL and assert exact journal/table/key postconditions |
+| `tests/Integration/MySql/ApproachSchemaIsolationTest.php` | Exact46-file inventory plus equality; additional real-MySQL journal inconsistency/absent-state tests and identifier/literal regression. Original13 direct test methods and all original assertions retained; inherited scenarios unchanged |
+| `tests/Integration/MySql/InstitutionPanelJourneyTest.php` | Original cleanup retained inside try/finally; restore testing before actual framework teardown even when cleanup throws. Original HTTP/local-CSRF scenarios unchanged |
+| `tests/Support/TenantIsolationSchemaContract.php` | One bounded regex alternative handles only actual ASCII/UTF8 charset introducers directly before literals; preserves identifiers/backticks and quoted content |
+| `tests/Integration/MySql/StageReassessmentIntegrityTest.php` | Preserve the already-authorized, actual MySQL ASCII identifier/literal negative test byte-for-byte from the live uncommitted evidence; it now passes |
+| `docs/engineering/reports/REAL-DOCUMENTS-AND-REASSESSMENT.md`, `68.md` | Current scope, actual failures, tests, risks and review boundary |
+| `docs/engineering/delivery/STATUS.md`, `RESUME.md` | Durable candidate state and explicit no-promotion/no-fingerprint gate |
 
-| Compatibility path | Reason / exact boundary |
+These are the only nine candidate paths beyond4b81e88. The four newly approved corrections are test/support code. R25 and report evidence existed before this approval and are retained in the candidate without committing or changing the live checkout.
+
+## Root causes and fixes
+
+The4b81e88 full run and [CI43060745091](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43060745091) both reported266 tests/3032 assertions,16 errors/1 failure. Twelve errors came from reversing original workflow parents while the new empty FK children remained; the unchanged historical guard correctly refused. Four HTTP cases deliberately used local for actual CSRF but left that state for MySQL teardown; the new testing-only migration guard correctly refused. One old inventory assertion expected40 filenames rather than46, preventing later schema assertions from running.
+
+The fixture now verifies unique known journal entries/positive IDs and batches; requires all six entries in the exact ordered tail and one cohort when present; checks complete schema presence, exact parent/original keys, unknown persistence objects and the existing full data/shape/constraint down guard before the first reverse command. A fully absent tail is accepted only when its tables and parent key are absent. The helper uses the real migration down methods; no raw purge, disabled FK, bypass or swallowed exception.
+
+After rollback it compares all remaining journal rows including original IDs/batches, all retained table names and absence of the added key. No original workflow reverse begins if these postconditions fail. Laravel returns qualified table names by default; the first postcondition test exposed this API detail, corrected with `schemaQualified: false` on both metadata reads, without weakening the equality.
+
+Five new fail-first cases (missing/duplicate/unknown journal, inconsistent cohort, missing table) originally attempted DDL. Actual MySQL journal/metadata probes now refuse before a spy sees any DDL request; exact mutated state is preserved and only each owned test mutation is restored. A separate positive test executes the actual six-migration reverse, asserts exact postconditions and proves the absent state is a no-op. The missing-table negative explicitly verifies the owned table is empty before removing that fixture.
+
+The original `_ascii` alternative also erased a suffix inside an identifier. Real metadata regression proved the same problem for the existing `_utf8mb4` alternative, so the same literal-introducer boundary now covers both recognized forms. Actual MySQL tests preserve `source_ascii`, `source_utf8mb4`, quoted `_ascii` identifiers and charset text inside literal values. This remains a bounded metadata codec, not a generic SQL parser.
+
+## Actual Laravel teardown failure injection
+
+A private reproducible PHPUnit harness instantiates the actual candidate InstitutionPanelJourneyTest through its real setup/teardown methods against the verified disposable MySQL server. It injects an exception in the real connection's first owned cleanup DELETE. A second case also fails a framework destruction callback. Both assert the actual DatabaseMigrations rollback completed, later callbacks saw app/config testing, the application was flushed and lifecycle state reset, and the original exception remained visible/chained. A genuinely fresh application/test instance then verifies no environment/callback failure leaked.
+
+Result **PASS2 tests/23 assertions**, separate from public suite totals. No Policy or application admission was mocked. The earlier pure-PHP finally demonstration is not substituted for this actual framework evidence. The private harness, source hashes, invocation and JUnit receipt remain inside the project and outside Git; the public original four HTTP scenarios also run in complete regression/CI.
+
+## Actual verification checkpoint
+
+| Check | Result |
 |---|---|
-| `tests/Support/TenantIsolationSchemaContract.php` | Recognize five tables and exact measured constraints; preserve original entries/methods; normalize proven `_ascii` introducers only outside literals |
-| `docs/architecture/tenant-isolation-schema-contract.md` | Match actual 46-migration/45-table inventory and TEST_ONLY constraints |
-| `tests/Integration/MySql/DocumentSchemaIsolationTest.php` | Explicit reviewed filename manifest; empty R-tail reverse before original rollback fixture; all original assertions retained |
-| `tests/Integration/MySql/ReviewMaturityIntegrityTest.php` | Reverse only the empty exact R-tail before original parent-history/failure tests; preserve all original eleven-migration scenarios |
+| Original17 failing cases | All17 matched individually to passing actual candidate JUnit records |
+| Complete affected MySQL suites | PASS58 tests/938 assertions, zero errors/failures/skips |
+| New journal fail-first | RED5 tests/5 failures before stronger preflight; no premature DDL executed by the spy |
+| Focused journal/postcondition/ASCII tests | PASS7/34 before adding the explicit empty-fixture assertion |
+| Actual ASCII and UTF8 metadata final tests | PASS2/4; real UTF8 fail-first retained before final boundary correction |
+| Actual Laravel failure injection | PASS2/23, zero errors/failures/skips, private independent harness |
+| Complete SQLite | PASS495/4529, final-source complete suite; zero errors/failures/skips |
+| Complete MySQL8.4.13 | PASS274/3418 on MySQL8.4.13; zero errors/failures/skips |
+| Redis8.2.11 | PASS4/19; fresh labelled loopback container removed afterward |
+| Composer | Strict validation/platform/audit PASS, zero advisories |
+| Pint | Candidate repository PASS; final check repeated before publication |
+| npm | Locked offline install and existing isolated build PASS62 modules; no package/lock or live asset change |
+| Exact-head CI | Pending candidate publication/verification; earlier4b81e88 CI failure is baseline evidence, not candidate success |
 
-Engineering records updated separately: this report, `68.md`, delivery `STATUS.md` and `RESUME.md`. Complete per-path line counts and source hashes are retained privately before publication. No Policy, shared authorization, application route/provider, package/lock, CI or coworker file changed.
+Complete local total: **773 tests/7966 assertions,0 errors/0 failures/0 skipped** (SQLite495/4529 +MySQL274/3418 +Redis4/19). The private actual Laravel injection2/23 is separate. Every original17 case also matched a passing record in the complete MySQL JUnit, not only in the targeted subset. Counts are actual; subsets are not added to the full suites. Full exact-head results and source identity are recorded in Draft PR/private final receipt after the containing commit exists. No identifier-only commit is needed to record its own SHA.
 
-## Database safety and portability
+## Isolation, preserved state and remaining review gate
 
-Six additive migrations introduce five tables plus one explicit initial-assessment candidate key. The guarded target requires testing plus forced in-memory SQLite, or actual MySQL8.4 `quality_platform_ci` with explicit local opt-in. The unchanged repository GitHub Actions job is independently recognized for its earlier migration preflight; no CI/global database setting was changed. The private local harness additionally checks owned container labels, loopback port and server UUID. This environment guard is a DDL safety check, not an operational authorization mechanism.
+Dependencies/autoload were copied into the detached candidate; Reflection and Laravel base-path checks prove source resolves there, not in the live checkout. The private candidate harness verifies checkout path, container issue/session labels, loopback port, actual MySQL8.4/database/server UUID before testing. All DDL is confined to the existing exclusively owned issue68 disposable server or forced SQLite memory. No normal developmentDB, original demoDB or global PHP/database settings were changed.
 
-R04/R05 enforce the approved parent state using stored generated references and pin the decision to the attempt's exact terminal submission/review pair. Composite actor references use existing `users(id,organization_id)` order. Acyclic numbered predecessors, one active attempt, unique review reuse prohibition, positive revisions and scenario/classification checks execute on both engines. An initial-stage review is additionally rejected by locked Action ownership invariants; direct privileged SQL is not represented as an authorized application review.
+An independently captured receipt records original HEAD/branch, four existing worktrees, exact five dirty-file hashes, every frozen demo source, normal.env, public build manifest and browser90 connection bytes. In-progress comparison is unchanged; original login returnsHTTP200. No fingerprint was modified, no grant renewed, no server stopped and no live checkout promoted. The original finite expiry remains authoritative; automatic renewal is prohibited.
 
-Before **any** reverse DDL, the package checks every new table and protected original document/version/review/submission/assessment history for rows, unknown external references, journal ownership, columns, tenant FKs, unique keys, enforced CHECKs and stored generated expressions. Populated, unjournaled or drifted state refuses reverse DDL. Recovery does not silently adopt an existing table. Missing-parent MySQL DDL fails atomically; SQLite received an explicit parent/candidate preflight because it otherwise accepts an invalid parent reference.
-
-The rollback metadata codec preserves literal bytes and grouping. SQLite's valid canonical `AS(` syntax requires a bounded actual-schema expression fallback because the framework metadata regex expects `AS (`. This does not rewrite the approved SQL or ignore an unknown generated expression.
-
-## Transaction, storage and authorization boundaries
-
-Document registration validates before finalization, quarantines outside SQL, then locks organization ? actor/membership ? Document ? version/intake under the real session and unchanged Policy. Document + Version + intake + registration audit share one transaction. Only a confirmed absent owned attempt can be compensated. Ambiguous commit/unbound bytes are retained for explicit operator review; the reconciliation Action does not delete possibly committed files.
-
-Scanner health/stream I/O occurs outside SQL locks under a finite generation/lease claim; result finalization rechecks current authorization, lease, generation, expiry and exact digest. Clean scan evidence is distinct from release. Human release excludes uploader/creator and requires separate current authority. Download audit means **authorized stream opened**, not proof of network delivery. Revocation is checked at authorization/stream-open boundaries; no global T17 serialization or mid-stream cancellation claim.
-
-Reassessment locks organization ? actor/membership ? Approach ? ordered stage roots ? attempt/review and current Policy. Saving always creates a new immutable submission/review except exact request replay. Decisions validate original configuration, last saved ownership, independent reviewer and exact fingerprints; review update ? approved parent/pair ? decision ? audit is atomic. Stale revisions and request-key conflicts fail closed. Current implementation deliberately supports completed five-stage initial histories only; partial initial cycles remain unsupported.
-
-New document operations (`upload_real`, `append_real`, `release_real`, `download_real`) and reassessment operations are **not** backed by any active assignment. Existing synthetic/create/append/view/answer/review grants do not activate them. Positive real-Policy Action acceptance, compensation under those authorized paths, scanner acceptance and new privilege revocation tests therefore remain gated; no allow-all mock was substituted.
-
-The unchanged review table also requires its foundational `review_stage` assignment FK. R20 requires that **in addition to** separate `review_reassessment` admission, never as a replacement. The activation amendment must address this exact dependency. R-only records decisions/history; no downstream effective projection, reassessment notifications or native customer UI is activated.
-
-## Actual validation checkpoint
-
-| Check | Actual result |
-|---|---|
-| Meaningful fail-first | Missing new persistence/classes; R17 MIME loss; SQLite missing-parent partial creation; initial-review reuse and exact pair constraints |
-| C15?C18 original 18 tests BEFORE | 18 tests /108 assertions; 2 errors,9 failures |
-| Same 18 tests AFTER approved compatibility | **PASS18 /737 assertions**; no assertion or case removed/skipped |
-| Selected R SQLite | **PASS13 /45** |
-| Complete SQLite | **PASS495 /4529**, process-only512MB; first128MB attempt exhausted memory |
-| Earlier selected MySQL R24/R25/R26 | **PASS4/19 +4/17 +3/25** before expanded recovery/constraint probes; not additive to a full suite |
-| Expanded R25 first run | All-six missing-parent/retry and transaction rollback probes passed; one test harness call-signature error corrected; full rerun pending |
-| Complete MySQL8.4.13 | Running on the new exclusively owned server; no PASS claimed |
-| Redis8.2.11 | **PASS4 /19**, own labelled loopback container removed afterward |
-| Composer | Strict validation/platform requirements/audit PASS; zero advisories |
-| Pint | Whole repository PASS; fixes restricted to approved paths |
-| npm | Locked offline install PASS; isolated existing build PASS62 modules. Windows wrapper first dropped outDir options; direct npm-cli forwarding corrected, public assets retained |
-| Old demo | HTTP200 with owned fixture header; eight actual Playwright read-only checks and thirteen SELECT-only preservation checks PASS. Initial verification URL/404 expectations were corrected without another fingerprint rebase |
-| CI | Prior committed head `b9cdf047bc2711a38a1608430d48ab6f62ce7a05`: [43025574535 SUCCESS](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43025574535). **Not current uncommitted source CI** |
-
-Approved C15?C18 source delta (added/removed lines): schema contract322/25 (including formatting), architecture20/0, DocumentSchema74/2 and ReviewMaturity21/0. Original test-method inventories are identical; assertion-call counts increased33?35 and32?33. Original contract entries/method bodies were independently compared. Full53-path staged publication export contains no known private fixture values; offline Gitleaks scanned499,936 bytes with zero findings. These are scope/publication checks, not substitute test assertions.
-
-The actual R26 tests use independent processes/PDO connections, verify MySQL8.4 and InnoDB REPEATABLE READ, observe real lock waits, distinguish old consistent snapshots from current locking reads, reject stale CAS updates and simultaneous duplicate active attempts. They prove bounded persistence races, not new privileged Action admission, shared permission-writer synchronization or T17 completion.
-
-## Existing owner demo and confidentiality
-
-The original browser-90 server/process/database, original40 migration journal, five fresh stages, nineteen finite workflow grants, pristine content/history and 24-hour assignment durations were retained. Only the two separately approved fingerprint values changed after byte-identity and semantic review. Original contract entries and method bodies were independently checked; only approved additions/ASCII metadata normalization differ. Private old/new fingerprints, exact diffs, manifest backup, screenshots and readback receipts are inside the project and ignored by Git.
-
-The existing demo remains pristine for the owner's own interaction; viewing its empty history screen is not proof of populated assessment history. Normal `.env` and public build manifest remain unchanged. The formerly observed unrelated PHP3044 is no longer present; the task neither stopped nor restarted it. Existing server26688 was retained. No private owner documents, credentials, complete amendment or raw credential-bearing logs belong in this public report/PR.
-
-## Remaining gates and next implementation
-
-Full MySQL/CI regression must finish before reporting this foundation as verified. Any additional shared test compatibility change needs its own exact approval with actual failure evidence. C01?C14/C19?C21 remain excluded.
-
-The next consolidated activation request must specify minimum exact grant persistence/issuer/revoker boundaries, Policies/admission, real evidence hydration, independent release and exact-version download, downstream projection/notifications and an isolated native browser harness. Real AV resources/signatures and actual PDF/DOCX browser-to-MySQL/SHA readback remain required. No operational owner ratification, real file serving, T17 resolution, overall Issue68 closure, deployment or self-merge is claimed.
+After complete candidate validation and final-head CI, provide final source hashes and a proposed **two-value-only** fingerprint diff. This is review evidence, not permission to apply it. Stop for separate explicit fingerprint/promotion approval. Preserve the current live checkout even though the remote feature branch may contain the validated candidate. No merge, deployment, operational grant, T17 completion or new functional acceptance.
+The original demo assignments reached their unchanged24-hour expiry on2026-11-11 at19:00:15UTC (22:00:15 Asia/Damascus). They were not renewed; source/fingerprint approval does not renew authorization. Login HTTP and frozen-source preservation remain independent of expired workspace access.

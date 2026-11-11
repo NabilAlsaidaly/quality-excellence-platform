@@ -1069,7 +1069,7 @@ SQL);
             // Only the bounded literal event expressions above, not a SQL parser.
             // Preserve literal contents: whitespace/charset text inside a value
             // must never make a different event appear to be an approved one.
-            $clause = preg_replace_callback("/'[^']*'|`event`|_utf8mb4|_ascii|\\s+/", static fn (array $match): string => match (true) {
+            $clause = preg_replace_callback("/'[^']*'|`event`|(?<![A-Za-z0-9_`])_(?:utf8mb4|ascii)(?=')|\\s+/", static fn (array $match): string => match (true) {
                 str_starts_with($match[0], "'") => $match[0],
                 $match[0] === '`event`' => 'event',
                 default => '',
