@@ -57,8 +57,8 @@
 | J02 | مؤسسة/وحدات tree/create/rename/move ومنع دورة | IMPLEMENTED_TEST_ONLY؛ كود الزميل محفوظ |
 | J03 | منهجية ومورد مسؤول وإسنادات صريحة وmetadata/draft/history | IMPLEMENTED_TEST_ONLY؛ انتقال/نشر عام غير مقبول |
 | J04 | رفع/نسخ/إتاحة مستقلة/تنزيل عينة حقيقية | IMPLEMENTED_TEST_ONLY؛ لا scanner إنتاجي أو ملفات مجهولة |
-| J05 | شاهد exact version وكفاية مستقلة | IMPLEMENTED_TEST_ONLY؛ لا اعتماد مؤسسي ضمني |
-| J06 | إرسال/تصحيح/اعتماد محتوى مستقل | IMPLEMENTED_TEST_ONLY |
+| J05 | فصل قرار الوثيقة عن قبول الشاهد؛ exact version وكفاية مستقلة مثبتان | PARTIAL TEST_ONLY؛ الاعتماد المؤسسي العام غير منفذ |
+| J06 | إرسال/تصحيح/اعتماد محتوى مستقل؛ النشر العام منفصل | PARTIAL TEST_ONLY؛ لا قبول لرحلة النشر التشغيلية |
 | J07 | إشعارات داخل التطبيق وread/unread | IMPLEMENTED_TEST_ONLY؛ لا قنوات خارجية |
 | J08 | خمس مراحل بأسئلة وسلم ولقطات فعلية | IMPLEMENTED_TEST_ONLY |
 | J09 | إعادة تقييم تاريخية وانخفاض/تساو/ارتفاع وتتابع لاحق | IMPLEMENTED_TEST_ONLY |
