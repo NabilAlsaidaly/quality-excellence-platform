@@ -1,3 +1,15 @@
+# منصة الجودة والتميّز — مرجع التسليم الحالي
+
+main `03c829fde71bbb11754ef657bf2edfe50253068e` يحتوي النسخة الوظيفية TEST_ONLY بعد دمج PR69 وPR70. [CI ما بعد الدمج](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43289862828) ناجح:885 تنفيذ اختبار/9560 تحقق. تتوفر أعمال فعلية للمنهجيات والوثائق والمراجعة والمراحل الخمس وإعادة التقييم في provider اختباري معزول؛ ليست تشغيلًا إنتاجيًا أو قبولًا عامًا للمتطلبات.
+
+[الكتالوج العربي](docs/catalog/00-INDEX-AR.md) · [دليل Herd وMySQL](docs/operations/LARAVEL-HERD-WINDOWS-RUNBOOK-AR.md) · [المستخدمون وTinker](docs/operations/LOCAL-USERS-TINKER-AND-PERMISSIONS-AR.md) · [تقرير صاحب المشروع](docs/engineering/delivery/PROJECT-OWNER-COMPLETE-HANDOVER-SOURCE-AR.md) · [تدقيق37](docs/engineering/reports/FINAL-MAIN-AND-ISSUE37-AUDIT-2026-11-12.md) · [حالة التنظيف](docs/engineering/reports/FINAL-HOUSEKEEPING-STATUS-2026-11-12.md).
+
+العروض15 تقاعدت بإذن صريح؛لا تستخدم روابطها القديمة أو حساباتها. Word خاص خارج Git. الإعداد العادي وبيانات التطوير محفوظة؛فحصHTTP Herd/phpMyAdmin لم ينجح حاليًا. قرارات الصلاحيات التشغيلية وscanner وonboarding/reference licences وL4 باقية. PR توثيق71 يحتاج مراجعة مستقلة؛لا self-merge.
+
+## وصف الأساس التاريخي وإرشادات سابقة
+
+الأقسام التالية توثق مرحلة الأساس عند كتابتها. عبارات «غير منفذ» أو «foundation» فيها لا تصف main الحالي؛ارجع للكتالوج ودليل التشغيل أعلاه قبل تطبيق أوامر قديمة على بيئة قائمة.
+
 # Quality & Excellence Platform
 
 Multi-organization institutional quality and excellence management platform (Arabic RTL primary UI), currently at the **engineering foundation** stage.
