@@ -3,6 +3,7 @@
 namespace App\Authorization;
 
 use App\Actions\Approaches\CreateApproach;
+use App\Actions\Maturity\ManageStageReassessmentOperations;
 use App\Actions\Reviews\ManageReviewMaturityAssignments;
 use App\Models\Approach;
 use App\Models\Organization;
@@ -28,6 +29,8 @@ final class ReviewMaturityAccess
     public const CAPABILITY = 'review_maturity.workspace.access';
 
     public const OPERATIONS = ['read_workflow', 'edit_content', 'review_content', 'configure_stage', 'answer_stage', 'review_stage'];
+
+    public const REASSESSMENT_OPERATIONS = ['open_reassessment', 'save_reassessment', 'review_reassessment', 'history_reassessment'];
 
     private static ?WeakMap $requests = null;
 
@@ -98,6 +101,11 @@ final class ReviewMaturityAccess
         return CarbonImmutable::now('UTC')->format('Y-m-d H:i:s');
     }
 
+    public static function hasReassessmentScope(): bool
+    {
+        return (self::context()['reassessment_operation_scope'] ?? null) === 'CLOSURE_REASSESSMENT_LOCAL_001';
+    }
+
     public function within(string $operation, string $publicId, ?int $stageId, Closure $callback, bool $audit = true): mixed
     {
         try {
@@ -115,6 +123,9 @@ final class ReviewMaturityAccess
                     ->where('approach_id', $approach->id)->orderBy('id')->lockForUpdate()->get();
                 // Lock all finite grants in one order, including the two explicit notification recipients.
                 $this->assignments()->orderBy('id')->lockForUpdate()->get();
+                if (self::hasReassessmentScope()) {
+                    $this->reassessmentAssignments()->orderBy('id')->lockForUpdate()->get();
+                }
                 $this->authorize($current, $operation, $approach, $stageId);
                 $result = $callback($current, $approach);
                 $this->authorize($current, $operation, $approach, $stageId);
@@ -123,7 +134,9 @@ final class ReviewMaturityAccess
             }));
         } catch (AuthorizationException|ModelNotFoundException $error) {
             if ($audit && self::context() !== null) {
-                app(ManageReviewMaturityAssignments::class)->recordDenied($operation, $publicId, $stageId);
+                in_array($operation, self::REASSESSMENT_OPERATIONS, true)
+                    ? app(ManageStageReassessmentOperations::class)->recordDenied($operation, $publicId, $stageId)
+                    : app(ManageReviewMaturityAssignments::class)->recordDenied($operation, $publicId, $stageId);
             }
             throw $error;
         }
@@ -145,15 +158,30 @@ final class ReviewMaturityAccess
 
     public function current(User $actor, string $operation, ?int $stageId): ?object
     {
-        return $this->assignments()->where('grantee_id', $actor->id)->where('operation', $operation)->where('stage_id', $stageId)
+        if (in_array($operation, self::REASSESSMENT_OPERATIONS, true) && (! self::hasReassessmentScope() || $stageId === null)) {
+            return null;
+        }
+        $query = in_array($operation, self::REASSESSMENT_OPERATIONS, true) ? $this->reassessmentAssignments() : $this->assignments();
+
+        return $query->where('grantee_id', $actor->id)->where('operation', $operation)->where('stage_id', $stageId)
             ->whereNull('revoked_at')->where('starts_at', '<=', self::timestamp())->where('expires_at', '>', self::timestamp())
             ->orderBy('id')->lockForUpdate()->first();
+    }
+
+    private function reassessmentAssignments(): Builder
+    {
+        $proof = self::context() ?? throw new AuthorizationException;
+
+        return DB::table('maturity_reassessment_operation_assignments')->where('organization_id', $proof['organization_id'])
+            ->where('fixture_id', $proof['fixture_id'])->where('approach_id', $proof['approach_id'])
+            ->where('scenario', self::SCENARIO)->where('classification', 'TEST_ONLY');
     }
 
     public function allows(User $actor, string $operation, Approach $approach, ?int $stageId = null): bool
     {
         $proof = self::context();
-        if ($proof === null || DB::transactionLevel() === 0 || ! in_array($operation, self::OPERATIONS, true)
+        $reassessment = in_array($operation, self::REASSESSMENT_OPERATIONS, true);
+        if ($proof === null || DB::transactionLevel() === 0 || (! in_array($operation, self::OPERATIONS, true) && ! ($reassessment && self::hasReassessmentScope()))
             || ! app(TenantContext::class)->verifiedFor($actor) || $actor->principal_type !== 'institution'
             || (int) $actor->organization_id !== $proof['organization_id'] || (int) $approach->organization_id !== $proof['organization_id']
             || (int) $approach->id !== $proof['approach_id'] || (int) Auth::guard('institution')->id() !== (int) $actor->id
@@ -162,11 +190,12 @@ final class ReviewMaturityAccess
             return false;
         }
         $expected = match ($operation) {
-            'read_workflow' => [$proof['author_id'], $proof['reviewer_id']],
-            'edit_content', 'answer_stage' => [$proof['author_id']],
+            'read_workflow', 'history_reassessment' => [$proof['author_id'], $proof['reviewer_id']],
+            'edit_content', 'answer_stage', 'open_reassessment', 'save_reassessment' => [$proof['author_id']],
             default => [$proof['reviewer_id']],
         };
-        if (! in_array((int) $actor->id, $expected, true) || (in_array($operation, ['configure_stage', 'answer_stage', 'review_stage'], true) !== ($stageId !== null))) {
+        if (! in_array((int) $actor->id, $expected, true) || ((in_array($operation, ['configure_stage', 'answer_stage', 'review_stage'], true) || $reassessment) !== ($stageId !== null))
+            || ($reassessment && $this->current($actor, 'read_workflow', null) === null)) {
             return false;
         }
         if ($stageId !== null && DB::table('maturity_workflow_stages')->where('organization_id', $proof['organization_id'])

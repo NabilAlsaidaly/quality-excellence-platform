@@ -2,7 +2,9 @@
 
 namespace App\Actions\Maturity;
 
+use App\Actions\Documents\AuthorizedDocumentEvidence;
 use App\Actions\Documents\RegisterDocumentIntake;
+use App\Actions\Notifications\ReviewMaturityNotifications;
 use App\Actions\Reviews\ReviewMaturityWorkspace;
 use App\Authorization\DocumentWorkspaceAccess;
 use App\Authorization\ReviewMaturityAccess;
@@ -15,6 +17,7 @@ use App\Domain\Reviews\ReviewSnapshot;
 use App\Models\Approach;
 use App\Models\Document;
 use App\Models\Organization;
+use App\Models\ReviewMaturityReview;
 use App\Models\User;
 use App\Services\Documents\InspectDocumentFile;
 use App\Services\Documents\QuarantinedDocumentStore;
@@ -120,6 +123,10 @@ final class SaveStageReassessment
                 }
                 $this->boundary->event($attempt, $actor, 'saved', $requestKey, $submissionId,
                     ['request_hash' => $requestHash, 'review_public_id' => $review->publicId, 'revision' => $expectedRevision + 1]);
+                if (ReviewMaturityAccess::hasReassessmentScope()) {
+                    app(ReviewMaturityNotifications::class)->deliver($actor, $approach,
+                        ReviewMaturityReview::where('organization_id', $attempt->organization_id)->where('public_id', $review->publicId)->firstOrFail(), 'review_opened', $attempt);
+                }
 
                 return ['review_public_id' => $review->publicId, 'revision' => $expectedRevision + 1];
             });
@@ -181,6 +188,9 @@ final class SaveStageReassessment
 
     private function version(User $actor, array $reference): array
     {
+        if (DocumentWorkspaceAccess::hasFileScope()) {
+            return app(AuthorizedDocumentEvidence::class)->execute($actor, $reference);
+        }
         $proof = ReviewMaturityAccess::context() ?? throw new AuthorizationException;
         $document = Document::where('organization_id', $proof['organization_id'])->where('public_id', $reference['document_public_id'])->lockForUpdate()->first()
             ?? throw new AuthorizationException;

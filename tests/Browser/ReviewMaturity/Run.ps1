@@ -147,7 +147,7 @@ if(!$state.server_pid){
     Save-State
     Invoke-Fixture 'setup'
     $router=Join-Path $PSScriptRoot 'Router.php'
-    $arguments='-d "sys_temp_dir='+(Join-Path $private 'tmp')+'" -d display_errors=0 -d log_errors=0 -S '+$state.http_host+':'+$state.http_port+' -t "'+(Join-Path $project 'public')+'" "'+$router+'"'
+    $arguments='-d "sys_temp_dir='+(Join-Path $private 'tmp')+'" -d "upload_tmp_dir='+(Join-Path $private 'tmp')+'" -d upload_max_filesize=32M -d post_max_size=34M -d display_errors=0 -d log_errors=0 -S '+$state.http_host+':'+$state.http_port+' -t "'+(Join-Path $project 'public')+'" "'+$router+'"'
     $process=Start-Process -FilePath $Php -ArgumentList $arguments -WorkingDirectory $project -WindowStyle Hidden -RedirectStandardOutput (Join-Path $private 'server.stdout.log') -RedirectStandardError 'NUL' -PassThru
     $state.server_pid=$process.Id
     Save-State

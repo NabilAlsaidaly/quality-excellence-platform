@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 /** Delivery store and origin share a SQL transaction; no afterCommit crash-loss window. */
 final class ReviewMaturityNotifications
 {
-    public function deliver(User $actor, Approach $approach, ReviewMaturityReview $review, string $event): void
+    public function deliver(User $actor, Approach $approach, ReviewMaturityReview $review, string $event, ?object $reassessment = null): void
     {
         $proof = ReviewMaturityAccess::context() ?? throw new AuthorizationException;
         $scope = ReviewMaturityWorkspace::attributes($approach);
@@ -26,13 +26,28 @@ final class ReviewMaturityNotifications
             throw new AuthorizationException;
         }
         $review = $persisted;
-        app(ReviewMaturityAccess::class)->authorize($actor, $event === 'review_opened'
-            ? ($review->stage_id === null ? 'edit_content' : 'answer_stage') : ($review->stage_id === null ? 'review_content' : 'review_stage'), $approach, $review->stage_id);
+        if ($reassessment !== null) {
+            if (! ReviewMaturityAccess::hasReassessmentScope() || (int) $reassessment->organization_id !== $proof['organization_id']
+                || $reassessment->fixture_id !== $proof['fixture_id'] || (int) $reassessment->approach_id !== (int) $approach->id
+                || (int) $reassessment->stage_id !== (int) $review->stage_id) {
+                throw new AuthorizationException;
+            }
+            $saved = DB::table('maturity_reassessment_events')->where('organization_id', $proof['organization_id'])->where('fixture_id', $proof['fixture_id'])
+                ->where('approach_id', $approach->id)->where('stage_id', $review->stage_id)->where('attempt_id', $reassessment->id)
+                ->where('submission_id', $review->submission_id)->where('event', 'saved')->lockForUpdate()->first();
+            if ($saved === null || (json_decode($saved->details_json, true, 64, JSON_THROW_ON_ERROR)['review_public_id'] ?? null) !== $review->public_id) {
+                throw new AuthorizationException;
+            }
+        }
+        $actorOperation = $reassessment === null ? ($event === 'review_opened'
+            ? ($review->stage_id === null ? 'edit_content' : 'answer_stage') : ($review->stage_id === null ? 'review_content' : 'review_stage'))
+            : ($event === 'review_opened' ? 'save_reassessment' : 'review_reassessment');
+        app(ReviewMaturityAccess::class)->authorize($actor, $actorOperation, $approach, $review->stage_id);
         $recipientId = $event === 'review_opened' ? $proof['reviewer_id'] : $proof['author_id'];
         $recipient = User::where('organization_id', $proof['organization_id'])->whereKey($recipientId)->where('principal_type', 'institution')->lockForUpdate()->first();
         $access = app(ReviewMaturityAccess::class);
-        $operation = $event === 'review_opened' ? ($review->stage_id === null ? 'review_content' : 'review_stage')
-            : ($review->stage_id === null ? 'edit_content' : 'answer_stage');
+        $operation = $reassessment === null ? ($event === 'review_opened' ? ($review->stage_id === null ? 'review_content' : 'review_stage')
+            : ($review->stage_id === null ? 'edit_content' : 'answer_stage')) : ($event === 'review_opened' ? 'review_reassessment' : 'save_reassessment');
         if ($recipient === null || ! OrganizationMembership::where('organization_id', $proof['organization_id'])->where('user_id', $recipientId)->lockForUpdate()->first()
             || ! $access->structural($recipient) || ! $access->current($recipient, 'read_workflow', null)
             || ! $access->current($recipient, $operation, $review->stage_id)) {

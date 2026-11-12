@@ -82,30 +82,40 @@ final class OpenStageReassessment
         $proof = ReviewMaturityAccess::context() ?? throw new AuthorizationException;
         $actor = Auth::guard('institution')->user();
 
-        return app(DocumentWorkspaceAccess::class)->withSession($actor, fn (User $current) => app(CreateApproach::class)->withinContext($current,
-            function (int $organization, User $locked) use ($proof, $operation, $approachId, $stageId, $callback): mixed {
-                $approach = Str::isUlid($approachId) ? Approach::where('organization_id', $organization)
-                    ->whereKey($proof['approach_id'])->where('public_id', $approachId)->lockForUpdate()->first() : null;
-                if ($approach === null || ! hash_equals($locked->getAuthPassword(), (string) request()->session()->get('institution.password_hash'))) {
-                    throw new AuthorizationException;
-                }
-                $stages = DB::table('maturity_workflow_stages')->where('organization_id', $organization)
-                    ->where('fixture_id', $proof['fixture_id'])->where('approach_id', $approach->id)
-                    ->orderBy('stage_ordinal')->lockForUpdate()->get();
-                $stage = Str::isUlid($stageId) ? $stages->first(fn ($row) => strcasecmp($row->public_id, $stageId) === 0) : null;
-                if ($stage === null) {
-                    throw new AuthorizationException;
-                }
-                $access = app(ReviewMaturityAccess::class);
-                $access->authorize($locked, $operation, $approach, $stage->id);
-                $result = $callback($locked, $approach, $stage);
-                $access->authorize($locked, $operation, $approach, $stage->id);
-                if (! hash_equals($locked->fresh()->getAuthPassword(), (string) request()->session()->get('institution.password_hash'))) {
-                    throw new AuthorizationException;
-                }
+        try {
+            return app(DocumentWorkspaceAccess::class)->withSession($actor, fn (User $current) => app(CreateApproach::class)->withinContext($current,
+                function (int $organization, User $locked) use ($proof, $operation, $approachId, $stageId, $callback): mixed {
+                    $approach = Str::isUlid($approachId) ? Approach::where('organization_id', $organization)
+                        ->whereKey($proof['approach_id'])->where('public_id', $approachId)->lockForUpdate()->first() : null;
+                    if ($approach === null || ! hash_equals($locked->getAuthPassword(), (string) request()->session()->get('institution.password_hash'))) {
+                        throw new AuthorizationException;
+                    }
+                    $stages = DB::table('maturity_workflow_stages')->where('organization_id', $organization)
+                        ->where('fixture_id', $proof['fixture_id'])->where('approach_id', $approach->id)
+                        ->orderBy('stage_ordinal')->lockForUpdate()->get();
+                    $stage = Str::isUlid($stageId) ? $stages->first(fn ($row) => strcasecmp($row->public_id, $stageId) === 0) : null;
+                    if ($stage === null) {
+                        throw new AuthorizationException;
+                    }
+                    $access = app(ReviewMaturityAccess::class);
+                    $access->authorize($locked, $operation, $approach, $stage->id);
+                    if (ReviewMaturityAccess::hasReassessmentScope() && $operation !== 'history_reassessment') {
+                        app(EffectiveMaturityState::class)->assertMayMutate($approach, $stage);
+                    }
+                    $result = $callback($locked, $approach, $stage);
+                    $access->authorize($locked, $operation, $approach, $stage->id);
+                    if (! hash_equals($locked->fresh()->getAuthPassword(), (string) request()->session()->get('institution.password_hash'))) {
+                        throw new AuthorizationException;
+                    }
 
-                return $result;
-            }));
+                    return $result;
+                }));
+        } catch (AuthorizationException $error) {
+            $stage = Str::isUlid($stageId) ? DB::table('maturity_workflow_stages')->where('organization_id', $proof['organization_id'])
+                ->where('fixture_id', $proof['fixture_id'])->where('approach_id', $proof['approach_id'])->where('public_id', $stageId)->value('id') : null;
+            app(ManageStageReassessmentOperations::class)->recordDenied($operation, $approachId, $stage);
+            throw $error;
+        }
     }
 
     public function attempt(string $publicId): object

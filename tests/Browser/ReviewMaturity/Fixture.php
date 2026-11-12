@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\Browser\ReviewMaturity\Environment;
+use Tests\Support\ClosureFileFixture;
+use Tests\Support\ClosureReassessmentFixture;
+use Tests\Support\HarmlessDocumentSamples;
 use Tests\Support\ReviewMaturityFixtures;
 
 require_once __DIR__.'/Environment.php';
@@ -84,6 +87,19 @@ try {
             'livewire_script' => EndpointResolver::scriptPath(minified: true), 'livewire_update' => '/'.$update->uri()];
         if ($unitProof !== null) {
             $payload['panel_proof']['organization_units'] = $unitProof;
+        }
+        if (getenv('QEP_CLOSURE_FIXTURE') === '1') {
+            $closure = app(ClosureFileFixture::class)->issue($f);
+            $payload['panel_proof']['document'] = $closure['proof'];
+            $payload['panel_proof']['workflow'] = app(ClosureReassessmentFixture::class)->issue($f, $closure['proof']);
+            $payload['file_targets'] = $closure['targets'];
+            $payload['livewire_upload'] = '/'.Route::getRoutes()->getByName('livewire.upload-file')->uri();
+            file_put_contents(Environment::privateRoot().'/harmless-owner-demo.pdf', HarmlessDocumentSamples::pdf());
+            HarmlessDocumentSamples::docx(Environment::privateRoot().'/harmless-owner-demo.docx');
+            foreach (['pdf' => 'application/pdf', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] as $format => $type) {
+                $sample = Environment::privateRoot().'/harmless-owner-demo.'.$format;
+                $payload['panel_proof']['document']['demo_file_receipts'][hash_file('sha256', $sample)] = ['byte_size' => filesize($sample), 'media_type' => $type];
+            }
         }
         file_put_contents($path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR), LOCK_EX);
         $db->statement("REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'workflow_fixture'@'%'");

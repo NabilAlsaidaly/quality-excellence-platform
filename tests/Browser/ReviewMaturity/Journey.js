@@ -120,8 +120,17 @@ async (page) => {
             for (const label of ['شاهد أول للمرحلة ', 'شاهد ثان للمرحلة ']) {
                 const selector = dialog.getByRole('combobox', { name: label + (i + 1), exact: true });
                 const options = await selector.locator('option').evaluateAll(nodes => nodes.map(n => n.value).filter(Boolean));
-                check(options.length === 1, 'only the actual authorized owned synthetic version offered ' + (i + 1));
-                await selector.selectOption(options[0]);
+                if (Array.isArray(f.real_evidence_options)) {
+                    const actual = options.map(value => value.toLowerCase()).sort();
+                    const expected = f.real_evidence_options.map(value => value.toLowerCase()).sort();
+                    check(JSON.stringify(actual) === JSON.stringify(expected), 'exact explicitly authorized synthetic/real version choices ' + (i + 1));
+                    const selected = options.find(value => value.toLowerCase() === f.selected_real_evidence.toLowerCase());
+                    check(Boolean(selected), 'exact released-for-demo real version selected explicitly ' + (i + 1));
+                    await selector.selectOption(selected);
+                } else {
+                    check(options.length === 1, 'only the actual authorized owned synthetic version offered ' + (i + 1));
+                    await selector.selectOption(options[0]);
+                }
             }
             await button(dialog, 'حفظ مسودة المرحلة').click();
             await dialog.locator('button[type="submit" ]').waitFor({ state: 'hidden', timeout: 60000 });
@@ -130,12 +139,15 @@ async (page) => {
             await button(reviewer, 'مراجعة وتقييم المرحلة').click();
             dialog = reviewer.locator('[role="dialog" ]').last();
             await dialog.getByRole('combobox', { name: /^القرار/ }).selectOption('approved');
-            await dialog.getByRole('combobox', { name: /^التصنيف اليدوي/ }).selectOption('0');
-            await dialog.getByRole('textbox', { name: /^تعليل القرار/ }).fill('راجعت الإجابة والشاهدين؛ التصنيف الأدنى مناسب لهذا المثال الاختباري.');
+            await dialog.getByRole('combobox', { name: /^التصنيف اليدوي/ }).selectOption(f.initial_band === 1 ? '1' : '0');
+            await dialog.getByRole('textbox', { name: /^تعليل القرار/ }).fill(f.initial_band === 1
+                ? 'راجعت الإجابة وكفاية الشاهدين للعرض المحلي؛ اخترت التصنيف الأعلى يدويًا لهذا المثال الاختباري.'
+                : 'راجعت الإجابة والشاهدين؛ التصنيف الأدنى مناسب لهذا المثال الاختباري.');
             await button(dialog, 'حفظ تقييم المرحلة').click();
             await dialog.locator('button[type="submit" ]').waitFor({ state: 'hidden', timeout: 60000 });
             await go(reviewer, stagePath);
-            await visible(reviewer.getByText('بداية تجريبية', { exact: true }), 'manual lowest-category assessment persisted ' + (i + 1));
+            await visible(f.initial_band === 1 ? reviewer.getByText('تقدم تجريبي', { exact: true }).first()
+                : reviewer.getByText('بداية تجريبية', { exact: true }), 'manual category assessment persisted ' + (i + 1));
             if (i === 0 || i === 4) await layout(reviewer, 'maturity-stage-' + (i + 1));
         }
         await go(author, content + '/maturity/' + f.stages[0]);

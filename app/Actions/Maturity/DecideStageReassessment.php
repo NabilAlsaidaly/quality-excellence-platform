@@ -2,6 +2,7 @@
 
 namespace App\Actions\Maturity;
 
+use App\Actions\Notifications\ReviewMaturityNotifications;
 use App\Authorization\ReviewMaturityAccess;
 use App\Domain\Maturity\ApprovedStageAssessment;
 use App\Domain\Maturity\RatingBand;
@@ -10,6 +11,7 @@ use App\Domain\Reviews\ReviewSnapshot;
 use App\Domain\Reviews\ReviewState;
 use App\Domain\Reviews\ReviewWorkflow;
 use App\Models\Approach;
+use App\Models\ReviewMaturityReview;
 use App\Models\User;
 use DateTimeImmutable;
 use DomainException;
@@ -18,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
-/** Records immutable decisions only; C-scope effective impacts, notices and admission are not activated. */
+/** Immutable decisions; effective impacts and notices require the separately sealed local reassessment scope. */
 final class DecideStageReassessment
 {
     public function __construct(private OpenStageReassessment $boundary, private SaveStageReassessment $submissions) {}
@@ -68,6 +70,7 @@ final class DecideStageReassessment
                 $change = ReviewWorkflow::decide($domain, $actor->public_id, $value->publicId, ReviewState::from($decision), $reason,
                     new DateTimeImmutable(ReviewMaturityAccess::timestamp().' UTC'));
                 $assessment = null;
+                $impact = null;
                 if ($decision === 'approved') {
                     $value->assertComplete();
                     if ($bandIndex === null) {
@@ -77,6 +80,9 @@ final class DecideStageReassessment
                     $scale = new RatingScale(array_map(fn ($band) => new RatingBand($band['name'], $band['description'], $band['lower_bound'], $band['upper_bound']), $snapshot['configuration']['scale']));
                     $assessment = new ApprovedStageAssessment($approach->public_id, $value->stage(), $scale, $bandIndex,
                         $snapshot['answers'], $change->current, submission: $value);
+                    if (ReviewMaturityAccess::hasReassessmentScope()) {
+                        $impact = app(EffectiveMaturityState::class)->impact($approach, $assessment, $value);
+                    }
                 } elseif ($bandIndex !== null) {
                     throw new DomainException('طلب التصحيح لا يسجل تقييمًا جديدًا.');
                 }
@@ -113,7 +119,12 @@ final class DecideStageReassessment
                 }
                 $this->boundary->event($attempt, $actor, $decision, $requestKey, $row->id,
                     ['request_hash' => $hash, 'review_public_id' => $review->public_id, 'decision_public_id' => $decisionId,
-                        'assignment_public_id' => $newGrant->public_id, 'revision' => $expectedRevision + 1]);
+                        'assignment_public_id' => $newGrant->public_id, 'revision' => $expectedRevision + 1]
+                        + ($impact === null ? [] : ['effective_impact' => $impact]));
+                if (ReviewMaturityAccess::hasReassessmentScope()) {
+                    app(ReviewMaturityNotifications::class)->deliver($actor, $approach,
+                        ReviewMaturityReview::where('organization_id', $attempt->organization_id)->whereKey($review->id)->firstOrFail(), $decision, $attempt);
+                }
 
                 return ['review_public_id' => $review->public_id, 'decision_public_id' => $decisionId, 'revision' => $expectedRevision + 1];
             });

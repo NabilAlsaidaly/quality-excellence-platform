@@ -33,6 +33,14 @@ final class DecideReview
                     throw new \DomainException('قرار المراجعة غير صالح.');
                 }
                 $review = ReviewMaturityReview::whereKey($candidate->id)->lockForUpdate()->firstOrFail();
+                if ($review->submission_id !== null && DB::table('maturity_reassessment_events')
+                    ->where('organization_id', $review->organization_id)->where('fixture_id', $review->fixture_id)
+                    ->where('approach_id', $approach->id)->where('stage_id', $review->stage_id)
+                    ->where('submission_id', $review->submission_id)->where('event', 'saved')->lockForUpdate()->exists()) {
+                    // Initial review_stage authority never substitutes for the
+                    // separate reassessment admission and immutable lineage.
+                    throw new AuthorizationException;
+                }
                 $decisionHash = hash('sha256', json_encode([$expectedFingerprint, $decision, $reason, $bandIndex, $notes], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
                 if ($review->decision_key === $requestKey && $review->decision_fingerprint === $decisionHash && (int) $review->reviewer_id === (int) $actor->id) {
                     return $review;
