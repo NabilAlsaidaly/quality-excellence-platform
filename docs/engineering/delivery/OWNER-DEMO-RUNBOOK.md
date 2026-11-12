@@ -1,3 +1,13 @@
+# الحالة المرجعية الحالية بعد الدمج والتقاعُد
+
+12 نوفمبر2026 · source main `03c829fde71bbb11754ef657bf2edfe50253068e` · PR69 وPR70 MERGED. [Post-merge CI43289862828](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43289862828) SUCCESS: SQLite563/5378،MySQL318/4163،Redis4/19،إجمالي885/9560؛0errors/failures/skipped tests. ليست قبولًا تشغيليًا أو L4 للـ105.
+
+العروض browser21–26/31–38/90 تقاعدت بإذن المالك؛لا URL أو credentials سارية موعودة،ولا renew/rebaseline تلقائي. الأدلة والأرشيفات محفوظة. للتوثيق الحالي [catalog](../../catalog/00-INDEX-AR.md)،[audit](../reports/FINAL-MAIN-AND-ISSUE37-AUDIT-2026-11-12.md)،[cleanup](../reports/FINAL-HOUSEKEEPING-STATUS-2026-11-12.md)،[owner source](PROJECT-OWNER-COMPLETE-HANDOVER-SOURCE-AR.md). أي عرض قادم يحتاج fixture خاصة جديدة.
+
+فرع Issue71 توثيقي من main؛ لا يندمج ذاتيًا. أدلة exact-head CI الخاصة به في PR والتسليم النهائي؛ لا تعتبر run main تحققًا لcommit آخر. تبقى D002/D007/D014 التشغيلية وscanner وIDM اليدوي وحدود T17 واضحة. لا تنفيذ عمل منتج جديد أو تغيير105AC.
+
+## السجل التالي تاريخي ينطبق فقط على مصدره ووقته
+
 # دليل العرض الخاص بعد إغلاق الوثائق وإعادة التقييم — 12 نوفمبر 2026
 
 هذه نسخة TEST_ONLY محلية ببيانات خيالية، مرشحها Draft PR70. اقرأ [تقرير المالك](PROJECT-OWNER-FINAL-REPORT-AR-2026-11-12.md) و[التقرير الهندسي](../reports/FINAL-MVP-CLOSURE-2026-11-12.md). تعليمات المصادر الأقدم أدناه تاريخية ولا تُطبق على النسخة الجديدة.

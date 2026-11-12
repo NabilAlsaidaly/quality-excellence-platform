@@ -1,3 +1,13 @@
+# الحالة المرجعية الحالية بعد الدمج والتقاعُد
+
+12 نوفمبر2026 · source main `03c829fde71bbb11754ef657bf2edfe50253068e` · PR69 وPR70 MERGED. [Post-merge CI43289862828](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43289862828) SUCCESS: SQLite563/5378،MySQL318/4163،Redis4/19،إجمالي885/9560؛0errors/failures/skipped tests. ليست قبولًا تشغيليًا أو L4 للـ105.
+
+العروض browser21–26/31–38/90 تقاعدت بإذن المالك؛لا URL أو credentials سارية موعودة،ولا renew/rebaseline تلقائي. الأدلة والأرشيفات محفوظة. للتوثيق الحالي [catalog](../../catalog/00-INDEX-AR.md)،[audit](../reports/FINAL-MAIN-AND-ISSUE37-AUDIT-2026-11-12.md)،[cleanup](../reports/FINAL-HOUSEKEEPING-STATUS-2026-11-12.md)،[owner source](PROJECT-OWNER-COMPLETE-HANDOVER-SOURCE-AR.md). أي عرض قادم يحتاج fixture خاصة جديدة.
+
+فرع Issue71 توثيقي من main؛ لا يندمج ذاتيًا. أدلة exact-head CI الخاصة به في PR والتسليم النهائي؛ لا تعتبر run main تحققًا لcommit آخر. تبقى D002/D007/D014 التشغيلية وscanner وIDM اليدوي وحدود T17 واضحة. لا تنفيذ عمل منتج جديد أو تغيير105AC.
+
+## السجل التالي تاريخي ينطبق فقط على مصدره ووقته
+
 # Current closure checkpoint — 12 November 2026
 
 Branch `integration/mvp-final-2026-11-12`, [Draft PR70](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/70). Verified code HEAD `59a10a445725ee0bd79649f2873485f6c6ac5e14`; document4b9412e, reassessment28f8e0c, verification59a10a4. [CI43268830788](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43268830788) SUCCESS: SQLite563/5378, MySQL318/4163, Redis4/19 =885 executions/9560 assertions;0 errors/failures/skipped tests. Local final full suites: SQLite563/5378, MySQL318/4163, Redis4/19; all PASS. Required Composer/Pint/npm/runtime checks PASS. Final documentation-containing HEAD CI must be verified separately in PR/private handover; never substitute an older run.
