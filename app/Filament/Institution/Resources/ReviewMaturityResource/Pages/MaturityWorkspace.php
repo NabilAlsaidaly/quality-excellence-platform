@@ -6,8 +6,10 @@ use App\Actions\Maturity\ConfigureMaturityStage;
 use App\Actions\Maturity\SaveStageSubmission;
 use App\Actions\Reviews\DecideReview;
 use App\Actions\Reviews\ReadReviewMaturityWorkspace;
+use App\Authorization\DocumentWorkspaceAccess;
 use App\Authorization\ReviewMaturityAccess;
 use App\Domain\Maturity\MaturityStage;
+use App\Filament\Institution\Concerns\HasStageReassessment;
 use App\Filament\Institution\Resources\ReviewMaturityResource;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Hidden;
@@ -35,6 +37,7 @@ use Livewire\Attributes\Locked;
 
 final class MaturityWorkspace extends Page implements HasTable
 {
+    use HasStageReassessment;
     use InteractsWithTable;
 
     protected static string $resource = ReviewMaturityResource::class;
@@ -58,6 +61,7 @@ final class MaturityWorkspace extends Page implements HasTable
     public function hydrate(): void
     {
         $this->workspaceSnapshot = null;
+        $this->reassessmentSnapshot = null;
         $this->current();
     }
 
@@ -78,7 +82,9 @@ final class MaturityWorkspace extends Page implements HasTable
     #[Unexposed]
     public function content(Schema $schema): Schema
     {
-        return $schema->components([Text::make('دورة أولية اختبارية بخمس مراحل. التقدير تصنيف يدوي؛ لا توجد درجة رقمية أو نتيجة إجمالية. إعادة التقييم غير متاحة حتى حسم سياستها.'),
+        return $schema->components([Text::make(ReviewMaturityAccess::hasReassessmentScope()
+            ? 'عرض اختباري بخمس مراحل وتصنيفات يختارها مراجع مستقل. إعادة التقييم تحفظ الماضي وتستخدم الأسئلة والسلم الأصليين؛ لا توجد درجة إجمالية أو نتيجة محسوبة تلقائيًا.'
+            : 'دورة أولية اختبارية بخمس مراحل. التقدير تصنيف يدوي؛ لا توجد درجة رقمية أو نتيجة إجمالية. إعادة التقييم غير متاحة حتى حسم سياستها.'),
             Section::make('الأسئلة والشواهد والإجابات الحالية')->schema(function (): array {
                 $current = $this->current();
                 $answers = array_column($current['submission']['answers'] ?? [], 'answer', 'question_public_id');
@@ -120,7 +126,7 @@ final class MaturityWorkspace extends Page implements HasTable
                 }
 
                 return $fields;
-            }), Section::make('تاريخ المراجعة')->schema([EmbeddedTable::make()])]);
+            }), $this->reassessmentSection(), Section::make('تاريخ المراجعة')->schema([EmbeddedTable::make()])]);
     }
 
     #[Unexposed]
@@ -139,7 +145,7 @@ final class MaturityWorkspace extends Page implements HasTable
 
     protected function getHeaderActions(): array
     {
-        return [Action::make('configure')->label('إعدادات المرحلة')->modalSubmitActionLabel('حفظ الإعدادات')->visible(fn () => app(ReviewMaturityAccess::class)->can('configure_stage', $this->approach, $this->current()['id']))
+        return [...$this->reassessmentActions(), Action::make('configure')->label('إعدادات المرحلة')->modalSubmitActionLabel('حفظ الإعدادات')->visible(fn () => app(ReviewMaturityAccess::class)->can('configure_stage', $this->approach, $this->current()['id']))
             ->modalDescription('نسخة إعدادات اختبارية خاصة بهذه المرحلة؛ لا تغير التقييمات أو الإجابات التاريخية.')
             ->fillForm(fn () => ($this->current()['configuration'] ?? ['questions' => [], 'scale' => []]) + ['configuration_token' => $this->current()['configuration_token']])
             ->schema($this->configurationFields())->action(function (array $data): void {
@@ -179,7 +185,7 @@ final class MaturityWorkspace extends Page implements HasTable
                 Notification::make()->title('حُفظت المسودة وتزامنت المراجعة')->success()->send();
                 $this->resetTable();
             }), Action::make('reviewStage')->label('مراجعة وتقييم المرحلة')->modalSubmitActionLabel('حفظ تقييم المرحلة')->visible(fn () => ($this->current()['review']['state'] ?? null) === 'pending'
-                && app(ReviewMaturityAccess::class)->can('review_stage', $this->approach, $this->current()['id']))
+                && $this->current()['assessment'] === null && app(ReviewMaturityAccess::class)->can('review_stage', $this->approach, $this->current()['id']))
             ->fillForm(fn () => ['review_id' => $this->current()['review']['public_id'], 'fingerprint' => $this->current()['review']['fingerprint'], 'request_key' => (string) Str::ulid()])
             ->schema(fn () => [Select::make('decision')->label('القرار')->options(['changes_requested' => 'طلب تصحيح', 'approved' => 'اعتماد المرحلة'])->required()->native(),
                 Select::make('band_index')->label('التصنيف اليدوي عند الاعتماد')->options(array_column($this->current()['configuration']['scale'], 'name'))->native()->nullable(),
@@ -210,15 +216,23 @@ final class MaturityWorkspace extends Page implements HasTable
 
     private function answerFields(): array
     {
-        $fields = [Hidden::make('submission_token'), Hidden::make('configuration_token'), Hidden::make('request_key')];
-        foreach ($this->current()['configuration']['questions'] ?? [] as $question) {
+        return [Hidden::make('submission_token'), Hidden::make('configuration_token'), Hidden::make('request_key'),
+            ...$this->questionAnswerFields($this->current()['configuration'] ?? [])];
+    }
+
+    private function questionAnswerFields(array $configuration): array
+    {
+        $fields = [];
+        foreach ($configuration['questions'] ?? [] as $question) {
             if (! $question['active']) {
                 continue;
             }
             $fields[] = Textarea::make('answers.'.$question['public_id'])->label($question['text'])->helperText($question['instructions'])->maxLength(1000000)->rows(5)->default('');
             foreach ($question['expected_evidence'] as $expected) {
                 $fields[] = Select::make('evidence.'.$question['public_id'].'.'.$expected['public_id'])->label($expected['description'])
-                    ->helperText($expected['required'] ? 'مطلوب قبل الاعتماد؛ إصدارات اصطناعية مخولة فقط.' : 'اختياري؛ إصدارات اصطناعية مخولة فقط.')
+                    ->helperText(DocumentWorkspaceAccess::hasFileScope()
+                        ? ($expected['required'] ? 'شاهد مطلوب؛ اختر نسخة مخوّلة صراحةً ثم تُراجع كفايتها مستقلًا.' : 'شاهد اختياري؛ اختره صراحةً دون قبول تلقائي.')
+                        : ($expected['required'] ? 'مطلوب قبل الاعتماد؛ إصدارات اصطناعية مخولة فقط.' : 'اختياري؛ إصدارات اصطناعية مخولة فقط.'))
                     ->options(fn () => app(ReadReviewMaturityWorkspace::class)->evidenceOptions($this->approach))->native()->nullable();
             }
         }
@@ -232,7 +246,9 @@ final class MaturityWorkspace extends Page implements HasTable
         $root = $this->getMountedAction(0);
         $mounted = $this->getMountedAction();
         $operation = match ($root?->getName()) {
-            'configure' => 'configure_stage', 'answer' => 'answer_stage', 'reviewStage' => 'review_stage', default => null
+            'configure' => 'configure_stage', 'answer' => 'answer_stage', 'reviewStage' => 'review_stage',
+            'openReassessment' => 'open_reassessment', 'saveReassessment' => 'save_reassessment',
+            'reviewReassessment' => 'review_reassessment', 'reassessmentHistory' => 'history_reassessment', default => null
         };
         if ($mounted !== $root) {
             $component = $mounted?->getSchemaComponent();
@@ -241,6 +257,7 @@ final class MaturityWorkspace extends Page implements HasTable
                 && in_array($mounted->getName(), ['add', 'addBetween', 'delete', 'moveDown', 'moveUp', 'reorder', 'collapse', 'expand', 'collapseAll', 'expandAll'], true), 403);
         }
         abort_unless($operation !== null && app(ReviewMaturityAccess::class)->can($operation, $this->approach, $this->current()['id']), 403);
+        abort_if($operation === 'review_stage' && $this->current()['assessment'] !== null, 403);
 
         return parent::callMountedAction($arguments);
     }

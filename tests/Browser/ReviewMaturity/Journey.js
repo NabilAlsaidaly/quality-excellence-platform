@@ -49,11 +49,11 @@ async (page) => {
     const content = '/institution/mvp-workspace/workflows/' + f.approach;
     const saveContent = async (p, text) => {
         await button(p, 'تحرير المحتوى').click();
-        const dialog = p.getByRole('dialog');
+        const dialog = p.locator('[role="dialog"]').last();
         await visible(dialog.getByRole('textbox', { name: /^محتوى المنهجية/ }), 'native real content editor');
         await dialog.getByRole('textbox', { name: /^محتوى المنهجية/ }).fill(text);
         await button(dialog, 'حفظ المحتوى').click();
-        await dialog.waitFor({ state: 'hidden', timeout: 60000 });
+        await dialog.locator('button[type="submit"]').waitFor({ state: 'hidden', timeout: 60000 });
         await visible(p.getByText(text, { exact: true }), 'content persisted through real Action');
     };
     if (phase !== 'workflow') throw new Error('Unknown bounded browser phase');
@@ -71,22 +71,22 @@ async (page) => {
         await go(reviewer, content);
         check(await button(reviewer, 'تحرير المحتوى').count() === 0, 'independent reviewer cannot edit');
         await button(reviewer, 'قرار المراجعة').click();
-        let dialog = reviewer.getByRole('dialog');
+        let dialog = reviewer.locator('[role="dialog" ]').last();
         await visible(dialog.getByRole('combobox', { name: /^القرار/ }), 'native independent decision modal');
         await dialog.getByRole('combobox', { name: /^القرار/ }).selectOption('changes_requested');
         await dialog.getByRole('textbox', { name: /^ملاحظات المراجعة/ }).fill('أضف وصف التطبيق قبل الاعتماد.');
         await button(dialog, 'حفظ القرار').click();
-        await dialog.waitFor({ state: 'hidden', timeout: 60000 });
+        await dialog.locator('button[type="submit" ]').waitFor({ state: 'hidden', timeout: 60000 });
         await go(author, content);
         await visible(author.getByText('تصحيح مطلوب', { exact: true }), 'persisted correction visible to author');
         await saveContent(author, 'محتوى الرحلة المصحح مع وصف التطبيق من المتصفح');
         await go(reviewer, content);
         await button(reviewer, 'قرار المراجعة').click();
-        dialog = reviewer.getByRole('dialog');
+        dialog = reviewer.locator('[role="dialog" ]').last();
         await dialog.getByRole('combobox', { name: /^القرار/ }).selectOption('approved');
         await dialog.getByRole('textbox', { name: /^ملاحظات المراجعة/ }).fill('اعتماد مستقل للإصدار المصحح.');
         await button(dialog, 'حفظ القرار').click();
-        await dialog.waitFor({ state: 'hidden', timeout: 60000 });
+        await dialog.locator('button[type="submit" ]').waitFor({ state: 'hidden', timeout: 60000 });
         await go(reviewer, content);
         await visible(reviewer.getByText('معتمد', { exact: true }), 'approval survives reload');
         await visible(reviewer.getByText('تصحيح مطلوب', { exact: true }), 'historical correction survives approval');
@@ -95,7 +95,7 @@ async (page) => {
             const stagePath = content + '/maturity/' + f.stages[i];
             await go(reviewer, stagePath);
             await button(reviewer, 'إعدادات المرحلة').click();
-            dialog = reviewer.getByRole('dialog');
+            dialog = reviewer.locator('[role="dialog" ]').last();
             await visible(button(dialog, 'إضافة سؤال'), 'real editable question configuration ' + (i + 1));
             await button(dialog, 'إضافة سؤال').click();
             await dialog.getByRole('textbox', { name: /^نص السؤال/ }).fill('سؤال المرحلة ' + (i + 1) + ' من رحلة المالك');
@@ -111,31 +111,43 @@ async (page) => {
                 await dialog.getByRole('spinbutton', { name: /^الحد الأعلى/ }).nth(b).fill(b === 0 ? '30' : '100');
             }
             await button(dialog, 'حفظ الإعدادات').click();
-            await dialog.waitFor({ state: 'hidden', timeout: 60000 });
+            await dialog.locator('button[type="submit" ]').waitFor({ state: 'hidden', timeout: 60000 });
             await go(author, stagePath);
             await button(author, 'تحرير إجابات المرحلة').click();
-            dialog = author.getByRole('dialog');
+            dialog = author.locator('[role="dialog" ]').last();
             await visible(dialog.getByRole('textbox', { name: /^سؤال المرحلة/ }), 'actual configured text answer ' + (i + 1));
             await dialog.getByRole('textbox', { name: /^سؤال المرحلة/ }).fill('إجابة المرحلة ' + (i + 1) + ' محفوظة من المتصفح مع الشواهد.');
             for (const label of ['شاهد أول للمرحلة ', 'شاهد ثان للمرحلة ']) {
                 const selector = dialog.getByRole('combobox', { name: label + (i + 1), exact: true });
                 const options = await selector.locator('option').evaluateAll(nodes => nodes.map(n => n.value).filter(Boolean));
-                check(options.length === 1, 'only the actual authorized owned synthetic version offered ' + (i + 1));
-                await selector.selectOption(options[0]);
+                if (Array.isArray(f.real_evidence_options)) {
+                    const actual = options.map(value => value.toLowerCase()).sort();
+                    const expected = f.real_evidence_options.map(value => value.toLowerCase()).sort();
+                    check(JSON.stringify(actual) === JSON.stringify(expected), 'exact explicitly authorized synthetic/real version choices ' + (i + 1));
+                    const selected = options.find(value => value.toLowerCase() === f.selected_real_evidence.toLowerCase());
+                    check(Boolean(selected), 'exact released-for-demo real version selected explicitly ' + (i + 1));
+                    await selector.selectOption(selected);
+                } else {
+                    check(options.length === 1, 'only the actual authorized owned synthetic version offered ' + (i + 1));
+                    await selector.selectOption(options[0]);
+                }
             }
             await button(dialog, 'حفظ مسودة المرحلة').click();
-            await dialog.waitFor({ state: 'hidden', timeout: 60000 });
+            await dialog.locator('button[type="submit" ]').waitFor({ state: 'hidden', timeout: 60000 });
             await go(reviewer, stagePath);
             await visible(reviewer.getByText('إجابة المرحلة ' + (i + 1) + ' محفوظة من المتصفح مع الشواهد.', { exact: true }), 'actual answer readback ' + (i + 1));
             await button(reviewer, 'مراجعة وتقييم المرحلة').click();
-            dialog = reviewer.getByRole('dialog');
+            dialog = reviewer.locator('[role="dialog" ]').last();
             await dialog.getByRole('combobox', { name: /^القرار/ }).selectOption('approved');
-            await dialog.getByRole('combobox', { name: /^التصنيف اليدوي/ }).selectOption('0');
-            await dialog.getByRole('textbox', { name: /^تعليل القرار/ }).fill('راجعت الإجابة والشاهدين؛ التصنيف الأدنى مناسب لهذا المثال الاختباري.');
+            await dialog.getByRole('combobox', { name: /^التصنيف اليدوي/ }).selectOption(f.initial_band === 1 ? '1' : '0');
+            await dialog.getByRole('textbox', { name: /^تعليل القرار/ }).fill(f.initial_band === 1
+                ? 'راجعت الإجابة وكفاية الشاهدين للعرض المحلي؛ اخترت التصنيف الأعلى يدويًا لهذا المثال الاختباري.'
+                : 'راجعت الإجابة والشاهدين؛ التصنيف الأدنى مناسب لهذا المثال الاختباري.');
             await button(dialog, 'حفظ تقييم المرحلة').click();
-            await dialog.waitFor({ state: 'hidden', timeout: 60000 });
+            await dialog.locator('button[type="submit" ]').waitFor({ state: 'hidden', timeout: 60000 });
             await go(reviewer, stagePath);
-            await visible(reviewer.getByText('بداية تجريبية', { exact: true }), 'manual lowest-category assessment persisted ' + (i + 1));
+            await visible(f.initial_band === 1 ? reviewer.getByText('تقدم تجريبي', { exact: true }).first()
+                : reviewer.getByText('بداية تجريبية', { exact: true }), 'manual category assessment persisted ' + (i + 1));
             if (i === 0 || i === 4) await layout(reviewer, 'maturity-stage-' + (i + 1));
         }
         await go(author, content + '/maturity/' + f.stages[0]);

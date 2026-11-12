@@ -11,9 +11,9 @@ final class DocumentPolicy
 {
     public function __construct(private DocumentWorkspaceAccess $access) {}
 
-    public function workspaceOperation(User $actor, string $operation, ?Document $document = null): bool
+    public function workspaceOperation(User $actor, string $operation, ?Document $document = null, ?string $versionId = null, ?string $grantId = null): bool
     {
-        return $this->access->allows($actor, $operation, $document);
+        return $this->access->allows($actor, $operation, $document, $versionId, $grantId);
     }
 
     public function viewAny(User $actor): bool

@@ -6,6 +6,9 @@
             @if ($account->canAccessPanel(\Filament\Facades\Filament::getPanel('institution')))
                 <x-filament::button :color="\Filament\Facades\Filament::getPanel('institution')->getColors()['primary']" tag="a" :href="route('filament.institution.pages.institution-dashboard', [], false)" class="min-h-11 w-full dark:bg-primary-700 dark:hover:bg-primary-800">فتح مساحة المؤسسة</x-filament::button>
             @endif
+            @isset ($localDemoWorkspaceUrl)
+                <x-filament::button tag="a" :href="$localDemoWorkspaceUrl" color="gray" outlined class="min-h-11 w-full">فتح العرض المتكامل</x-filament::button>
+            @endisset
             <form method="post" action="{{ route('institution.logout', ['organization' => request()->route('organization')], false) }}">
                 @csrf
                 <x-filament::button type="submit" color="gray" outlined class="min-h-11 w-full">تسجيل الخروج</x-filament::button>

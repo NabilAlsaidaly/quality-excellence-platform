@@ -1,11 +1,17 @@
 <?php
 
+use App\Authorization\RoleManagement;
+use App\Authorization\TenantContext;
+use App\Models\Organization;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Mechanisms\HandleRequests\EndpointResolver;
 use Tests\Browser\ReviewMaturity\Environment;
+use Tests\Support\ClosureFileFixture;
+use Tests\Support\ClosureReassessmentFixture;
+use Tests\Support\HarmlessDocumentSamples;
 use Tests\Support\ReviewMaturityFixtures;
 
 require_once __DIR__.'/Environment.php';
@@ -39,6 +45,30 @@ try {
         };
         $f = $builder->build();
         $foreign = $builder->build();
+        $unitProof = null;
+        if (getenv('QEP_FINAL_UNITS_FIXTURE') === '1') {
+            $f['organization']->forceFill(['name' => 'مؤسسة آفاق للجودة — بيانات عرض خيالية'])->save();
+            $foreign['organization']->forceFill(['name' => 'مؤسسة أخرى — اختبار العزل فقط'])->save();
+            // Explicit Issue50 TEST_ONLY role fixture; no normal registry,
+            // seeder or existing demo is changed. Setup already refuses adoption.
+            $oldCapabilities = config('authorization.capabilities');
+            config(['authorization.capabilities' => array_merge(config('authorization.test_only_fixture_capabilities'), [
+                'organization.units.view' => Organization::class, 'organization.units.manage' => Organization::class,
+            ])]);
+            try {
+                app(TenantContext::class)->run($f['issuer'], $f['organization']->id, function () use ($f): void {
+                    $manager = app(RoleManagement::class);
+                    $role = $manager->create('unit-ui-'.$f['proof']['fixture_id']);
+                    $manager->syncPermissions($role, ['organization.units.view', 'organization.units.manage']);
+                    $manager->assign($role, $f['author']);
+                    $manager->assign($role, $f['quality']);
+                });
+                $unitProof = ['scenario' => 'UNIT_LOCAL_001', 'fixture_id' => $f['proof']['fixture_id'],
+                    'organization_id' => $f['organization']->id, 'actor_ids' => [$f['author']->id, $f['quality']->id]];
+            } finally {
+                config(['authorization.capabilities' => $oldCapabilities]);
+            }
+        }
         $accounts = [];
         foreach (['issuer', 'quality', 'author', 'reviewer', 'foreign'] as $name) {
             $user = $name === 'foreign' ? $foreign['reviewer'] : $f[$name];
@@ -55,6 +85,22 @@ try {
             'approach' => $f['approach']->public_id, 'foreign' => $foreign['approach']->public_id,
             'document' => $f['document_public_id'], 'stages' => DB::table('maturity_workflow_stages')->where('fixture_id', $f['proof']['fixture_id'])->orderBy('stage_ordinal')->pluck('public_id')->all(),
             'livewire_script' => EndpointResolver::scriptPath(minified: true), 'livewire_update' => '/'.$update->uri()];
+        if ($unitProof !== null) {
+            $payload['panel_proof']['organization_units'] = $unitProof;
+        }
+        if (getenv('QEP_CLOSURE_FIXTURE') === '1') {
+            $closure = app(ClosureFileFixture::class)->issue($f);
+            $payload['panel_proof']['document'] = $closure['proof'];
+            $payload['panel_proof']['workflow'] = app(ClosureReassessmentFixture::class)->issue($f, $closure['proof']);
+            $payload['file_targets'] = $closure['targets'];
+            $payload['livewire_upload'] = '/'.Route::getRoutes()->getByName('livewire.upload-file')->uri();
+            file_put_contents(Environment::privateRoot().'/harmless-owner-demo.pdf', HarmlessDocumentSamples::pdf());
+            HarmlessDocumentSamples::docx(Environment::privateRoot().'/harmless-owner-demo.docx');
+            foreach (['pdf' => 'application/pdf', 'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'] as $format => $type) {
+                $sample = Environment::privateRoot().'/harmless-owner-demo.'.$format;
+                $payload['panel_proof']['document']['demo_file_receipts'][hash_file('sha256', $sample)] = ['byte_size' => filesize($sample), 'media_type' => $type];
+            }
+        }
         file_put_contents($path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR), LOCK_EX);
         $db->statement("REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'workflow_fixture'@'%'");
         $db->statement("GRANT SELECT,INSERT,UPDATE,DELETE ON quality_platform_ci.* TO 'workflow_fixture'@'%'");

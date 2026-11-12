@@ -1,3 +1,46 @@
+# Current closure checkpoint — 12 November 2026
+
+Branch `integration/mvp-final-2026-11-12`, [Draft PR70](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/70). Verified code HEAD `59a10a445725ee0bd79649f2873485f6c6ac5e14`; document4b9412e, reassessment28f8e0c, verification59a10a4. [CI43268830788](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43268830788) SUCCESS: SQLite563/5378, MySQL318/4163, Redis4/19 =885 executions/9560 assertions;0 errors/failures/skipped tests. Local final full suites: SQLite563/5378, MySQL318/4163, Redis4/19; all PASS. Required Composer/Pint/npm/runtime checks PASS. Final documentation-containing HEAD CI must be verified separately in PR/private handover; never substitute an older run.
+
+Fresh frozen-source browser37 PASS: documents42, initial workflow97, reassessment87 checks;4 exact download hashes; independent baseline20/final30 SQL/storage checks. Real native PDF/DOCX create/append/metadata/independent truthful unscanned availability/download; review/correction/five stages; LOWER/sequential/EQUAL/HIGHER reassessment/history/notices/logout. All old assessment bytes preserved. TEST_ONLY A/B browser acceptance, no operational/L4/105-requirement acceptance.
+
+Fresh retained manual browser38:29 read-only browser/16 SQL-storage checks PASS, one PDF/five initial stages prepared with actual Actions,0 reassessments consumed and one new document permit unused. Private root `.local-tools/reports/mvp-closure-20261112/OWNER-QUICKSTART-AR.md` contains URL/credentials/samples/expiry/scoped cleanup. Keep alive until owner finishes; no grant renewal or old manifest rebasing. Normal Chrome/Edge PDF interception by IDM remains unverified manually; approved exact exception was NOT applied because both computer-control runtimes failed to start. No IDM/system/security settings changed.
+
+Next executable action: verify final documentation commit CI, update PR70 with its exact SHA/run and request independent engineering review. No self-merge/deploy/promotion/PR69 duplication. Preserve root4b81e88, old a788138 source/demo, stashes/archive/.env/assets/contributor history. See [closure engineering report](../reports/FINAL-MVP-CLOSURE-2026-11-12.md) and [plain-Arabic owner report](PROJECT-OWNER-FINAL-REPORT-AR-2026-11-12.md). D002/D007/D014 operational gates, production scanner, institutional document approval and references remain excluded.
+
+## Previous checkpoints — historical at their stated source
+
+Final-source proof: ba495ff/CI43168419256 SUCCESS822/8639; all named native journeys remain TEST_ONLY, full customer/L4 acceptance unchanged. Manual fixture pristine17 browser/20 SQL checks and retained running.
+
+# Final integration journey evidence — 12 November 2026
+
+| Journey | Current bounded evidence | Full requirement status |
+|---|---|---|
+| J01 identity | Original real institution login/account/logout and invalid-session/CSRF controls retained; actual multi-actor browser proof | PARTIAL; provisioning/invitations/operational grants unavailable |
+| J02 organization/units | Contributor history integrated; native metadata/tree/create/rename/move, cycle denial,3 SQL audit events, responsive native menu;9 unit tests plus separate same-panel Policy test | PASS for the named TEST_ONLY actions; full organizational operation NOT_ACCEPTED |
+| J03 Approaches | Real assignment-filtered existing native Resource integrated in same test panel; exact-resource Policy denies reviewer/foreign users | PARTIAL; create/metadata/history earlier J03 evidence retained; no new Quality admission inferred |
+| J04 real documents | Synthetic metadata/version workspace and secure real-byte persistence foundation | PARTIAL; actual scanner/release/download/UI integration still unimplemented/unavailable |
+| J05/J06 evidence/review | Explicit version-scoped synthetic evidence; correction and independent approval;7 immutable review rounds | PASS bounded TEST_ONLY; broader evidence/publication NOT_ACCEPTED |
+| J07 maturity | Five configured initial stages;5 immutable manual assessments;10 exact-version evidence links | PASS bounded initial cycle; operational scoring/reassessment NOT_ACCEPTED |
+| J08 reassessment | R68 relational/Action foundation and negative/concurrency tests retained | PARTIAL; downstream effective projection, notification/UI and real operation backing incomplete |
+| J09/J10 references/notifications |14 persisted in-app notices/read state; no approved licensed reference mapping journey | Notifications bounded PASS; reference mapping BLOCKED |
+| J11/J12 security | Actual two-connection revocation-first/current RR/writer-first/1205/1213, no writes or success audit after denial | PASS supported tested writers; no global external-SQL guarantee or operational acceptance |
+| J13 complete customer workflow | Real connected local native journey; fresh frozen-source116 browser/19 independent SQL checks PASS | PARTIAL/TEST_ONLY; full P0–P10/L4 NOT_ACCEPTED |
+
+Earlier rows below are historical and do not override these bounded states.
+
+# Active final integration journey checkpoint
+
+| Journey | Current evidence | State |
+|---|---|---|
+| J02 institution/unit tree/create/rename/move | Exact contributor source merged into isolated branch; original HTTP15/336 PASS; current mutation boundary in testing | PARTIAL_TEST_ONLY; integrated browser NOT_TESTED |
+| J12 revocation | Actual published adapter reproduced three fail-first defects; initial adapter/J03 subset12/106 PASS; broader lock graph/current grant/rollback pending | PARTIAL; security acceptance not yet claimed |
+| J14 complete customer path | Historical bounded native journeys preserved; no new complete integrated browser result yet | PARTIAL/BLOCKED_OWNER |
+
+No new L4 acceptance, operational grants, expired-demo renewal, file serving or full MVP completion is claimed.
+
+## Historical checkpoints (superseded only within the scope above)
+
 # Customer journey register
 
 Owner-demo checkpoint2026-11-10: PR66 lead-merged9bac877; exact postmerge42877149742 SUCCESS690/7382 verified before safe synchronization. Fresh complete rehearsal on that source PASS87 browser/19 independent SQL checks/15 responsive screenshots; its owned services cleaned. Separate fresh manual fixture PASS57 browser navigation checks plus19 SQL checks proving no reviews/questions/answers/assessments/notices consumed, and remains running for the owner. The [requirement-to-screen matrix](OWNER-DEMO-COMPLETION-MATRIX.md) and [runbook](OWNER-DEMO-RUNBOOK.md) describe entry/navigation/24h expiry and exact limits. No whole-journey/L4 state is promoted.

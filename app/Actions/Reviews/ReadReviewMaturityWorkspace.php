@@ -3,6 +3,7 @@
 namespace App\Actions\Reviews;
 
 use App\Actions\Maturity\SaveStageSubmission;
+use App\Authorization\DocumentWorkspaceAccess;
 use App\Authorization\ReviewMaturityAccess;
 use App\Models\Approach;
 use App\Models\User;
@@ -93,6 +94,21 @@ final class ReadReviewMaturityWorkspace
                 } catch (AuthorizationException) { /* Never reveal an inaccessible document/version. */
                 }
             }
+            if (DocumentWorkspaceAccess::hasFileScope()) {
+                $targets = DB::table('document_file_operation_assignments as g')->join('document_versions as v', fn ($j) => $j
+                    ->on('v.organization_id', '=', 'g.organization_id')->on('v.document_id', '=', 'g.document_id')->on('v.id', '=', 'g.version_id'))
+                    ->where('g.organization_id', $proof['organization_id'])->where('g.fixture_id', $proof['fixture_id'])->where('g.grantee_id', $actor->id)
+                    ->whereIn('g.operation', ['download_demo_unscanned', 'download_real'])->whereNull('g.revoked_at')
+                    ->where('g.starts_at', '<=', ReviewMaturityAccess::timestamp())->where('g.expires_at', '>', ReviewMaturityAccess::timestamp())
+                    ->orderByDesc('v.id')->limit(100)->select('g.document_public_id', 'v.public_id as version_public_id')->get();
+                foreach ($targets as $target) {
+                    try {
+                        [$document, $version] = app(SaveStageSubmission::class)->version($actor, (array) $target);
+                        $options[$document->public_id.':'.$version->public_id] = $document->title.' — إصدار '.$version->version_number.' (مرشح؛ يلزم تقييم الكفاية المستقل)';
+                    } catch (AuthorizationException) { /* Current denied/expired/unsafe versions are never selectable. */
+                    }
+                }
+            }
 
             return $options;
         });
@@ -105,13 +121,20 @@ final class ReadReviewMaturityWorkspace
             'decided_at' => $review->decided_at, 'reviewer_public_id' => $review->reviewer_id ? User::where('organization_id', $review->organization_id)->whereKey($review->reviewer_id)->value('public_id') : null];
     }
 
-    private function submissionDto(User $actor, object $submission): array
+    public function submissionDto(User $actor, object $submission): array
     {
+        $proof = ReviewMaturityAccess::context() ?? throw new AuthorizationException;
+        if (DB::transactionLevel() === 0 || (int) $submission->organization_id !== $proof['organization_id']
+            || $submission->fixture_id !== $proof['fixture_id'] || (int) $submission->approach_id !== $proof['approach_id']) {
+            throw new AuthorizationException;
+        }
         $data = json_decode($submission->content_json, true, 64, JSON_THROW_ON_ERROR);
         foreach ($data['evidence'] as &$reference) {
             try {
                 [$document, $version] = app(SaveStageSubmission::class)->version($actor, $reference);
-                $reference['display'] = $document->title.' — إصدار '.$version->version_number.' — '.$version->public_id.' (اصطناعي؛ بلا إتاحة ملف)';
+                $reference['display'] = $document->title.' — إصدار '.$version->version_number.' — '.$version->public_id
+                    .(isset((ReviewMaturityAccess::context()['synthetic_versions'] ?? [])[strtolower($version->public_id)])
+                        ? ' (اصطناعي؛ بلا إتاحة ملف)' : ' (ملف عرض؛ الإتاحة لا تثبت كفايته كشاهد)');
             } catch (AuthorizationException) {
                 // Preserve immutable SQL while withholding a now-inaccessible document identity.
                 $reference = array_intersect_key($reference, array_flip(['question_public_id', 'expected_evidence_public_id']))

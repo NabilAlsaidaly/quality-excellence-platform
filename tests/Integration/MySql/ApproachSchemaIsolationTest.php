@@ -34,7 +34,112 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
 {
     use ApproachAssignmentFixtures, DatabaseMigrations;
 
+    public static function invalidPersistenceFixtureStates(): array
+    {
+        return array_map(fn ($state) => [$state], [
+            'missing_entry', 'duplicate_entry', 'unknown_entry', 'inconsistent_batch', 'missing_table',
+        ]);
+    }
+
+    #[DataProvider('invalidPersistenceFixtureStates')]
+    public function test_original_fixture_refuses_inconsistent_persistence_before_requesting_any_ddl(string $state): void
+    {
+        $name = '2026_11_13_000006_create_maturity_reassessment_events_table';
+        $original = (array) DB::table('migrations')->where('migration', $name)->first();
+        $journal = fn () => DB::table('migrations')->orderBy('id')->get()->map(fn ($row) => (array) $row)->all();
+        $before = $journal();
+        $inserted = null;
+        if ($state === 'missing_entry') {
+            DB::table('migrations')->where('id', $original['id'])->delete();
+        } elseif (in_array($state, ['duplicate_entry', 'unknown_entry'], true)) {
+            $inserted = DB::table('migrations')->insertGetId(['migration' => $state === 'duplicate_entry' ? $name : '2026_11_13_999999_unreviewed_fixture', 'batch' => $original['batch']]);
+        } elseif ($state === 'inconsistent_batch') {
+            DB::table('migrations')->where('id', $original['id'])->update(['batch' => $original['batch'] + 1]);
+        } else {
+            $this->assertFalse(DB::table('maturity_reassessment_events')->exists(), 'Only the empty owned negative fixture may be removed.');
+            Schema::drop('maturity_reassessment_events');
+        }
+        $mutated = $journal();
+        $tables = Schema::getTableListing();
+        // Actual MySQL metadata/journal, with a spy that refuses a premature DDL request.
+        $probe = new class(__FUNCTION__) extends ApproachSchemaIsolationTest
+        {
+            public bool $ddlRequested = false;
+
+            public function exercise(): void
+            {
+                $this->rollbackEmptyReviewMaturityMigrations();
+            }
+
+            public function artisan($command, $parameters = [])
+            {
+                $this->ddlRequested = true;
+                throw new RuntimeException('DDL_BEFORE_PERSISTENCE_PREFLIGHT');
+            }
+        };
+        try {
+            try {
+                $probe->exercise();
+                $this->fail('Inconsistent fixture state must refuse before any DDL.');
+            } catch (RuntimeException $error) {
+                $this->assertStringContainsString('Persistence fixture', $error->getMessage());
+            }
+            $this->assertFalse($probe->ddlRequested);
+            $this->assertSame($tables, Schema::getTableListing());
+            $this->assertSame($mutated, $journal());
+        } finally {
+            // Restore only this test's explicitly captured empty schema/journal mutation.
+            if ($inserted !== null) {
+                DB::table('migrations')->where('id', $inserted)->delete();
+            }
+            if ($state === 'missing_entry') {
+                DB::table('migrations')->insert($original);
+            } elseif ($state === 'inconsistent_batch') {
+                DB::table('migrations')->where('id', $original['id'])->update(['batch' => $original['batch']]);
+            } elseif ($state === 'missing_table') {
+                (require database_path('migrations/'.$name.'.php'))->up();
+            }
+        }
+        $this->assertSame($before, $journal());
+    }
+
     private array $ownedApproaches = [];
+
+    public function test_metadata_codec_preserves_utf8_identifier_and_charset_text_inside_literals(): void
+    {
+        DB::statement(<<<'SQL'
+CREATE TABLE qep68_codec_integrity_fixture (
+ source_utf8mb4 VARCHAR(20) NOT NULL, `_ascii` VARCHAR(20) NOT NULL,
+ CONSTRAINT qep68_codec_utf8_identifier CHECK (source_utf8mb4 = _utf8mb4'clean'),
+ CONSTRAINT qep68_codec_charset_literal CHECK (`_ascii` <> _utf8mb4'_utf8mb4_ascii')
+) ENGINE=InnoDB
+SQL);
+        try {
+            $checks = TenantIsolationSchemaContract::read(DB::connection())['qep68_codec_integrity_fixture']['checks'];
+            $this->assertSame(['enforced' => true, 'clause' => "(`source_utf8mb4`='clean')"], $checks['qep68_codec_utf8_identifier']);
+            $this->assertSame(['enforced' => true, 'clause' => "(`_ascii`<>'_utf8mb4_ascii')"], $checks['qep68_codec_charset_literal']);
+        } finally {
+            Schema::drop('qep68_codec_integrity_fixture');
+        }
+    }
+
+    public function test_complete_persistence_fixture_rollback_has_exact_postconditions_and_absent_state_is_a_noop(): void
+    {
+        // Isolate this original six-migration postcondition from the newer empty tail;
+        // that helper independently proves its exact journal/table/key removal.
+        $this->rollbackEmptyClosureFixtures();
+        $before = DB::table('migrations')->orderBy('id')->get()->map(fn ($row) => (array) $row)->all();
+        try {
+            $this->rollbackEmptyRealPersistenceMigrations();
+            $expected = array_values(array_filter($before, fn ($row) => ! str_starts_with($row['migration'], '2026_11_13_')));
+            $actual = fn () => DB::table('migrations')->orderBy('id')->get()->map(fn ($row) => (array) $row)->all();
+            $this->assertSame($expected, $actual());
+            $this->rollbackEmptyRealPersistenceMigrations();
+            $this->assertSame($expected, $actual(), 'A fully absent owned tail is a verified no-op.');
+        } finally {
+            $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
+        }
+    }
 
     /** Keep the original feature DDL target independent of later document migrations. */
     private function rollbackApproachMigrations(int $step): PendingCommand
@@ -106,10 +211,68 @@ class ApproachSchemaIsolationTest extends MySqlTestCase
         }
     }
 
+    private const MIGRATION_INVENTORY = [
+        '0001_01_01_000000_create_users_table.php',
+        '0001_01_01_000001_create_cache_table.php',
+        '0001_01_01_000002_create_jobs_table.php',
+        '2026_10_31_000001_create_organizations_table.php',
+        '2026_10_31_000002_create_organization_memberships_table.php',
+        '2026_10_31_000003_create_organizational_units_table.php',
+        '2026_11_03_000001_create_permission_permissions_table.php',
+        '2026_11_03_000002_create_permission_roles_table.php',
+        '2026_11_03_000003_create_permission_role_has_permissions_table.php',
+        '2026_11_03_000004_create_permission_model_has_roles_table.php',
+        '2026_11_03_000005_create_permission_model_has_permissions_table.php',
+        '2026_11_03_000006_create_permission_authorization_changes_table.php',
+        '2026_11_03_000007_create_organizational_unit_changes_table.php',
+        '2026_11_03_000008_create_organization_changes_table.php',
+        '2026_11_05_000001_expand_user_identity_namespaces.php',
+        '2026_11_05_000002_guard_identity_membership_insert.php',
+        '2026_11_05_000003_guard_identity_membership_update.php',
+        '2026_11_05_000004_guard_identity_binding_update.php',
+        '2026_11_05_000005_create_institution_password_reset_tokens.php',
+        '2026_11_07_000001_create_approaches_table.php',
+        '2026_11_07_000002_create_approach_content_revisions_table.php',
+        '2026_11_08_000001_create_approach_changes_table.php',
+        '2026_11_08_000002_create_documents_table.php',
+        '2026_11_08_000003_create_document_versions_table.php',
+        '2026_11_10_000001_create_approach_assignments_table.php',
+        '2026_11_10_000002_create_approach_assignment_changes_table.php',
+        '2026_11_11_000001_create_document_workspace_assignments_table.php',
+        '2026_11_11_000002_create_document_workspace_assignment_changes_table.php',
+        '2026_11_11_000003_create_document_metadata_revisions_table.php',
+        '2026_11_12_000001_add_approach_revision_workflow_candidate_key.php',
+        '2026_11_12_000002_add_document_version_workflow_candidate_key.php',
+        '2026_11_12_000003_create_maturity_workflow_stages_table.php',
+        '2026_11_12_000004_create_review_maturity_assignments_table.php',
+        '2026_11_12_000005_create_maturity_workflow_configurations_table.php',
+        '2026_11_12_000006_create_maturity_workflow_submissions_table.php',
+        '2026_11_12_000007_create_maturity_workflow_evidence_table.php',
+        '2026_11_12_000008_create_review_maturity_reviews_table.php',
+        '2026_11_12_000009_create_maturity_workflow_assessments_table.php',
+        '2026_11_12_000010_create_review_maturity_audit_table.php',
+        '2026_11_12_000011_create_review_maturity_notifications_table.php',
+        '2026_11_13_000001_add_reassessment_parent_key.php',
+        '2026_11_13_000002_create_document_intakes_table.php',
+        '2026_11_13_000003_create_document_intake_events_table.php',
+        '2026_11_13_000004_create_maturity_reassessment_attempts_table.php',
+        '2026_11_13_000005_create_maturity_reassessment_decisions_table.php',
+        '2026_11_13_000006_create_maturity_reassessment_events_table.php',
+        '2026_11_14_000001_add_document_public_scope_identity.php',
+        '2026_11_14_000002_create_document_file_operation_assignments_table.php',
+        '2026_11_14_000003_create_document_file_operation_changes_table.php',
+        '2026_11_14_000004_create_maturity_reassessment_operation_assignments_table.php',
+        '2026_11_14_000005_create_maturity_reassessment_operation_changes_table.php',
+        '2026_11_14_000006_create_document_demo_availability_decisions_table.php',
+    ];
+
     public function test_actual_schema_and_journal_match_explicit_reviewed_tenant_contract(): void
     {
         $this->assertSame('quality_platform_ci', DB::selectOne('SELECT DATABASE() AS name')->name);
-        $this->assertSame(40, count(glob(database_path('migrations/*.php'))));
+        $actualMigrations = array_map('basename', glob(database_path('migrations/*.php')));
+        sort($actualMigrations);
+        $this->assertSame(count(self::MIGRATION_INVENTORY), count($actualMigrations));
+        $this->assertSame(self::MIGRATION_INVENTORY, $actualMigrations);
         $this->assertSame(count(glob(database_path('migrations/*.php'))), DB::table('migrations')->count());
         $schema = TenantIsolationSchemaContract::read(DB::connection());
         $this->assertSame([], TenantIsolationSchemaContract::violations($schema));

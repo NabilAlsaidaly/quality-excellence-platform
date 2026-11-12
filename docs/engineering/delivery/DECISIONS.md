@@ -1,3 +1,9 @@
+# Active final integration authority
+
+The Engineering Lead explicitly authorized contributor37 integration/repair and shared T17 technical candidate changes in the isolated final integration branch on2026-11-12. This supersedes earlier technical deferment and exclusive-edit restrictions only in that worktree. Contributor branch/history, original demo, normal environment and databases remain protected. Operational D002 and other owner-policy gates remain unchanged. The common supported-writer lock prefix is Organization -> ascending User PKs -> ascending membership PKs -> role/domain suffix; final claims require actual MySQL evidence. An arbitrary open transaction is not proof that this prefix was acquired.
+
+## Historical checkpoints (superseded only within the scope above)
+
 # Public decision-gate register
 
 Only public engineering status and references are recorded. Private decision text is excluded. RECEIVED is not RATIFIED; historical sources remain unchanged.
@@ -26,3 +32,6 @@ Later Issue55 reply selects J03_LOCAL_APPROACH_001 as TEST_ONLY and explicitly w
 Later [Issue57](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/57) and Issue55 lead disposition explicitly approve scoped TEST_ONLY implementation of rows01–04/08–25, with failure-evidenced compatibility rows26–36 only. Rows05–07 remain excluded. PR56 merged at2de70b2 with post-merge CI42665172771 SUCCESS. This supersedes the earlier engineering-review wait for the approved subset only; no operational owner ratification/L4, global grants or generic shared-service changes follow.
 
 Issue57 implementation now supplies actual Request/DB-bound Policy assignments, atomic initial recipients, scoped SQL listing and draft/history/audit with64 native browser checks and independent MySQL readback. The full MySQL failure demonstrated all eleven conditional compatibility paths. A supplementary current locking structural check was implemented only in the approved new assignment access class after two-process RR red evidence; excluded shared authorization/session sources remain unchanged. No strong global revocation guarantee or operational D-002 ratification follows. See report57 for actual final regression/CI receipts and limitations.
+## 12 November closure scope — local files and historical reassessment
+
+The later closure execution directive and separately approved local-unscanned exception authorize a bounded `CLOSURE_FILES_LOCAL_001` / `CLOSURE_REASSESSMENT_LOCAL_001` testing implementation. Separate finite resource/version/stage operation backing and real Policies are required. Known harmless synthetic files may receive an independent `available_demo_unscanned` decision and private exact-version access; no scan/clean/institutional-approval claim follows. The existing clean-scanner path remains unchanged. Historical reassessment uses pinned original configuration, independent decisions and the approved local lower/EQUAL/HIGHER dependency behavior. These supersede earlier technical non-activation notes **only within the named isolated testing scope**; operational D002/D007/D014 and full requirement acceptance remain open. See the [closure report](../reports/FINAL-MVP-CLOSURE-2026-11-12.md). The complete contracts and private owner sources are not published.
