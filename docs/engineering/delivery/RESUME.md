@@ -1,3 +1,17 @@
+# Current final integration — 12 November 2026
+
+Draft [PR70](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/70), branch `integration/mvp-final-2026-11-12`, is an isolated technical candidate. Core f2c13378198fddd79fc8f044dc77dab3423ff9e8 passed [exact-head CI43105967011](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43105967011): SQLite515/4887, MySQL283/3533, Redis4/19, total802/8439, zero test errors/failures/skips. The later native UI additions require their own final-head CI; that core run is not their acceptance.
+
+Actual added native tests: unit security/form/cycle plus same-panel real Approach Policy admission and denied reviewer access; focused combined Filament suite12/136 PASS. Earlier full SQLite523/4962 PASS predates the last two tests. Full local MySQL rerun uses a new owned MySQL8.4.13 service with its default binlogging and restricted CI account; original skip-log-bin fixture failed one real1419 precondition rather than an application assertion. No test was weakened. Redis4/19 PASS on a new authenticated owned service. Final full counts belong to the final report/PR receipts.
+
+Real browser rehearsals persisted unit create/rename/move with exactly3 audit events, visible cycle denial, current-user/foreign denial, CSRF/logout and mobile native management menus. Actual review/correction/independent approval and five initial maturity stages persisted2 content revisions,7 review rounds,5 configurations,5 immutable assessments,10 evidence links and14 in-app notices;19 independent SQL/byte checks PASS. Browser runner locator fixes were validated on retained, resumed rehearsals; a fresh full-source journey is still required before final acceptance.
+
+Existing Approach/Document Resources are reused in the isolated native panel. No normal provider, route, registry, Policy, migration, package or CI configuration is changed by the native slice. Original checkout, contributor branch, stashes/archive, development database and old owner demo remain preserved. Only failed rehearsals21/22 were stopped under the user's separate explicit approval, without deletion.
+
+This candidate does not ratify operational D002/D003/D007/D014 or reference licenses. Real-file user journeys and reassessment activation still have technical implementation gaps as well as operational gates; do not describe them as complete or solely owner-blocked. Supported-writer T17 evidence is bounded, not global synchronization of arbitrary SQL. All overall phase and full requirement acceptance states remain unaccepted. See [final engineering report](../reports/FINAL-MVP-DELIVERY-2026-11-12.md).
+
+## Earlier checkpoints (historical; apply only at their stated source)
+
 
 ## Verified core checkpoint -2026-11-12
 

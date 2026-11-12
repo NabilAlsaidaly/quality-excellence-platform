@@ -97,8 +97,23 @@ Assert-Server
 if(!(Test-Path -LiteralPath $PlaywrightCli)){throw 'Use the existing installed Playwright CLI'}
 $env:QEP_REVIEW_MATURITY_FIXTURE=$state.fixture_id;$env:QEP_REVIEW_MATURITY_RUN=$RunName
 function Invoke-Fixture([string]$Operation,[string]$Argument=''){
-    & $Php -d ('sys_temp_dir='+(Join-Path $private 'tmp')) (Join-Path $PSScriptRoot 'Fixture.php') $Operation $Argument
-    if($LASTEXITCODE -ne 0){throw ('Owned fixture operation failed: '+$Operation)}
+    $previousOptIn=[Environment]::GetEnvironmentVariable('MYSQL_TESTS_ENABLED','Process')
+    $previousUuid=[Environment]::GetEnvironmentVariable('MVP_FIXTURE_MYSQL_UUID','Process')
+    try {
+        if($Operation -eq 'setup'){
+            Assert-Server
+            # Scope the approved persistence DDL opt-in to this verified owned
+            # setup child only; never inherit it into the HTTP runtime.
+            $env:MYSQL_TESTS_ENABLED='1'
+            $env:MVP_FIXTURE_MYSQL_UUID=$state.server_uuid
+        }
+        & $Php -d ('sys_temp_dir='+(Join-Path $private 'tmp')) (Join-Path $PSScriptRoot 'Fixture.php') $Operation $Argument
+        $fixtureExitCode=$LASTEXITCODE
+    } finally {
+        [Environment]::SetEnvironmentVariable('MYSQL_TESTS_ENABLED',$previousOptIn,'Process')
+        [Environment]::SetEnvironmentVariable('MVP_FIXTURE_MYSQL_UUID',$previousUuid,'Process')
+    }
+    if($fixtureExitCode -ne 0){throw ('Owned fixture operation failed: '+$Operation)}
 }
 function Invoke-Journey([string]$Phase,[hashtable]$Data){
     $script=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'Journey.js')).Replace('/* PRIVATE_FIXTURE */ null',($Data|ConvertTo-Json -Depth 8 -Compress)).Replace('/* JOURNEY_PHASE */ null',($Phase|ConvertTo-Json -Compress))
@@ -122,7 +137,7 @@ function Invoke-Journey([string]$Phase,[hashtable]$Data){
 if(!$state.server_pid){
     $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Parse('127.0.0.6'),0)
     $listener.Start();$state.http_port=$listener.LocalEndpoint.Port;$listener.Stop()
-    $source=@('app','database/migrations','config','routes','bootstrap','tests/Support','tests/Browser/ReviewMaturity') | ForEach-Object {
+    $source=@('app','database/migrations','config','routes','bootstrap','resources/views','tests/Support','tests/Browser') | ForEach-Object {
         Get-ChildItem -LiteralPath (Join-Path $project $_) -Recurse -File | Where-Object { $_.Extension -in @('.php','.js','.ps1') } | ForEach-Object { $_.FullName.Substring($project.Length+1).Replace('\','/') }
     }
     $source+=@('composer.lock','public/build/manifest.json')

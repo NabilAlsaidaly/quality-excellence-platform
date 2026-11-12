@@ -1,3 +1,20 @@
+# Final integration journey evidence — 12 November 2026
+
+| Journey | Current bounded evidence | Full requirement status |
+|---|---|---|
+| J01 identity | Original real institution login/account/logout and invalid-session/CSRF controls retained; actual multi-actor browser proof | PARTIAL; provisioning/invitations/operational grants unavailable |
+| J02 organization/units | Contributor history integrated; native metadata/tree/create/rename/move, cycle denial,3 SQL audit events, responsive native menu;9 unit tests plus separate same-panel Policy test | PASS for the named TEST_ONLY actions; full organizational operation NOT_ACCEPTED |
+| J03 Approaches | Real assignment-filtered existing native Resource integrated in same test panel; exact-resource Policy denies reviewer/foreign users | PARTIAL; create/metadata/history earlier J03 evidence retained; no new Quality admission inferred |
+| J04 real documents | Synthetic metadata/version workspace and secure real-byte persistence foundation | PARTIAL; actual scanner/release/download/UI integration still unimplemented/unavailable |
+| J05/J06 evidence/review | Explicit version-scoped synthetic evidence; correction and independent approval;7 immutable review rounds | PASS bounded TEST_ONLY; broader evidence/publication NOT_ACCEPTED |
+| J07 maturity | Five configured initial stages;5 immutable manual assessments;10 exact-version evidence links | PASS bounded initial cycle; operational scoring/reassessment NOT_ACCEPTED |
+| J08 reassessment | R68 relational/Action foundation and negative/concurrency tests retained | PARTIAL; downstream effective projection, notification/UI and real operation backing incomplete |
+| J09/J10 references/notifications |14 persisted in-app notices/read state; no approved licensed reference mapping journey | Notifications bounded PASS; reference mapping BLOCKED |
+| J11/J12 security | Actual two-connection revocation-first/current RR/writer-first/1205/1213, no writes or success audit after denial | PASS supported tested writers; no global external-SQL guarantee or operational acceptance |
+| J13 complete customer workflow | Real connected local native journey; final fresh candidate verification pending | PARTIAL/TEST_ONLY; full P0–P10/L4 NOT_ACCEPTED |
+
+Earlier rows below are historical and do not override these bounded states.
+
 # Active final integration journey checkpoint
 
 | Journey | Current evidence | State |

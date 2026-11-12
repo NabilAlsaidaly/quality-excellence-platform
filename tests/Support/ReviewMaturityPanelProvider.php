@@ -7,10 +7,14 @@ use App\Authorization\ApproachAssignmentAccess;
 use App\Authorization\DocumentWorkspaceAccess;
 use App\Authorization\ReviewMaturityAccess;
 use App\Authorization\TenantContext;
+use App\Filament\Institution\Pages\OrganizationWorkspace;
 use App\Filament\Institution\Pages\WorkflowNotifications;
+use App\Filament\Institution\Resources\ApproachResource;
 use App\Filament\Institution\Resources\DocumentResource;
 use App\Filament\Institution\Resources\ReviewMaturityResource;
+use App\Models\Organization;
 use App\Models\ReviewMaturityReview;
+use App\Models\User;
 use App\Policies\ReviewMaturityPolicy;
 use Closure;
 use Filament\Facades\Filament;
@@ -29,6 +33,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use LogicException;
@@ -75,7 +80,7 @@ final class ReviewMaturityPanelProvider extends PanelProvider
     {
         return $panel->id('mvp_workflow_fixture')->path('institution/mvp-workspace')->authGuard('institution')
             ->brandName('الجودة والتميز — عرض اختباري')->viteTheme('resources/css/filament/admin/theme.css')
-            ->colors(['primary' => Color::hex('#17324D')])->resources([ReviewMaturityResource::class, DocumentResource::class])->pages([WorkflowNotifications::class])->widgets([])->userMenu(false)
+            ->colors(['primary' => Color::hex('#17324D')])->resources([ApproachResource::class, ReviewMaturityResource::class, DocumentResource::class])->pages([WorkflowNotifications::class, OrganizationWorkspace::class])->widgets([])->userMenu(false)
             ->middleware([EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class,
                 ShareErrorsFromSession::class, PreventRequestForgery::class, SubstituteBindings::class,
                 DisableBladeIconComponents::class, DispatchServingFilamentEvent::class])
@@ -84,6 +89,29 @@ final class ReviewMaturityPanelProvider extends PanelProvider
 
     public function boot(): void
     {
+        Gate::before(function (?User $actor, string $ability, array $arguments): ?bool {
+            if ($ability !== 'tenant-capability' || ! in_array($arguments[0] ?? null, ['organization.units.view', 'organization.units.manage'], true)) {
+                return null;
+            }
+            $units = self::proof()['organization_units'] ?? null;
+            if ($units === null) {
+                return null;
+            }
+
+            // Denial-only fixture restriction, evaluated after real session
+            // middleware and again by the actual Gate under the write lock.
+            // Null delegates to the unchanged real role/permission decision.
+            return $actor !== null && ReviewMaturityAccess::context() !== null
+                && in_array((int) $actor->getKey(), $units['actor_ids'] ?? [], true) ? null : false;
+        });
+        View::composer('institution.account', function ($view): void {
+            // Only the explicit final-integration fixture supplies this link.
+            // Admission is the same current real Policy used by its panel.
+            if (app()->environment('testing') && (self::proof()['organization_units'] ?? null) !== null
+                && ReviewMaturityAccess::context() !== null && app(ReviewMaturityWorkspace::class)->canEnter()) {
+                $view->with('localDemoWorkspaceUrl', '/institution/mvp-workspace/workflows');
+            }
+        });
         app(ExceptionHandler::class)->renderable(function (HttpExceptionInterface|CannotUpdateLockedPropertyException $error, Request $request) {
             if (Filament::getCurrentPanel()?->getId() !== 'mvp_workflow_fixture') {
                 return null;
@@ -105,6 +133,29 @@ final class ReviewMaturityPanelProvider extends PanelProvider
 /** Kernel-wide in this test app so signed Livewire updates keep the exact real Request proof. */
 final class ReviewMaturityFixtureRequestScope
 {
+    private function withUnits(array $proof, Closure $next): mixed
+    {
+        $units = $proof['organization_units'] ?? null;
+        if ($units === null) {
+            return $next();
+        }
+        abort_unless(($units['scenario'] ?? null) === 'UNIT_LOCAL_001'
+            && ($units['fixture_id'] ?? null) === $proof['workflow']['fixture_id']
+            && ($units['organization_id'] ?? null) === $proof['workflow']['organization_id']
+            && is_array($units['actor_ids'] ?? null), 403);
+        // Provisional Issue50 mapping only in this owned request. The actual
+        // TenantAuthorization role+permission decision remains mandatory.
+        $old = config('authorization.capabilities');
+        config(['authorization.capabilities' => array_merge($old, [
+            'organization.units.view' => Organization::class, 'organization.units.manage' => Organization::class,
+        ])]);
+        try {
+            return $next();
+        } finally {
+            config(['authorization.capabilities' => $old]);
+        }
+    }
+
     public function handle(Request $request, Closure $next)
     {
         $proof = ReviewMaturityPanelProvider::proof();
@@ -112,7 +163,7 @@ final class ReviewMaturityFixtureRequestScope
             return response('غير متاح.', 404, ['Cache-Control' => 'no-store, private']);
         }
 
-        return $proof === null ? $next($request) : ApproachAssignmentAccess::runFixture($request, $proof['approach'], fn () => DocumentWorkspaceAccess::runFixture($request, $proof['document'], fn () => ReviewMaturityAccess::runFixture($request, $proof['workflow'], fn () => $next($request))));
+        return $proof === null ? $next($request) : ApproachAssignmentAccess::runFixture($request, $proof['approach'], fn () => DocumentWorkspaceAccess::runFixture($request, $proof['document'], fn () => ReviewMaturityAccess::runFixture($request, $proof['workflow'], fn () => $this->withUnits($proof, fn () => $next($request)))));
     }
 }
 
