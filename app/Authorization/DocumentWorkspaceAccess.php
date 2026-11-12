@@ -5,6 +5,7 @@ namespace App\Authorization;
 use App\Actions\Documents\CreateDocumentWithVersion;
 use App\Actions\Documents\ManageDocumentWorkspaceAssignments;
 use App\Models\Document;
+use App\Models\DocumentFileOperationAssignment;
 use App\Models\DocumentWorkspaceAssignment;
 use App\Models\Organization;
 use App\Models\User;
@@ -28,6 +29,8 @@ final class DocumentWorkspaceAccess
     public const CAPABILITY = 'documents.workspace.access';
 
     public const OPERATIONS = ['create', 'list', 'view', 'metadata', 'append', 'history'];
+
+    public const FILE_OPERATIONS = ['upload_real', 'append_real', 'release_real', 'download_real', 'release_demo_unscanned', 'download_demo_unscanned'];
 
     private static ?WeakMap $requests = null;
 
@@ -158,9 +161,9 @@ final class DocumentWorkspaceAccess
     }
 
     /** Side-effect-free; also used after file/SQL waits before commit. */
-    public function authorize(User $actor, string $operation, ?Document $document = null): void
+    public function authorize(User $actor, string $operation, ?Document $document = null, ?string $versionId = null, ?string $grantId = null): void
     {
-        Gate::forUser($actor)->authorize('workspaceOperation', [Document::class, $operation, $document]);
+        Gate::forUser($actor)->authorize('workspaceOperation', [Document::class, $operation, $document, $versionId, $grantId]);
     }
 
     public function query(User $actor, string $operation): Builder
@@ -172,8 +175,11 @@ final class DocumentWorkspaceAccess
             ->where('grantee_id', $actor->id)->where('operation', $operation);
     }
 
-    public function current(User $actor, string $operation, ?Document $document = null): ?DocumentWorkspaceAssignment
+    public function current(User $actor, string $operation, ?Document $document = null, ?string $versionId = null, ?string $grantId = null): ?DocumentWorkspaceAssignment
     {
+        if (in_array($operation, self::FILE_OPERATIONS, true)) {
+            return $this->fileGrant($actor, $operation, $document, $versionId, $grantId);
+        }
         $now = self::timestamp();
         $query = $this->query($actor, $operation)->whereNull('revoked_at')->where('starts_at', '<=', $now)->where('expires_at', '>', $now);
         if (in_array($operation, ['create', 'list'], true)) {
@@ -182,14 +188,46 @@ final class DocumentWorkspaceAccess
             $query->where('scope_kind', 'document')->where('document_id', $document?->id);
         }
 
+        return $query->orderBy('id')->lockForUpdate()->first()
+            ?? $this->fileGrant($actor, $operation, $document, $versionId, $grantId);
+    }
+
+    public static function hasFileScope(): bool
+    {
+        return (self::context()['file_operation_scope'] ?? null) === 'CLOSURE_FILES_LOCAL_001';
+    }
+
+    /** No synthetic grant, creator status or target supplied by a browser is authority. */
+    private function fileGrant(User $actor, string $operation, ?Document $document, ?string $versionId, ?string $grantId): ?DocumentFileOperationAssignment
+    {
+        if (! self::hasFileScope() || $document === null || (! $document->exists && $operation !== 'upload_real')
+            || ! in_array($operation, [...self::FILE_OPERATIONS, 'view', 'metadata', 'history'], true)
+            || ($grantId !== null && ! Str::isUlid($grantId))) {
+            return null;
+        }
+        $versionScoped = in_array($operation, self::FILE_OPERATIONS, true);
+        if ($versionScoped && ($versionId === null || ! Str::isUlid($versionId))) {
+            return null;
+        }
+        $proof = self::context();
+        $query = DocumentFileOperationAssignment::query()->where('organization_id', $proof['organization_id'])
+            ->where('fixture_id', $proof['fixture_id'])->where('scenario', self::SCENARIO)->where('classification', 'TEST_ONLY')
+            ->where('grantee_id', $actor->id)->where('operation', $operation)->where('document_public_id', $document->public_id)
+            ->where('document_id', $document->exists ? $document->id : null)
+            ->whereNull('revoked_at')->where('starts_at', '<=', self::timestamp())->where('expires_at', '>', self::timestamp());
+        $versionScoped ? $query->where('version_public_id', $versionId) : $query->whereNull('version_public_id');
+        if ($grantId !== null) {
+            $query->where('public_id', $grantId);
+        }
+
         return $query->orderBy('id')->lockForUpdate()->first();
     }
 
-    public function allows(User $actor, string $operation, ?Document $document = null): bool
+    public function allows(User $actor, string $operation, ?Document $document = null, ?string $versionId = null, ?string $grantId = null): bool
     {
         $proof = self::context();
         $context = app(TenantContext::class);
-        if ($proof === null || DB::transactionLevel() === 0 || ! in_array($operation, self::OPERATIONS, true)
+        if ($proof === null || DB::transactionLevel() === 0 || ! in_array($operation, [...self::OPERATIONS, ...self::FILE_OPERATIONS], true)
             || ! $context->verifiedFor($actor) || $context->organizationId() !== $proof['organization_id']
             || $actor->principal_type !== 'institution' || (int) $actor->organization_id !== $proof['organization_id']
             || ! in_array((int) $actor->id, [$proof['editor_id'], $proof['reader_id']], true)
@@ -202,7 +240,18 @@ final class DocumentWorkspaceAccess
             && ($document === null || (int) $document->organization_id !== $proof['organization_id'])) {
             return false;
         }
-        if ((int) $actor->id === $proof['reader_id'] && ! in_array($operation, ['list', 'view', 'history'], true)) {
+        $fileOperation = in_array($operation, self::FILE_OPERATIONS, true);
+        if (str_ends_with($operation, '_demo_unscanned') && ($proof['demo_unscanned_exception'] ?? false) !== true) {
+            return false;
+        }
+        if ($fileOperation && (! self::hasFileScope() || ! in_array((int) $actor->id, match ($operation) {
+            'upload_real', 'append_real' => [$proof['editor_id']],
+            'release_real', 'release_demo_unscanned', 'download_real' => [$proof['reader_id']],
+            'download_demo_unscanned' => [$proof['editor_id'], $proof['reader_id']],
+        }, true))) {
+            return false;
+        }
+        if (! $fileOperation && (int) $actor->id === $proof['reader_id'] && ! in_array($operation, ['list', 'view', 'history'], true)) {
             return false;
         }
         $organization = Organization::find($proof['organization_id']);
@@ -211,7 +260,7 @@ final class DocumentWorkspaceAccess
             return false;
         }
 
-        return $this->current($actor, $operation, $document) !== null;
+        return $this->current($actor, $operation, $document, $versionId, $grantId) !== null;
     }
 
     private function currentStructuralGrant(User $actor, int $organization): bool
@@ -230,12 +279,24 @@ final class DocumentWorkspaceAccess
         $proof = self::context() ?? throw new AuthorizationException;
         $now = self::timestamp();
 
-        return $query->join('document_workspace_assignments as document_view', function ($join) use ($proof, $actor, $now): void {
+        $method = self::hasFileScope() ? 'leftJoin' : 'join';
+        $query->{$method}('document_workspace_assignments as document_view', function ($join) use ($proof, $actor, $now): void {
             $join->on('document_view.document_id', '=', 'documents.id')->on('document_view.organization_id', '=', 'documents.organization_id')
                 ->where('document_view.fixture_id', $proof['fixture_id'])->where('document_view.scenario', self::SCENARIO)
                 ->where('document_view.classification', 'TEST_ONLY')->where('document_view.scope_kind', 'document')
                 ->where('document_view.grantee_id', $actor->id)->where('document_view.operation', 'view')->whereNull('document_view.revoked_at')
                 ->where('document_view.starts_at', '<=', $now)->where('document_view.expires_at', '>', $now);
-        })->sharedLock();
+        });
+        if (self::hasFileScope()) {
+            $query->leftJoin('document_file_operation_assignments as document_file_view', function ($join) use ($proof, $actor, $now): void {
+                $join->on('document_file_view.organization_id', '=', 'documents.organization_id')->on('document_file_view.document_id', '=', 'documents.id')
+                    ->on('document_file_view.document_public_id', '=', 'documents.public_id')->where('document_file_view.fixture_id', $proof['fixture_id'])
+                    ->where('document_file_view.scenario', self::SCENARIO)->where('document_file_view.classification', 'TEST_ONLY')
+                    ->where('document_file_view.grantee_id', $actor->id)->where('document_file_view.operation', 'view')->whereNull('document_file_view.version_public_id')
+                    ->whereNull('document_file_view.revoked_at')->where('document_file_view.starts_at', '<=', $now)->where('document_file_view.expires_at', '>', $now);
+            })->where(fn ($query) => $query->whereNotNull('document_view.id')->orWhereNotNull('document_file_view.id'));
+        }
+
+        return $query->sharedLock();
     }
 }

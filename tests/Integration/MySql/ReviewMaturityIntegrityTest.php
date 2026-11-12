@@ -11,13 +11,14 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Tests\Support\ClosureMigrationFixtures;
 use Tests\Support\MySqlTestCase;
 use Tests\Support\ReviewMaturityFixtures;
 use Tests\Support\TenantIsolationSchemaContract;
 
 class ReviewMaturityIntegrityTest extends MySqlTestCase
 {
-    use DatabaseMigrations, ReviewMaturityFixtures;
+    use ClosureMigrationFixtures, DatabaseMigrations, ReviewMaturityFixtures;
 
     protected function tearDown(): void
     {
@@ -261,6 +262,7 @@ class ReviewMaturityIntegrityTest extends MySqlTestCase
 
     private function rollbackEmptyPersistenceMigrations(): void
     {
+        $this->rollbackEmptyClosureFixtures();
         $paths = [
             'database/migrations/2026_11_13_000001_add_reassessment_parent_key.php',
             'database/migrations/2026_11_13_000002_create_document_intakes_table.php',

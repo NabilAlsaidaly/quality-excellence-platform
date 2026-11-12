@@ -156,6 +156,12 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
         '2026_11_13_000004_create_maturity_reassessment_attempts_table.php',
         '2026_11_13_000005_create_maturity_reassessment_decisions_table.php',
         '2026_11_13_000006_create_maturity_reassessment_events_table.php',
+        '2026_11_14_000001_add_document_public_scope_identity.php',
+        '2026_11_14_000002_create_document_file_operation_assignments_table.php',
+        '2026_11_14_000003_create_document_file_operation_changes_table.php',
+        '2026_11_14_000004_create_maturity_reassessment_operation_assignments_table.php',
+        '2026_11_14_000005_create_maturity_reassessment_operation_changes_table.php',
+        '2026_11_14_000006_create_document_demo_availability_decisions_table.php',
     ];
 
     public function test_measured_schema_journal_and_strict_negative_contract_match_actual_mysql(): void
@@ -338,6 +344,7 @@ class DocumentSchemaIsolationTest extends MySqlTestCase
 
     private function rollbackEmptyPersistenceMigrations(): void
     {
+        $this->rollbackEmptyClosureFixtures();
         $paths = [
             'database/migrations/2026_11_13_000001_add_reassessment_parent_key.php',
             'database/migrations/2026_11_13_000002_create_document_intakes_table.php',

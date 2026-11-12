@@ -2,6 +2,7 @@
 
 namespace App\Actions\Maturity;
 
+use App\Actions\Documents\AuthorizedDocumentEvidence;
 use App\Actions\Reviews\ReviewMaturityWorkspace;
 use App\Actions\Reviews\SynchronizeReview;
 use App\Authorization\DocumentWorkspaceAccess;
@@ -150,6 +151,9 @@ final class SaveStageSubmission
     {
         $proof = ReviewMaturityAccess::context() ?? throw new AuthorizationException;
         $receipt = $proof['synthetic_versions'][strtolower($reference['version_public_id'])] ?? null;
+        if ($receipt === null && DocumentWorkspaceAccess::hasFileScope()) {
+            return app(AuthorizedDocumentEvidence::class)->execute($actor, $reference);
+        }
         $document = Document::where('organization_id', $proof['organization_id'])->where('public_id', $reference['document_public_id'])->lockForUpdate()->first();
         if ($document === null || $receipt === null || strcasecmp($receipt['document_public_id'], $document->public_id) !== 0
             || (int) $document->created_by !== $proof['author_id']) {

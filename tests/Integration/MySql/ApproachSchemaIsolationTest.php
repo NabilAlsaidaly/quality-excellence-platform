@@ -125,6 +125,9 @@ SQL);
 
     public function test_complete_persistence_fixture_rollback_has_exact_postconditions_and_absent_state_is_a_noop(): void
     {
+        // Isolate this original six-migration postcondition from the newer empty tail;
+        // that helper independently proves its exact journal/table/key removal.
+        $this->rollbackEmptyClosureFixtures();
         $before = DB::table('migrations')->orderBy('id')->get()->map(fn ($row) => (array) $row)->all();
         try {
             $this->rollbackEmptyRealPersistenceMigrations();
@@ -255,6 +258,12 @@ SQL);
         '2026_11_13_000004_create_maturity_reassessment_attempts_table.php',
         '2026_11_13_000005_create_maturity_reassessment_decisions_table.php',
         '2026_11_13_000006_create_maturity_reassessment_events_table.php',
+        '2026_11_14_000001_add_document_public_scope_identity.php',
+        '2026_11_14_000002_create_document_file_operation_assignments_table.php',
+        '2026_11_14_000003_create_document_file_operation_changes_table.php',
+        '2026_11_14_000004_create_maturity_reassessment_operation_assignments_table.php',
+        '2026_11_14_000005_create_maturity_reassessment_operation_changes_table.php',
+        '2026_11_14_000006_create_document_demo_availability_decisions_table.php',
     ];
 
     public function test_actual_schema_and_journal_match_explicit_reviewed_tenant_contract(): void

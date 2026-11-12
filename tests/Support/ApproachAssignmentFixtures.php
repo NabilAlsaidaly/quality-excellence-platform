@@ -20,6 +20,8 @@ use RuntimeException;
 /** Explicit fictional TEST_ONLY fixture; never an operational role definition. */
 trait ApproachAssignmentFixtures
 {
+    use ClosureMigrationFixtures;
+
     protected array $assignmentFixtures = [];
 
     protected function assignmentFixture(bool $bootstrap = true): array
@@ -200,6 +202,32 @@ trait ApproachAssignmentFixtures
             throw new RuntimeException('Persistence fixture has an unknown or duplicate migration journal.');
         }
         $actualTables = Schema::getTableListing(schemaQualified: false);
+        $closureNames = array_map(fn ($path) => basename($path, '.php'), glob(database_path('migrations/2026_11_14_*.php')));
+        $closureApplied = array_values(array_intersect($allNames, $closureNames));
+        if ($closureApplied !== []) {
+            // Validate the ENTIRE older fixture before removing any empty newer dependency.
+            // This preserves the original no-DDL guarantee for corrupt/partial journals.
+            if ($closureApplied !== $closureNames || array_values(array_diff($known, $allNames)) !== []
+                || array_slice(array_values(array_diff($allNames, $closureNames)), -count($names)) !== $names
+                || count(array_unique(array_column(array_filter($journal, fn ($row) => in_array($row['migration'], $names, true)), 'batch'))) !== 1
+                || TenantIsolationSchemaContract::violations(TenantIsolationSchemaContract::read(DB::connection())) !== []) {
+                throw new RuntimeException('Persistence fixture is partial or inconsistent before any reverse DDL.');
+            }
+            foreach (array_merge($tables, ['document_versions', 'maturity_workflow_assessments', 'maturity_workflow_submissions', 'review_maturity_reviews']) as $table) {
+                if (Schema::hasTable($table) && DB::table($table)->exists()) {
+                    throw new RuntimeException('Populated persistence history preserved before any fixture DROP.');
+                }
+            }
+            $this->rollbackEmptyClosureFixtures();
+            $journal = $readJournal();
+            $allNames = array_column($journal, 'migration');
+            $known = array_values(array_diff($known, $closureNames));
+            $actualTables = Schema::getTableListing(schemaQualified: false);
+        } else {
+            // Reject unjournaled newer objects too; never adopt a partial fixture.
+            $this->rollbackEmptyClosureFixtures();
+            $known = array_values(array_diff($known, $closureNames));
+        }
         foreach ($actualTables as $table) {
             if ((str_starts_with($table, 'document_intake') || str_starts_with($table, 'maturity_reassessment'))
                 && ! in_array($table, $tables, true)) {

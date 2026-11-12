@@ -12,6 +12,7 @@ use App\Filament\Institution\Pages\WorkflowNotifications;
 use App\Filament\Institution\Resources\ApproachResource;
 use App\Filament\Institution\Resources\DocumentResource;
 use App\Filament\Institution\Resources\ReviewMaturityResource;
+use App\Http\Controllers\Institution\DemoDocumentVersionDownloadController;
 use App\Models\Organization;
 use App\Models\ReviewMaturityReview;
 use App\Models\User;
@@ -33,6 +34,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
@@ -70,6 +72,10 @@ final class ReviewMaturityPanelProvider extends PanelProvider
             return;
         }
         parent::register();
+        config(['livewire.temporary_file_upload.middleware' => ['throttle:60,1', ClosureDocumentUploadAuthorization::class]]);
+        // Livewire selects this disk by name whenever APP_ENV=testing,
+        // including a real browser harness. Reuse its owned private local root.
+        config(['filesystems.disks.tmp-for-tests' => array_replace(config('filesystems.disks.local'), ['serve' => false, 'visibility' => 'private'])]);
         Gate::policy(ReviewMaturityReview::class, ReviewMaturityPolicy::class);
         // HttpKernel may already be resolved when this test provider boots.
         // Laravel's helper also applies the callback to that existing instance.
@@ -89,6 +95,20 @@ final class ReviewMaturityPanelProvider extends PanelProvider
 
     public function boot(): void
     {
+        if (app()->environment('testing')) {
+            $this->app->booted(function (): void {
+                foreach (Route::getRoutes() as $route) {
+                    if (in_array('POST', $route->methods(), true) && str_contains($route->getName() ?? '', 'livewire') && str_contains($route->uri(), 'update')) {
+                        // Persistent middleware executes a verification-only
+                        // pipeline. Temporary-file hydration needs context for
+                        // the actual entire update controller invocation.
+                        $route->middleware(ClosureDocumentUploadContext::class);
+                    }
+                }
+            });
+            Route::get('/institution/local-document-versions/{document}/{version}/download', DemoDocumentVersionDownloadController::class)
+                ->middleware('web')->name('institution.local-document-version.download');
+        }
         Gate::before(function (?User $actor, string $ability, array $arguments): ?bool {
             if ($ability !== 'tenant-capability' || ! in_array($arguments[0] ?? null, ['organization.units.view', 'organization.units.manage'], true)) {
                 return null;

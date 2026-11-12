@@ -37,21 +37,37 @@ final class RegisterDocumentIntake
     }
 
     public function execute(?User $actor, array $metadata, UploadedFile $file, string $requestKey,
-        ?string $documentPublicId = null, string $expectedVersion = 'none'): array
+        ?string $documentPublicId = null, string $expectedVersion = 'none', ?string $operationGrantId = null): array
     {
         if (DB::transactionLevel() !== 0) {
             throw new LogicException('Real-file intake owns its SQL/file compensation boundary.');
         }
         $operation = $documentPublicId === null ? 'upload_real' : 'append_real';
-        $organization = $this->within($actor, $operation, $documentPublicId, fn (User $current, ?Document $document, Organization $organization) => $organization->public_id);
+        $targetVersion = null;
+        if ($operationGrantId !== null) {
+            $proof = DocumentWorkspaceAccess::context() ?? throw new AuthorizationException;
+            if (! DocumentWorkspaceAccess::hasFileScope() || $actor === null || ! Str::isUlid($operationGrantId)) {
+                throw new AuthorizationException;
+            }
+            $permit = DB::table('document_file_operation_assignments')->where('organization_id', $proof['organization_id'])
+                ->where('fixture_id', $proof['fixture_id'])->where('grantee_id', $actor->id)->where('public_id', $operationGrantId)
+                ->whereIn('operation', ['upload_real', 'append_real'])->first() ?? throw new AuthorizationException;
+            if ($documentPublicId === null || strcasecmp($documentPublicId, $permit->document_public_id) !== 0) {
+                throw new AuthorizationException;
+            }
+            $operation = $permit->operation;
+            $targetVersion = $permit->version_public_id;
+        }
+        $organization = $this->within($actor, $operation, $documentPublicId, fn (User $current, ?Document $document, Organization $organization) => $organization->public_id,
+            $targetVersion, $operationGrantId);
         if (! Str::isUlid($requestKey)) {
             throw new ConflictHttpException('معرّف محاولة الرفع غير صالح.');
         }
         $creator = app(CreateDocumentWithVersion::class);
-        if (array_diff(array_keys($metadata), $documentPublicId === null ? ['title', 'description'] : []) !== []) {
+        if (array_diff(array_keys($metadata), $operation === 'upload_real' ? ['title', 'description'] : []) !== []) {
             throw ValidationException::withMessages(['document' => 'حقول الوثيقة غير مسموح بها.']);
         }
-        $creator->validateMetadata($metadata + ['original_filename' => $file->getClientOriginalName()], $documentPublicId === null);
+        $creator->validateMetadata($metadata + ['original_filename' => $file->getClientOriginalName()], $operation === 'upload_real');
         $this->assertStorage();
         $receipt = $this->quarantine->store($organization, $file, $this->limits);
         $this->owned[$receipt->storageKey] = true;
@@ -59,7 +75,7 @@ final class RegisterDocumentIntake
             $receipt->inspection->originalFilename, $receipt->inspection->byteSize, $receipt->inspection->sha256], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         try {
             $result = $this->within($actor, $operation, $documentPublicId,
-                function (User $current, ?Document $document, Organization $organization, array $proof) use ($metadata, $expectedVersion, $requestKey, $receipt, $fingerprint, $creator, $operation): array {
+                function (User $current, ?Document $document, Organization $organization, array $proof) use ($metadata, $expectedVersion, $requestKey, $receipt, $fingerprint, $creator, $operation, $operationGrantId, $targetVersion): array {
                     $prior = DB::table('document_intakes')->where('organization_id', $organization->id)
                         ->where('actor_id', $current->id)->where('request_key', $requestKey)->lockForUpdate()->first();
                     if ($prior !== null) {
@@ -67,14 +83,15 @@ final class RegisterDocumentIntake
                             throw new ConflictHttpException('معرّف المحاولة مستخدم لملف أو بيانات مختلفة.');
                         }
 
-                        return ['intake_public_id' => $prior->public_id, 'created' => false];
+                        return ['intake_public_id' => $prior->public_id, 'created' => false]
+                            + ($operationGrantId === null ? [] : ['document_public_id' => $document->public_id, 'version_public_id' => $targetVersion]);
                     }
-                    if ($document === null) {
+                    if ($document === null || ! $document->exists) {
                         if ($expectedVersion !== 'none') {
                             throw new ConflictHttpException('مرجع الإصدار السابق غير صالح.');
                         }
-                        $document = new Document;
-                        $document->forceFill(['public_id' => (string) Str::ulid(), 'organization_id' => $organization->id,
+                        $document ??= new Document;
+                        $document->forceFill(['public_id' => $document->public_id ?? (string) Str::ulid(), 'organization_id' => $organization->id,
                             'created_by' => $current->id, 'title' => $metadata['title'], 'description' => $metadata['description']])->save();
                     }
                     $latest = DB::table('document_versions')->where('organization_id', $organization->id)
@@ -83,10 +100,18 @@ final class RegisterDocumentIntake
                         throw new ConflictHttpException('ظهر إصدار أحدث؛ أعد فتح الوثيقة.');
                     }
                     $version = $creator->persistVersion($document, $current, ($latest?->version_number ?? 0) + 1,
-                        $receipt->inspection->originalFilename, ['version_public_id' => (string) Str::ulid(),
+                        $receipt->inspection->originalFilename, ['version_public_id' => $targetVersion ?? (string) Str::ulid(),
                             'storage_key' => $receipt->storageKey, 'sha256' => $receipt->inspection->sha256,
                             'byte_size' => $receipt->inspection->byteSize, 'detected_media_type' => $receipt->inspection->mediaType]);
                     $versionId = DB::table('document_versions')->where('public_id', $version['version_public_id'])->value('id');
+                    if ($operationGrantId !== null) {
+                        // Bind only the issuer's pre-existing explicit targets;
+                        // never derive new permissions from the uploader/creator.
+                        $targets = DB::table('document_file_operation_assignments')->where('organization_id', $organization->id)
+                            ->where('fixture_id', $proof['fixture_id'])->where('document_public_id', $document->public_id);
+                        $targets->clone()->whereNull('document_id')->update(['document_id' => $document->id]);
+                        $targets->clone()->where('version_public_id', $targetVersion)->whereNull('version_id')->update(['version_id' => $versionId]);
+                    }
                     $id = DB::table('document_intakes')->insertGetId(['public_id' => $receipt->intakePublicId,
                         'organization_id' => $organization->id, 'fixture_id' => $proof['fixture_id'], 'document_id' => $document->id,
                         'version_id' => $versionId, 'actor_id' => $current->id, 'request_key' => $requestKey,
@@ -98,11 +123,11 @@ final class RegisterDocumentIntake
                         'created_at' => self::timestamp(), 'updated_at' => self::timestamp()]);
                     $intake = DB::table('document_intakes')->where('id', $id)->first();
                     $this->event($intake, $current, 'registered', $requestKey, ['sha256' => $receipt->inspection->sha256, 'byte_size' => $receipt->inspection->byteSize]);
-                    app(DocumentWorkspaceAccess::class)->authorize($current, $operation, $document);
+                    app(DocumentWorkspaceAccess::class)->authorize($current, $operation, $document, $targetVersion, $operationGrantId);
 
                     return ['intake_public_id' => $intake->public_id, 'document_public_id' => $document->public_id,
                         'version_public_id' => $version['version_public_id'], 'created' => true];
-                });
+                }, $targetVersion, $operationGrantId);
         } catch (Throwable $error) {
             $this->compensate($receipt, $error);
             throw $error;
@@ -117,17 +142,21 @@ final class RegisterDocumentIntake
     }
 
     /** Real session + current locks + actual unchanged Policy before and after each transaction. */
-    public function within(?User $actor, string $operation, ?string $documentId, Closure $callback): mixed
+    public function within(?User $actor, string $operation, ?string $documentId, Closure $callback, ?string $versionId = null, ?string $grantId = null): mixed
     {
         $access = app(DocumentWorkspaceAccess::class);
 
         return $access->withSession($actor, fn (User $current) => app(CreateDocumentWithVersion::class)->withinContext($current,
-            function (Organization $organization, User $locked) use ($access, $operation, $documentId, $callback): mixed {
+            function (Organization $organization, User $locked) use ($access, $operation, $documentId, $callback, $versionId, $grantId): mixed {
                 $proof = DocumentWorkspaceAccess::context() ?? throw new AuthorizationException;
                 $document = null;
                 if ($documentId !== null) {
                     $document = Str::isUlid($documentId) ? Document::where('organization_id', $organization->id)
                         ->where('public_id', $documentId)->lockForUpdate()->first() : null;
+                    if ($document === null && $operation === 'upload_real' && $grantId !== null && Str::isUlid($documentId)) {
+                        $document = new Document;
+                        $document->forceFill(['public_id' => strtolower($documentId), 'organization_id' => $organization->id]);
+                    }
                     if ($document === null) {
                         throw new AuthorizationException;
                     }
@@ -135,9 +164,9 @@ final class RegisterDocumentIntake
                 if (! hash_equals($locked->getAuthPassword(), (string) request()->session()->get('institution.password_hash'))) {
                     throw new AuthorizationException;
                 }
-                $access->authorize($locked, $operation, $document);
+                $access->authorize($locked, $operation, $document, $versionId, $grantId);
                 $result = $callback($locked, $document, $organization, $proof);
-                $access->authorize($locked, $operation, $document);
+                $access->authorize($locked, $operation, $document, $versionId, $grantId);
                 if (! hash_equals($locked->fresh()->getAuthPassword(), (string) request()->session()->get('institution.password_hash'))) {
                     throw new AuthorizationException;
                 }

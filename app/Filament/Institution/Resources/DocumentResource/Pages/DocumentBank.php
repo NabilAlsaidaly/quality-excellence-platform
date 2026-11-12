@@ -3,6 +3,8 @@
 namespace App\Filament\Institution\Resources\DocumentResource\Pages;
 
 use App\Actions\Documents\DocumentWorkspace;
+use App\Authorization\DocumentWorkspaceAccess;
+use App\Filament\Institution\Concerns\HasDocumentFileUpload;
 use App\Filament\Institution\Resources\DocumentResource;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -20,6 +22,7 @@ use Filament\Tables\Table;
 
 class DocumentBank extends Page implements HasTable
 {
+    use HasDocumentFileUpload;
     use InteractsWithTable;
 
     protected static string $resource = DocumentResource::class;
@@ -32,7 +35,9 @@ class DocumentBank extends Page implements HasTable
     #[Unexposed]
     public function content(Schema $schema): Schema
     {
-        return $schema->components([Text::make('مساحة اختبارية معزولة: بيانات الوثائق وإصدارات اصطناعية فقط. رفع الملفات وتنزيلها غير متاحين.')
+        return $schema->components([Text::make(DocumentWorkspaceAccess::hasFileScope()
+            ? 'عرض محلي معزول بملفات اصطناعية آمنة فقط. كل نسخة محفوظة مستقلة. الفحص الأمني غير مفعّل؛ الإتاحة المحلية تتطلب قرارًا مستقلًا وصلاحية منفصلة.'
+            : 'مساحة اختبارية معزولة: بيانات الوثائق وإصدارات اصطناعية فقط. رفع الملفات وتنزيلها غير متاحين.')
             ->extraAttributes(['class' => 'min-w-0 whitespace-normal break-words']), EmbeddedTable::make()]);
     }
 
@@ -55,9 +60,9 @@ class DocumentBank extends Page implements HasTable
 
     protected function getHeaderActions(): array
     {
-        return [Action::make('create')->label('إنشاء وثيقة اختبارية')->modalSubmitActionLabel('إنشاء الوثيقة')
+        return [$this->realUploadAction('upload_real'), Action::make('create')->label('إنشاء وثيقة اختبارية')->modalSubmitActionLabel('إنشاء الوثيقة')
             ->modalDescription('تُحفظ بيانات الوثيقة مع محتوى اصطناعي آمن، دون استقبال ملفات من المستخدم.')
-            ->visible(fn () => app(DocumentWorkspace::class)->can('create'))->schema(DocumentResource::metadataFields())
+            ->visible(fn () => ! DocumentWorkspaceAccess::hasFileScope() && app(DocumentWorkspace::class)->can('create'))->schema(DocumentResource::metadataFields())
             ->action(function (array $data): void {
                 app(DocumentWorkspace::class)->create($data);
                 Notification::make()->title('حُفظت الوثيقة الاختبارية')->success()->send();
@@ -68,13 +73,12 @@ class DocumentBank extends Page implements HasTable
     #[Exposed]
     public function callMountedAction(array $arguments = []): mixed
     {
-        abort_unless($this->getMountedAction()?->getName() === 'create' && app(DocumentWorkspace::class)->can('create'), 403);
+        if ($this->getMountedAction()?->getName() === 'uploadFile') {
+            $this->assertMountedUpload('mountedActions.0.data.file');
+        } else {
+            abort_unless(! DocumentWorkspaceAccess::hasFileScope() && $this->getMountedAction()?->getName() === 'create' && app(DocumentWorkspace::class)->can('create'), 403);
+        }
 
         return parent::callMountedAction($arguments);
-    }
-
-    public function _startUpload($name, $fileInfo, $isMultiple): void
-    {
-        abort(403);
     }
 }

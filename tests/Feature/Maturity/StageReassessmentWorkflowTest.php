@@ -15,12 +15,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Tests\Support\ClosureMigrationFixtures;
 use Tests\Support\ReviewMaturityFixtures;
 use Tests\TestCase;
 
 class StageReassessmentWorkflowTest extends TestCase
 {
-    use DatabaseMigrations, ReviewMaturityFixtures;
+    use ClosureMigrationFixtures, DatabaseMigrations, ReviewMaturityFixtures;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // These scenarios deliberately corrupt/rollback the original R68
+        // foundation. New closure behavior has its own independent tests.
+        $this->rollbackEmptyClosureFixtures();
+    }
 
     public function test_unjournaled_creation_is_never_adopted_or_dropped_automatically(): void
     {

@@ -1,5 +1,21 @@
 # Tenant isolation schema contract
 
+## Final closure — finite file/reassessment operations and local availability
+
+The12 November closure directive and separately approved local-unscanned exception add six new migrations, without editing applied migrations. Actual isolated MySQL8.4.13 inspection measured **52 migration files/journal rows and50 InnoDB base tables**. Earlier inventories below remain historical. This is TEST_ONLY persistence and admission, not operational D002/D007/D014 ratification.
+
+| New direct tenant table | Required integrity |
+|---|---|
+| document_file_operation_assignments | Exact document/version public identity; optional bound internal identities; separate enumerated operations; positive exact24h, revocation tuple, restrictive composite user/document/version FKs, stored normalized version scope and non-duplicable authority. |
+| document_file_operation_changes | Exact fixture/grant/subject relationship, tenant-scoped actor/subject user keys, unique event key, JSON-object audit and restrictive history references. |
+| maturity_reassessment_operation_assignments | Exact fixture/Approach/stage/recipient/operation, positive exact24h, restrictive composite parent/user keys, non-duplicable current assignment and revocation integrity. |
+| maturity_reassessment_operation_changes | Exact scoped assignment/subject, tenant-local actors, unique event key and immutable audit relationships. |
+| document_demo_availability_decisions | One immutable decision per exact intake/version; independent reviewer; exact release-operation grant backed by a stored constant; restrictive composite intake/authority/user keys and JSON/scenario/state checks. |
+
+User references preserve the existing `users(id,organization_id)` candidate order. New document/public and intake/authority candidates have explicit ownership and reverse ordering. The schema gate independently requires every FK, full UNIQUE, enforced CHECK, declared type/nullability and generated expression. Raw MySQL tests reject non-positive/non24h expiry, cross-tenant user references and duplicate reserved version scopes; individual metadata mutations prove each new constraint is required. No normalizer broadening, FK disabling or global server setting change is used.
+
+Reverse DDL refuses populated operation/audit history, unknown/partial own journals, inconsistent table/key ownership and external dependencies before any DROP. Actual CREATE privilege denial after adding the two availability parent keys compensates only those owned keys and leaves the earlier journal/schema intact. Unjournaled post-DDL process crashes require reviewed forward recovery. Empty legacy rollback fixtures remove only a preflighted, explicitly inventoried newer tail and verify exact remaining tables, keys and journal. Original failure scenarios and assertions remain in place. See the [closure report](../engineering/reports/FINAL-MVP-CLOSURE-2026-11-12.md).
+
 ## Issue62 — bounded review and initial maturity additions
 
 The [reviewed conditional TEST_ONLY authorization](https://github.com/NabilAlsaidaly/quality-excellence-platform/issues/62#issuecomment-6769110851) adds eleven migrations: two explicit revision candidate keys and nine directly tenant-scoped tables. Actual MySQL 8.4.13 inspection found **40 migration files, 40 journal entries and 40 InnoDB base tables**. The earlier measurements below describe their historical baselines.

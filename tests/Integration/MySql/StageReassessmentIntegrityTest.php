@@ -75,6 +75,7 @@ SQL);
 
     public function test_disabled_check_causes_rollback_refusal_before_any_drop(): void
     {
+        $this->rollbackEmptyClosureFixtures();
         $table = 'maturity_reassessment_attempts';
         $check = DB::selectOne("SELECT CONSTRAINT_NAME AS name FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND CONSTRAINT_TYPE='CHECK' ORDER BY CONSTRAINT_NAME LIMIT 1", [$table])->name;
         $journal = DB::table('migrations')->orderBy('id')->pluck('migration')->all();
@@ -97,6 +98,7 @@ SQL);
     {
         $names = array_keys(self::PERSISTENCE_MIGRATIONS);
         foreach ($names as $position => $name) {
+            $this->rollbackEmptyClosureFixtures();
             $paths = array_map(fn ($migration) => 'database/migrations/'.$migration.'.php', array_slice($names, $position));
             $this->artisan('migrate:rollback', ['--path' => $paths, '--step' => DB::table('migrations')->count(), '--force' => true])->assertExitCode(0);
             [$parent, $target] = self::PERSISTENCE_MIGRATIONS[$name];
