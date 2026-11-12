@@ -1,3 +1,5 @@
+Final-source proof: ba495ff/CI43168419256 SUCCESS822/8639; all named native journeys remain TEST_ONLY, full customer/L4 acceptance unchanged. Manual fixture pristine17 browser/20 SQL checks and retained running.
+
 # Final integration journey evidence — 12 November 2026
 
 | Journey | Current bounded evidence | Full requirement status |
@@ -11,7 +13,7 @@
 | J08 reassessment | R68 relational/Action foundation and negative/concurrency tests retained | PARTIAL; downstream effective projection, notification/UI and real operation backing incomplete |
 | J09/J10 references/notifications |14 persisted in-app notices/read state; no approved licensed reference mapping journey | Notifications bounded PASS; reference mapping BLOCKED |
 | J11/J12 security | Actual two-connection revocation-first/current RR/writer-first/1205/1213, no writes or success audit after denial | PASS supported tested writers; no global external-SQL guarantee or operational acceptance |
-| J13 complete customer workflow | Real connected local native journey; final fresh candidate verification pending | PARTIAL/TEST_ONLY; full P0–P10/L4 NOT_ACCEPTED |
+| J13 complete customer workflow | Real connected local native journey; fresh frozen-source116 browser/19 independent SQL checks PASS | PARTIAL/TEST_ONLY; full P0–P10/L4 NOT_ACCEPTED |
 
 Earlier rows below are historical and do not override these bounded states.
 

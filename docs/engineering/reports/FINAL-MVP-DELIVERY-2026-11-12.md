@@ -5,13 +5,13 @@
 - Branch: `integration/mvp-final-2026-11-12`; [Draft PR70](https://github.com/NabilAlsaidaly/quality-excellence-platform/pull/70), never self-merged.
 - Protected base: `90894051f249fe9b8aa78af728580bf96ddd9299`; validated starting source `b3db07e8afe4cc6f637946865f0d0e51fd9d07ca`.
 - Contributor: published `5c86b4fdc8327975dab84faf9a4f39f82ad694fe`; non-destructive merge `01f2e53419a9a11030656ae023fc914f017fad52`, preserving original attribution and branch.
-- Core technical source: `f2c13378198fddd79fc8f044dc77dab3423ff9e8`. Native additions are a subsequent checkpoint; the containing commit and exact final-head CI receipt are recorded in PR70 and the private handover, avoiding a self-referential report SHA.
+- Core technical source: `f2c13378198fddd79fc8f044dc77dab3423ff9e8`. Native source is `ba495ffdba55d15088e8c32c03f38df615a81ac5`, independently verified by [CI43168419256](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43168419256). The final containing documentation commit receives its own CI verification recorded in PR70/private handover; application/test blobs remain frozen. This avoids a self-referential report SHA.
 
 ## Authority, requirements and preservation
 
 The final Lead authorization permits contributor37 repair and shared technical T17 work only in the isolated integration branch. It supersedes historical technical deferments, never open owner business policies. Reviewed sources include AGENTS/CONTRIBUTING, accepted ADR001/002/003, the decision ledger, canonical SRS/105-row acceptance register, complete private execution contract and the authoritative received owner answers. Private owner prose, source paths and full contracts are not published.
 
-Relevant acceptance groups: FR-ID004 and tenant/session controls; FR-APP assigned-resource lifecycle/history; FR-DOC metadata/version/integrity; FR-REV correction/independent approval; FR-MAT initial ordered stages/history; FR-UX Arabic native presentation. Full original requirement acceptance states remain NOT_ACCEPTED in [ACCEPTANCE](../delivery/ACCEPTANCE.md). A tested bounded action is not the whole requirement.
+Relevant acceptance groups: FR-ID-004 and tenant/session controls; FR-APP assigned-resource lifecycle/history; FR-DOC metadata/version/integrity; FR-REV correction/independent approval; FR-MAT initial ordered stages/history; FR-UX Arabic native presentation. Full original requirement acceptance states remain NOT_ACCEPTED in [ACCEPTANCE](../delivery/ACCEPTANCE.md). A tested bounded action is not the whole requirement.
 
 Original checkout remains4b81e88 with its previously retained five-file archive, stash9b30bc6b578ac4b6c4ab1b7db035a775ea31a2fa and prior stash. No interrupted local promotion, stash application/drop, original demo fingerprint/grant/credential renewal, development database modification or unrelated app interference. Private preservation receipts retain hashes for the original environment/assets/archive/browser90 manifest and worktree/ref inventory. Only failed new rehearsals21/22 were stopped under separate explicit user approval; all their containers, volumes and evidence were retained. No main/contributor branch push, deployment or destructive cleanup.
 
@@ -39,15 +39,17 @@ No migration, SQL definition, dependency, package lock, Policy or CI configurati
 | Same-panel Approach admission fail-first |1/2 FAIL404|Real missing registration reproduced before resource reuse |
 | Cycle-error fail-first |1/11 FAIL|Actual mounted field had no persisted validation error before path correction |
 | Native unit + existing review Filament subset |12/136 PASS|Actual login, signed Livewire, create/rename/move, visible cycle error/no write, foreign/numeric IDs, current role/password, same-panel assigned resource/reviewer denial |
-| Full native SQLite checkpoint |523/4962 PASS|Before final two added native tests; not the final source total |
+| Final-source full local SQLite |525/4987 PASS|0 errors/failures/skipped tests; canonical storage |
 | Full local MySQL first pass |290/3591,1 failure|Fixture had skip-log-bin but original1419 test requires log_bin1; no application test weakened |
-| Corrected owned MySQL8.4.13 full rerun |RUNNING at this source checkpoint|Default log_bin1/trust0 and exact restricted CI account; no global configuration change |
+| Corrected owned MySQL8.4.13 full checkpoint |291/3608 PASS|Default log_bin1/trust0 and exact restricted account; discovered before final two native cases |
+| Final native MySQL subset |10/100 PASS|All final signed-form/current-Policy/cycle tests,0 errors/failures/skips; overlaps full checkpoint |
+| Native exact-head CI43168419256 |822/8639 PASS|SQLite525/4987; MySQL293/3633; Redis4/19;0 errors/failures/skipped tests |
 | Current owned Redis |4/19 PASS|Authenticated separate service,DB15, exact-owned key cleanup only |
 | Composer validate/install/platform/audit |PASS|Existing locked dependencies |
 | npm ci/build |PASS|Existing portable Node24.22.2; no package/lock changes |
-| Full Pint |PASS|Final format recheck also required before publication |
+| Full Pint |PASS|351 files in exact native CI; final source locally rechecked |
 
-Core [CI43105967011](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43105967011) checkout7a36c84e1c755b1866946e7421b91b635794f449 has parents90894051/f2c1337 and tree54ce69d7c339af8e03ffc5e0641f4578e51d879f, exactly the local core tree. All required job logs were read. The Issue4 conditional step is not applicable; no tests were skipped. This run does not validate the later native changes. Final containing-head CI and full regression results must be verified separately in PR70/private final receipt.
+Core [CI43105967011](https://github.com/NabilAlsaidaly/quality-excellence-platform/actions/runs/43105967011) checkout7a36c84e1c755b1866946e7421b91b635794f449 has parents90894051/f2c1337 and tree54ce69d7c339af8e03ffc5e0641f4578e51d879f, exactly the local core tree. All required job logs were read. The Issue4 conditional step is not applicable; no tests were skipped. That core run predates native changes. Native CI43168419256 subsequently passed all required checks; checkout55ca470c648748f9f4393d9824cc074e08597c81 has parents90894051/ba495ff and treec901cfae706a90baa17863f05b495e3198b00b00, exactly the native source tree. Actual complete logs verify MySQL8.4.13, Redis8.2.11,525+293+4 tests and4987+3633+19 assertions. No test skipped; only the Issue4-specific scope step is inapplicable. A baseline ephemeral Redis overcommit warning was recorded; no host tuning was made. Final containing documentation-head CI is independently recorded in PR70/private handover.
 
 The alternate-storage SQLite pass failed8 protocol-peer readiness assertions because the peer correctly restricts its canonical storage root; canonical-worktree-storage full rerun passed523/4962. The first newly added cycle test also exposed a self-FK teardown requirement. Its exact-created leaf IDs are now cleaned after assertions and fixture audit cleanup, with the self-FK still rejecting unexpected children; no FK disabling or migration guard bypass. These setup failures and original results remain private evidence.
 
@@ -57,7 +59,9 @@ Retained real Chrome157 rehearsals used actual institutional login, real CSRF/se
 
 Independent SQL and owned-byte readback verified2 content revisions,7 immutable review rounds (1 correction,6 approvals),5 configurations,5 immutable stage assessments with exact predecessor chain,10 version evidence links,14 atomic notices and actual read state. Unit create/rename/move yielded exactly3 audit events with the expected persisted parent after independent HTTP reload; attempted cycle added no event. All19 original SQL/byte checks passed. Reviewer/foreign unit denial, real CSRF rejection and logout reentry denial passed.
 
-The retained rehearsals required explicit browser locator corrections/resumption: native modal wrappers can have zero height while their children are visible, custom Select's button label differs from its placeholder, and native menuitems appear asynchronously. They were resumed only after read-only SQL established exact state; no reset, duplicate replay or fabricated result. The corrected public runner must pass once on a fresh source-frozen fixture; that final result belongs to the final receipt. Screenshots, private account data, raw manifests and full diagnostics stay outside public Git.
+The retained rehearsals required explicit browser locator corrections/resumption: native modal wrappers can have zero height while their children are visible, custom Select's button label differs from its placeholder, and native menuitems appear asynchronously. They were resumed only after read-only SQL established exact state; no reset, duplicate replay or fabricated result. The corrected public runner then passed once on a fresh source-frozen fixture:116 browser checks, including87 full review/maturity checks, followed by19 independent SQL/byte checks and the exact3 unit events. All existing Workflow assertions were preserved. Initial cold navigation exceeded the browser30-second load wait; an unchanged-source retry passed without reset or replay because the failed attempt had reached no domain write. The warmed manual service was verified separately. Screenshots, private account data, raw manifests and full diagnostics stay outside public Git.
+
+A separate fresh manual fixture remains running. Its read-only browser inspection passed17 checks, and20 independent SQL checks prove the initial workflow is pristine: no content revisions, configurations, submissions, review rounds, assessments or notifications were consumed. All46 migrations are exactly journaled, assignments are current/finite and the runtime account lacks DDL privileges. Credentials, URL and explicit owner-triggered cleanup are in the private local quickstart. Source edits intentionally fail its guard; documentation updates do not.
 
 ## Completion matrix and explicit delivery cuts
 
@@ -74,7 +78,7 @@ The retained rehearsals required explicit browser locator corrections/resumption
 | P9 coherent Arabic native UX |PARTIAL|Working protected native navigation and mobile unit controls; incomplete modules are not represented by fake-success screens |
 | P10 complete operational customer acceptance |NOT_ACCEPTED|Only bounded local journeys and technical candidate evidence; no L4/production readiness |
 
-Explicit technical cuts are not renamed owner blockers: new unit forms do not yet provide a request-key replay contract or optimistic stale-edit token; real-file/reassessment UI activation is unimplemented. Do not present a serialized current authorization check as either of those guarantees. Existing Approach/document/review idempotency/conflict tests remain intact. Settled bounded D007/D014 decisions are reused; they are not reopened or treated as operational ratification. Minimum genuine owner gates remain operational issuer/revoker/grant/resource/delegation scopes, D003 placement, operational D007/D014 and reference authority.
+Timestamps in the existing stage UI remain UTC; the private quickstart gives grant expiry in Damascus time. Explicit technical cuts are not renamed owner blockers: new unit forms do not yet provide a request-key replay contract or optimistic stale-edit token; real-file/reassessment UI activation is unimplemented. Do not present a serialized current authorization check as either of those guarantees. Existing Approach/document/review idempotency/conflict tests remain intact. Settled bounded D007/D014 decisions are reused; they are not reopened or treated as operational ratification. Minimum genuine owner gates remain operational issuer/revoker/grant/resource/delegation scopes, D003 placement, operational D007/D014 and reference authority.
 
 ## Review and handover
 
@@ -82,7 +86,7 @@ No hosting, production permissions or main merge. Keep the final local demo runn
 
 ## Exact changed-file inventory relative to b3db07e
 
-The following inventory includes preserved contributor source, technical repairs, native integration/tests and engineering records. Private files and generated assets are excluded.
+41 public paths; preserved contributor source, repairs, native integration/tests and engineering records. Private materials and generated assets are excluded.
 
 - `app/Actions/Approaches/CreateApproach.php`
 - `app/Actions/OrganizationalUnits/AuthorizedUnitOperations.php`
